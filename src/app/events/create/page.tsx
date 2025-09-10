@@ -126,6 +126,10 @@ export default function CreateEventPage() {
         created_by_email: user?.email || 'demo@example.com'
       }
 
+      console.log('Event data being sent:', eventData)
+      console.log('Selected entity:', selectedEntity)
+      console.log('Club ID:', clubId, 'Zone ID:', zoneId, 'District ID:', districtId)
+
       await createEvent(eventData)
       router.push('/')
     } catch (error) {

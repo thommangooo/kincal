@@ -62,6 +62,26 @@ export async function getEventById(id: string) {
 export async function createEvent(event: Omit<Event, 'id' | 'created_at' | 'updated_at'>) {
   console.log('Creating event with data:', event)
   
+  // Validate required fields
+  if (!event.title) {
+    throw new Error('Event title is required')
+  }
+  if (!event.start_date) {
+    throw new Error('Event start date is required')
+  }
+  if (!event.end_date) {
+    throw new Error('Event end date is required')
+  }
+  if (!event.club_id) {
+    throw new Error('Event club_id is required')
+  }
+  if (!event.zone_id) {
+    throw new Error('Event zone_id is required')
+  }
+  if (!event.district_id) {
+    throw new Error('Event district_id is required')
+  }
+  
   const { data, error } = await supabase
     .from('events')
     .insert(event)
@@ -74,9 +94,14 @@ export async function createEvent(event: Omit<Event, 'id' | 'created_at' | 'upda
     .single()
 
   console.log('Supabase response:', { data, error })
+  console.log('Error details:', JSON.stringify(error, null, 2))
 
   if (error) {
     console.error('Supabase error details:', error)
+    console.error('Error code:', error.code)
+    console.error('Error message:', error.message)
+    console.error('Error details:', error.details)
+    console.error('Error hint:', error.hint)
     throw error
   }
   return data as Event
