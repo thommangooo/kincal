@@ -25,7 +25,6 @@ const eslintConfig = [
       // TypeScript rules
       "@typescript-eslint/no-unused-vars": "error",
       "@typescript-eslint/no-explicit-any": "error",
-      "@typescript-eslint/prefer-const": "error",
       
       // React rules
       "react-hooks/exhaustive-deps": "error",

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import Header from '@/components/Header'
-import { ArrowLeft, Plus, Trash2, Building, MapPin, Users, Check, X } from 'lucide-react'
+import { ArrowLeft, Plus, Building, MapPin, Users, Check, X } from 'lucide-react'
 
 interface EntityPermission {
   id: string
