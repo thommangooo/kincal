@@ -54,8 +54,8 @@ export interface Event {
   entity_id: string
   visibility: 'public' | 'private'
   tags?: string[]
-  event_url?: string
-  image_url?: string
+  event_url?: string | null
+  image_url?: string | null
   created_by_email: string
   created_at: string
   updated_at: string
@@ -69,7 +69,7 @@ export interface Announcement {
   title: string
   content: string // HTML content
   publish_date: string
-  expiry_date?: string
+  expiry_date?: string | null
   club_id: string | null
   zone_id: string | null
   district_id: string | null
@@ -78,7 +78,7 @@ export interface Announcement {
   visibility: 'public' | 'private'
   tags?: string[]
   priority: number
-  image_url?: string
+  image_url?: string | null
   created_by_email: string
   created_at: string
   updated_at: string

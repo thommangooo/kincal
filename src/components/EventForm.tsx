@@ -189,8 +189,8 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
         entity_id: selectedEntity.id,
         visibility: 'public' as const,
         tags: data.tags || [],
-        event_url: data.event_url || undefined,
-        image_url: imageUrl || undefined,
+        event_url: data.event_url || null,
+        image_url: imageUrl,
         created_by_email: user?.email || 'demo@example.com'
       }
 
@@ -417,7 +417,7 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
                       Event Image
                     </label>
                     <ImageUpload
-                      value={imageUrl || undefined}
+                      value={imageUrl}
                       onChange={setImageUrl}
                     />
                   </div>

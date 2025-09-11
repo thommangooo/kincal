@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { announcementFormSchema, AnnouncementFormData } from '@/lib/validations'
 import { createAnnouncement } from '@/lib/database'
-import { getDistricts, getZones, getClubs, getUserRole, District, Zone, Club } from '@/lib/database'
+import { getZones, getClubs, getUserRole, Zone, Club } from '@/lib/database'
 import { useAuth } from '@/contexts/AuthContext'
 import Header from '@/components/Header'
 import RichTextEditor from '@/components/RichTextEditor'
@@ -18,7 +18,6 @@ export default function CreateAnnouncementPage() {
   const router = useRouter()
   const { user } = useAuth()
   const [loading, setLoading] = useState(false)
-  const [districts, setDistricts] = useState<District[]>([])
   const [zones, setZones] = useState<Zone[]>([])
   const [clubs, setClubs] = useState<Club[]>([])
   const [content, setContent] = useState('')
@@ -46,13 +45,11 @@ export default function CreateAnnouncementPage() {
       if (!user?.email) return
       
       try {
-        const [districtsData, zonesData, clubsData, role] = await Promise.all([
-          getDistricts(),
+        const [zonesData, clubsData, role] = await Promise.all([
           getZones(),
           getClubs(),
           getUserRole(user.email)
         ])
-        setDistricts(districtsData)
         setZones(zonesData)
         setClubs(clubsData)
         setUserRole(role)
@@ -108,7 +105,7 @@ export default function CreateAnnouncementPage() {
         title: data.title,
         content: content,
         publish_date: new Date(data.publish_date).toISOString(),
-        expiry_date: data.expiry_date ? new Date(data.expiry_date).toISOString() : undefined,
+        expiry_date: data.expiry_date ? new Date(data.expiry_date).toISOString() : null,
         club_id,
         zone_id,
         district_id,
@@ -117,7 +114,7 @@ export default function CreateAnnouncementPage() {
         visibility: 'public' as const,
         tags: data.tags || [],
         priority: data.priority,
-        image_url: imageUrl || undefined,
+        image_url: imageUrl,
         created_by_email: user?.email || 'demo@example.com'
       }
 
@@ -188,7 +185,7 @@ export default function CreateAnnouncementPage() {
                       Announcement Image
                     </label>
                     <ImageUpload
-                      value={imageUrl || undefined}
+                      value={imageUrl}
                       onChange={setImageUrl}
                     />
                   </div>
