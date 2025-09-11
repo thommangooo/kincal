@@ -186,7 +186,7 @@ export default function UserPermissionsPage() {
               Back to Users
             </button>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Entity Permissions for {user.name}
+              Entity Permissions for {user.email}
             </h1>
             <p className="text-gray-600">
               Manage which entities {user.email} can post on behalf of
