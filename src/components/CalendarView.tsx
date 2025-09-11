@@ -91,21 +91,6 @@ export default function CalendarView({ filters }: CalendarViewProps) {
     )
   }, [events, filters?.search])
 
-  // Group events by date for calendar view
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const eventsByDate = useMemo(() => {
-    const grouped: { [key: string]: Event[] } = {}
-    
-    filteredEvents.forEach(event => {
-      const date = new Date(event.start_date).toDateString()
-      if (!grouped[date]) {
-        grouped[date] = []
-      }
-      grouped[date].push(event)
-    })
-    
-    return grouped
-  }, [filteredEvents])
 
   // Get events for current month
   const currentMonthEvents = useMemo(() => {

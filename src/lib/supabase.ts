@@ -41,6 +41,8 @@ export interface Event {
   description?: string
   start_date: string
   end_date: string
+  start_time?: string
+  end_time?: string
   location?: string
   club_id: string | null
   zone_id: string | null

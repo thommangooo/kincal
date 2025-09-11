@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { Announcement } from '@/lib/database'
 import { formatDate } from '@/lib/utils'
 import { Users, Globe, Lock, Star, Calendar, Clock } from 'lucide-react'
@@ -44,9 +45,11 @@ export default function AnnouncementCard({ announcement, showClub = true }: Anno
       {/* Image */}
       {announcement.image_url && (
         <div className="mb-4">
-          <img
+          <Image
             src={announcement.image_url}
             alt={announcement.title}
+            width={800}
+            height={400}
             className="max-w-full h-auto rounded-lg border border-gray-200"
           />
         </div>

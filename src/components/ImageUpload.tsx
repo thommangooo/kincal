@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import Image from 'next/image'
 import { supabase } from '@/lib/supabase'
 import { Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react'
 
@@ -100,9 +101,11 @@ export default function ImageUpload({ value, onChange, className = '' }: ImageUp
 
       {preview ? (
         <div className="relative">
-          <img
+          <Image
             src={preview}
             alt="Preview"
+            width={400}
+            height={300}
             className="max-w-full h-auto rounded-lg border border-gray-300"
           />
           <button

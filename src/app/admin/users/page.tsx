@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import Header from '@/components/Header'
 import { ArrowLeft, Plus, Trash2, User, Shield, Mail, Settings } from 'lucide-react'

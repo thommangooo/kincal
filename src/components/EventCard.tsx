@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { Event } from '@/lib/database'
 import { formatDate, formatTime, getEventStatus } from '@/lib/utils'
 import { Calendar, MapPin, Users, Globe, Lock, ExternalLink } from 'lucide-react'
@@ -85,9 +86,11 @@ export default function EventCard({ event, showClub = true }: EventCardProps) {
       {/* Image */}
       {event.image_url && (
         <div className="mb-4">
-          <img
+          <Image
             src={event.image_url}
             alt={event.title}
+            width={800}
+            height={400}
             className="max-w-full h-auto rounded-lg border border-gray-200"
           />
         </div>

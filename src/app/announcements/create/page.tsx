@@ -18,7 +18,6 @@ export default function CreateAnnouncementPage() {
   const router = useRouter()
   const { user } = useAuth()
   const [loading, setLoading] = useState(false)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [districts, setDistricts] = useState<District[]>([])
   const [zones, setZones] = useState<Zone[]>([])
   const [clubs, setClubs] = useState<Club[]>([])
@@ -32,7 +31,6 @@ export default function CreateAnnouncementPage() {
     handleSubmit,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     watch,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     setValue,
     formState: { errors }
   } = useForm<AnnouncementFormData>({

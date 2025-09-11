@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { Event, deleteEvent } from '@/lib/database'
 import { formatDate, formatTime, getEventStatus } from '@/lib/utils'
 import { getCalendarExportOptions, downloadICSFile, copyEventDetails } from '@/lib/calendarExport'
@@ -196,9 +197,11 @@ export default function EventModal({ event, isOpen, onClose }: EventModalProps) 
               {/* Image */}
               {event.image_url && (
                 <div className="w-full">
-                  <img
+                  <Image
                     src={event.image_url}
                     alt={event.title}
+                    width={800}
+                    height={400}
                     className="max-w-full h-auto rounded-lg border border-gray-200"
                   />
                 </div>
