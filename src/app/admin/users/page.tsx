@@ -18,7 +18,7 @@ export default function AdminUsersPage() {
   const { user } = useAuth()
   const [users, setUsers] = useState<ApprovedUser[]>([])
   const [loading, setLoading] = useState(true)
-  const [newUser, setNewUser] = useState({ email: '', name: '', role: 'editor' as const })
+  const [newUser, setNewUser] = useState({ email: '', name: '', role: 'editor' as 'superuser' | 'editor' })
   const [adding, setAdding] = useState(false)
 
   useEffect(() => {
