@@ -1,5 +1,8 @@
 import { supabase, Event, Announcement, Club, Zone, District, UserEntityPermission, MagicLinkToken } from './supabase'
 
+// Re-export types for use in other files
+export type { Event, Announcement, Club, Zone, District, UserEntityPermission }
+
 // Event operations
 export async function getEvents(filters?: {
   clubId?: string
