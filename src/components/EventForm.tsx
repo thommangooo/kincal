@@ -417,9 +417,8 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
                       Event Image
                     </label>
                     <ImageUpload
-                      currentImageUrl={imageUrl}
-                      onImageUpload={setImageUrl}
-                      onImageRemove={() => setImageUrl(null)}
+                      value={imageUrl || undefined}
+                      onChange={setImageUrl}
                     />
                   </div>
                 </div>

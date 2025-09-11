@@ -192,7 +192,7 @@ export default function CreateAnnouncementPage() {
                       Announcement Image
                     </label>
                     <ImageUpload
-                      value={imageUrl}
+                      value={imageUrl || undefined}
                       onChange={setImageUrl}
                     />
                   </div>
