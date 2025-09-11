@@ -15,7 +15,7 @@ interface ApprovedUser {
 }
 
 export default function AdminUsersPage() {
-  const { user: _user } = useAuth()
+  // const { user } = useAuth() // Not used in this component
   const [users, setUsers] = useState<ApprovedUser[]>([])
   const [loading, setLoading] = useState(true)
   const [newUser, setNewUser] = useState({ email: '', name: '', role: 'editor' as 'superuser' | 'editor' })

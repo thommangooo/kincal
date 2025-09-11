@@ -18,7 +18,8 @@ export default function CreateAnnouncementPage() {
   const router = useRouter()
   const { user } = useAuth()
   const [loading, setLoading] = useState(false)
-  const [_districts, setDistricts] = useState<District[]>([])
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [districts, setDistricts] = useState<District[]>([])
   const [zones, setZones] = useState<Zone[]>([])
   const [clubs, setClubs] = useState<Club[]>([])
   const [content, setContent] = useState('')
@@ -29,8 +30,10 @@ export default function CreateAnnouncementPage() {
   const {
     register,
     handleSubmit,
-    watch: _watch,
-    setValue: _setValue,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    watch,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    setValue,
     formState: { errors }
   } = useForm<AnnouncementFormData>({
     resolver: zodResolver(announcementFormSchema),

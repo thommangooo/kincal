@@ -21,7 +21,8 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
   const [loading, setLoading] = useState(mode === 'edit')
   const [submitting, setSubmitting] = useState(false)
   const [event, setEvent] = useState<Event | null>(null)
-  const [_districts, setDistricts] = useState<District[]>([])
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [districts, setDistricts] = useState<District[]>([])
   const [zones, setZones] = useState<Zone[]>([])
   const [clubs, setClubs] = useState<Club[]>([])
   const [selectedEntity, setSelectedEntity] = useState<{ type: 'club' | 'zone' | 'district'; id: string } | null>(null)
@@ -38,7 +39,8 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
     handleSubmit,
     formState: { errors },
     setValue,
-    watch: _watch
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    watch
   } = useForm<EventFormData>({
     resolver: zodResolver(eventFormSchema),
     defaultValues: {
