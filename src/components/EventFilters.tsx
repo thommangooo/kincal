@@ -114,7 +114,7 @@ export default function EventFilters({ onFiltersChange }: EventFiltersProps) {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by title, description..."
+              placeholder="Search by club name, title, description..."
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-kin-red focus:border-transparent transition-colors"
             />
           </div>
@@ -184,9 +184,9 @@ export default function EventFilters({ onFiltersChange }: EventFiltersProps) {
 
         {/* Visibility Filter */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Visibility
-          </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Type
+                </label>
           <select
             value={visibility}
             onChange={(e) => setVisibility(e.target.value as 'all' | 'public' | 'internal-use')}
