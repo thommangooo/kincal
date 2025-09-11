@@ -121,7 +121,7 @@ export default function CreateAnnouncementPage() {
         visibility: 'public' as const,
         tags: data.tags || [],
         priority: data.priority,
-        image_url: imageUrl,
+        image_url: imageUrl || undefined,
         created_by_email: user?.email || 'demo@example.com'
       }
 
