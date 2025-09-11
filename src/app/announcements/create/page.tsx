@@ -13,7 +13,7 @@ import RichTextEditor from '@/components/RichTextEditor'
 import ImageUpload from '@/components/ImageUpload'
 import EntitySelector from '@/components/EntitySelector'
 import Toast from '@/components/Toast'
-import { ArrowLeft, Users, Star } from 'lucide-react'
+import { ArrowLeft, Users } from 'lucide-react'
 
 export default function CreateAnnouncementPage() {
   const router = useRouter()
@@ -31,7 +31,6 @@ export default function CreateAnnouncementPage() {
   const {
     register,
     handleSubmit,
-    watch,
     setValue,
     formState: { errors, isValid }
   } = useForm<AnnouncementFormData>({
@@ -136,7 +135,7 @@ export default function CreateAnnouncementPage() {
         district_id,
         entity_type,
         entity_id,
-        visibility: data.visibility === 'internal-use' ? 'private' : 'public',
+        visibility: data.visibility === 'internal-use' ? 'private' as const : 'public' as const,
         tags: data.tags || null,
         priority: data.priority,
         image_url: imageUrl,

@@ -1,11 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
 import Header from '@/components/Header'
 import EventFilters from '@/components/EventFilters'
 import AnnouncementsList from '@/components/AnnouncementsList'
-import { Plus } from 'lucide-react'
 
 export default function AnnouncementsPage() {
   const [filters, setFilters] = useState({

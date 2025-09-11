@@ -1,11 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
 import CalendarView from '@/components/CalendarView'
 import EventFilters from '@/components/EventFilters'
 import Header from '@/components/Header'
-import { Plus } from 'lucide-react'
 
 export default function Home() {
   const [filters, setFilters] = useState({

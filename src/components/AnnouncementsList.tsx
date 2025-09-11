@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { getAnnouncements, Announcement } from '@/lib/database'
 import { useAuth } from '@/contexts/AuthContext'
-import { Megaphone, Calendar, Users, Globe, Lock, ExternalLink, Plus } from 'lucide-react'
+import { Megaphone, Calendar, Users, Globe, Lock, Plus } from 'lucide-react'
 import Image from 'next/image'
 
 interface AnnouncementsListProps {

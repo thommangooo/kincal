@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Plus, Calendar, LogOut, User } from 'lucide-react'
+import { LogOut, User } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import KinLogo from './KinLogo'
 
