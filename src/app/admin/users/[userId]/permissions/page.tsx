@@ -67,7 +67,7 @@ export default function UserPermissionsPage() {
         id: p.id,
         entity_type: p.entity_type,
         entity_id: p.entity_id,
-        entity_name: p.club?.name || p.zone?.name || p.district?.name || 'Unknown'
+        entity_name: (p.club as any)?.name || (p.zone as any)?.name || (p.district as any)?.name || 'Unknown'
       })) || []
 
       setPermissions(transformedPermissions)
