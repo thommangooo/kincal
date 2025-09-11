@@ -433,14 +433,24 @@ export async function getEntityDetails(entityType: 'club' | 'zone' | 'district',
   return data
 }
 
-// Get user role from approved_users table
-export async function getUserRole(userEmail: string): Promise<'superuser' | 'editor' | null> {
+// Get user role and entities from approved_users table
+export async function getUserRole(userEmail: string): Promise<{
+  role: 'superuser' | 'editor'
+  club_id?: string
+  zone_id?: string
+  district_id?: string
+} | null> {
   const { data, error } = await supabase
     .from('approved_users')
-    .select('role')
+    .select('role, club_id, zone_id, district_id')
     .eq('email', userEmail)
     .single()
 
   if (error || !data) return null
-  return data.role as 'superuser' | 'editor'
+  return {
+    role: data.role as 'superuser' | 'editor',
+    club_id: data.club_id,
+    zone_id: data.zone_id,
+    district_id: data.district_id
+  }
 }

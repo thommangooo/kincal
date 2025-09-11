@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Plus, Calendar, LogOut, User } from 'lucide-react'
+import { LogOut, User, Plus } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import KinLogo from './KinLogo'
 
@@ -28,10 +28,16 @@ export default function Header() {
                 Calendar
               </Link>
               <Link 
-                href="/embed" 
+                href="/announcements" 
                 className="text-gray-600 hover:text-kin-red transition-colors font-medium"
               >
-                Embed Widget
+                Announcements
+              </Link>
+              <Link 
+                href="/widgets" 
+                className="text-gray-600 hover:text-kin-red transition-colors font-medium"
+              >
+                Widgets
               </Link>
             </nav>
           </div>

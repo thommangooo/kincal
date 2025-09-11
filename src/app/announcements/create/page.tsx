@@ -23,7 +23,12 @@ export default function CreateAnnouncementPage() {
   const [content, setContent] = useState('')
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [selectedEntity, setSelectedEntity] = useState<{type: 'club' | 'zone' | 'district', id: string} | null>(null)
-  const [userRole, setUserRole] = useState<'superuser' | 'editor' | null>(null)
+  const [userRole, setUserRole] = useState<{
+    role: 'superuser' | 'editor'
+    club_id?: string
+    zone_id?: string
+    district_id?: string
+  } | null>(null)
 
   const {
     register,
@@ -256,7 +261,7 @@ export default function CreateAnnouncementPage() {
                 <div className="space-y-4">
                   <EntitySelector
                     userEmail={user?.email || ''}
-                    userRole={userRole || 'editor'}
+                    userRole={userRole?.role || 'editor'}
                     selectedEntity={selectedEntity}
                     onEntitySelect={setSelectedEntity}
                   />
