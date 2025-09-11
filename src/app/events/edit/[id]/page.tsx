@@ -9,7 +9,7 @@ export default function EditEventPage() {
   const eventId = params.id as string
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <Header />
       <EventForm mode="edit" eventId={eventId} />
     </div>

@@ -16,18 +16,9 @@ export default function Home() {
   })
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <Header />
       <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Kin Canada Events Calendar
-          </h1>
-          <p className="text-gray-600">
-            Discover and share events across Kin clubs, zones, and districts
-          </p>
-        </div>
-        
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           <div className="lg:col-span-1">
             <EventFilters onFiltersChange={setFilters} />

@@ -144,9 +144,9 @@ export default function CalendarView({ filters }: CalendarViewProps) {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
       {/* Header */}
-      <div className="p-4 sm:p-6 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
+      <div className="p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-4 sm:space-y-0">
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-3">
@@ -157,7 +157,10 @@ export default function CalendarView({ filters }: CalendarViewProps) {
                 <h2 className="text-lg sm:text-xl font-bold text-gray-900">
                   {viewMode === 'calendar' ? 'Calendar View' : 'List View'}
                 </h2>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-600 mb-1">
+                  Discover and share events across Kin clubs, zones, and districts. Stay connected with your Kin community.
+                </p>
+                <p className="text-xs text-gray-500">
                   {filteredEvents.length} event{filteredEvents.length !== 1 ? 's' : ''} found
                 </p>
               </div>

@@ -3,36 +3,33 @@
 import Link from 'next/link'
 import { Plus, Calendar, LogOut, User } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
+import KinLogo from './KinLogo'
 
 export default function Header() {
   const { user, signOut } = useAuth()
 
   return (
-    <header className="bg-white shadow-sm border-b">
-      <div className="container mx-auto px-4 py-4">
+    <header className="bg-white shadow-lg">
+      <div className="container mx-auto px-4 py-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-8">
-            <Link href="/" className="flex items-center space-x-2">
-              <Calendar className="h-8 w-8 text-blue-600" />
-              <span className="text-xl font-bold text-gray-900">Kin Calendar</span>
+            <Link href="/" className="flex items-center space-x-4 group">
+              <KinLogo size="lg" className="group-hover:scale-105 transition-transform duration-200" />
+              <div className="flex flex-col">
+                <span className="text-2xl font-bold text-kin-red">KinCal</span>
+              </div>
             </Link>
             
             <nav className="hidden md:flex space-x-6">
               <Link 
                 href="/" 
-                className="text-gray-600 hover:text-gray-900 transition-colors"
+                className="text-gray-600 hover:text-kin-red transition-colors font-medium"
               >
                 Calendar
               </Link>
               <Link 
-                href="/events" 
-                className="text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                All Events
-              </Link>
-              <Link 
                 href="/embed" 
-                className="text-gray-600 hover:text-gray-900 transition-colors"
+                className="text-gray-600 hover:text-kin-red transition-colors font-medium"
               >
                 Embed Widget
               </Link>
@@ -45,14 +42,14 @@ export default function Header() {
                 <div className="hidden md:flex items-center space-x-2">
                   <Link
                     href="/events/create"
-                    className="inline-flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                    className="inline-flex items-center px-4 py-2 bg-kin-red text-white rounded-lg hover:bg-kin-red-dark transition-colors text-sm font-medium shadow-sm hover:shadow-md"
                   >
                     <Plus className="h-4 w-4 mr-1" />
                     Event
                   </Link>
                   <Link
                     href="/announcements/create"
-                    className="inline-flex items-center px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                    className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium border border-gray-200"
                   >
                     <Plus className="h-4 w-4 mr-1" />
                     Announcement
@@ -62,7 +59,7 @@ export default function Header() {
                 <div className="md:hidden">
                   <Link
                     href="/events/create"
-                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="inline-flex items-center px-4 py-2 bg-kin-red text-white rounded-lg hover:bg-kin-red-dark transition-colors font-medium"
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     Create
@@ -75,7 +72,7 @@ export default function Header() {
                   </span>
                   <button
                     onClick={() => signOut()}
-                    className="p-2 text-gray-600 hover:text-gray-900 transition-colors"
+                    className="p-2 text-gray-600 hover:text-kin-red transition-colors rounded-lg hover:bg-kin-red-light"
                     title="Sign Out"
                   >
                     <LogOut className="h-5 w-5" />
@@ -85,7 +82,7 @@ export default function Header() {
             ) : (
               <Link
                 href="/signin"
-                className="inline-flex items-center px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+                className="inline-flex items-center px-4 py-2 bg-kin-red text-white rounded-lg hover:bg-kin-red-dark transition-colors text-sm font-medium shadow-sm hover:shadow-md"
               >
                 <User className="h-4 w-4 mr-1" />
                 Sign In

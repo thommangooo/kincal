@@ -92,15 +92,15 @@ export default function EventFilters({ onFiltersChange }: EventFiltersProps) {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border p-6">
+    <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-          <Filter className="h-5 w-5 mr-2" />
+          <Filter className="h-5 w-5 mr-2 text-kin-red" />
           Filters
         </h2>
         <button
           onClick={clearFilters}
-          className="text-sm text-blue-600 hover:text-blue-700"
+          className="text-sm text-kin-red hover:text-kin-red-dark font-medium transition-colors"
         >
           Clear all
         </button>
@@ -115,7 +115,7 @@ export default function EventFilters({ onFiltersChange }: EventFiltersProps) {
           <select
             value={contentType}
             onChange={(e) => setContentType(e.target.value as 'all' | 'events' | 'announcements')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-kin-red focus:border-transparent transition-colors"
           >
             <option value="all">All Content</option>
             <option value="events">Events Only</option>
@@ -135,7 +135,7 @@ export default function EventFilters({ onFiltersChange }: EventFiltersProps) {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by title, description..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-kin-red focus:border-transparent transition-colors"
             />
           </div>
         </div>
@@ -149,7 +149,7 @@ export default function EventFilters({ onFiltersChange }: EventFiltersProps) {
           <select
             value={districtId}
             onChange={(e) => setDistrictId(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-kin-red focus:border-transparent transition-colors"
           >
             <option value="">All Districts</option>
             {districts.map((district) => (
@@ -169,7 +169,7 @@ export default function EventFilters({ onFiltersChange }: EventFiltersProps) {
           <select
             value={zoneId}
             onChange={(e) => setZoneId(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-kin-red focus:border-transparent transition-colors"
             disabled={!districtId}
           >
             <option value="">All Zones</option>
@@ -190,7 +190,7 @@ export default function EventFilters({ onFiltersChange }: EventFiltersProps) {
           <select
             value={clubId}
             onChange={(e) => setClubId(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-kin-red focus:border-transparent transition-colors"
             disabled={!zoneId}
           >
             <option value="">All Clubs</option>
@@ -210,7 +210,7 @@ export default function EventFilters({ onFiltersChange }: EventFiltersProps) {
           <select
             value={visibility}
             onChange={(e) => setVisibility(e.target.value as 'all' | 'public' | 'private')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-kin-red focus:border-transparent transition-colors"
           >
             <option value="all">All Events</option>
             <option value="public">Public Only</option>

@@ -1,0 +1,90 @@
+---
+description: Core development principles and safety guidelines for the Kincal project
+globs: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"]
+alwaysApply: true
+---
+
+# Cursor Development Guidelines
+
+## Core Principles
+- **Be cautious and systematic** - always consider potential issues before implementing
+- **Suggest, don't assume** - ask about architecture decisions rather than making them
+- **Focus on prevention** - identify potential problems before they occur
+- **Validate incrementally** - ensure each change works before moving to the next
+
+## Before Any Code Changes
+
+**Always ask these questions first:**
+- What's the current routing system? (App Router vs Pages Router)
+- What's the null/undefined strategy for optional fields?
+- Are we using any names that might conflict with DOM types?
+- Will this change affect the build process?
+
+## Type Safety Checklist
+
+When working with TypeScript:
+- [ ] Check for DOM type collisions (`Event`, `Window`, `Document`, etc.)
+- [ ] Ensure consistent null/undefined handling across database → functions → components
+- [ ] Verify all interface properties are actually provided
+- [ ] Avoid `as any` or incorrect type assertions
+- [ ] Test that `npm run build` still passes
+
+## Warning Signs to Flag
+
+**Stop and warn me if you see:**
+- Mixed routing systems (both `src/app/` and `src/pages/`)
+- Custom interfaces with DOM names
+- Inconsistent null/undefined patterns
+- Unused imports or variables
+- Missing required properties in objects
+- External image usage without proper Next.js config
+
+## Development Approach
+
+1. **Start small** - make minimal changes that can be tested
+2. **Build frequently** - suggest testing builds after significant changes
+3. **Document decisions** - explain why you chose one approach over another
+4. **Question assumptions** - ask if you're unsure about existing patterns
+5. **Suggest alternatives** - offer multiple approaches when appropriate
+
+## Communication Style
+
+- **Be direct about risks** - don't sugarcoat potential issues
+- **Explain trade-offs** - mention downsides of suggested approaches
+- **Ask before major changes** - confirm architectural decisions
+- **Suggest verification steps** - recommend how to test changes
+- **Flag complexity** - warn when solutions might introduce new problems
+
+## Emergency Protocols
+
+If builds start failing:
+1. **Stop adding features** - focus on getting builds working first
+2. **Isolate the problem** - create minimal test cases
+3. **Check the basics** - verify TypeScript config, routing consistency
+4. **Suggest systematic fixes** - address root causes, not just symptoms
+5. **Recommend incremental testing** - fix one issue at a time
+
+## Key Questions to Ask
+
+- "Should we test the build before continuing?"
+- "Are you sure this pattern is consistent with the rest of the codebase?"
+- "Have you considered how this affects the type flow?"
+- "Would you like me to suggest a safer alternative?"
+- "Should we create a utility function for this pattern?"
+- "Does this component need to be interactive, or can it stay as a server component?"
+- "Should this data be cached, and what's the appropriate revalidation time?"
+- "Do we need error.tsx and loading.tsx files for this route?"
+- "Will this server action properly revalidate the affected paths?"
+- "Are we handling the loading and error states properly?"
+
+## Project-Specific Context
+
+This project uses:
+- **Next.js 15.5.2 with App Router** (`src/app/` structure)
+- **TypeScript with strict mode**
+- **Supabase for database and auth**
+- **Tailwind CSS for styling**
+- **Zod for validation**
+- **Consistent null/undefined handling** via utility functions in `src/lib/nullish.ts`
+
+Remember: **Better to catch issues early than debug build failures later.**

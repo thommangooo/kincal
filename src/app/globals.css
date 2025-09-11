@@ -3,11 +3,17 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --kin-red: #dc2626;
+  --kin-red-light: #fef2f2;
+  --kin-red-dark: #991b1b;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-kin-red: var(--kin-red);
+  --color-kin-red-light: var(--kin-red-light);
+  --color-kin-red-dark: var(--kin-red-dark);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }

@@ -217,25 +217,25 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <main className="container mx-auto px-4 py-8 flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
+      </main>
     )
   }
 
   if (mode === 'edit' && !event) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <main className="container mx-auto px-4 py-8 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Event Not Found</h1>
           <p className="text-gray-600">The event you&apos;re looking for doesn&apos;t exist.</p>
         </div>
-      </div>
+      </main>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
           <div className="mb-8">
@@ -456,6 +456,6 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
         isVisible={showToast}
         onClose={() => setShowToast(false)}
       />
-    </div>
+    </>
   )
 }

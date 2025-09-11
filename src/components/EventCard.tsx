@@ -46,10 +46,10 @@ export default function EventCard({ event, showClub = true }: EventCardProps) {
   const clubColor = event.club_id ? generateClubColor(event.club_id) : { bg: 'bg-gray-100', text: 'text-gray-800', border: 'bg-gray-500' }
 
   return (
-    <div className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow relative">
+    <div className="border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all duration-200 relative bg-white hover:border-gray-300">
       {/* Club Color Indicator */}
       {event.club_id && (
-        <div className={`absolute top-0 left-0 w-1 h-full rounded-l-lg ${clubColor.border}`}></div>
+        <div className={`absolute top-0 left-0 w-1 h-full rounded-l-xl ${clubColor.border}`}></div>
       )}
       
       <div className="flex items-start justify-between mb-4">
@@ -91,7 +91,7 @@ export default function EventCard({ event, showClub = true }: EventCardProps) {
             alt={event.title}
             width={800}
             height={400}
-            className="max-w-full h-auto rounded-lg border border-gray-200"
+            className="max-w-full h-auto rounded-lg border border-gray-200 shadow-sm"
           />
         </div>
       )}
