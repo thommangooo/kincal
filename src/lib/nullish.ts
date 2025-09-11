@@ -32,4 +32,4 @@ export const safeString = (v: string | null | undefined): string => v || ''
 /**
  * Check if value is nullish (null or undefined)
  */
-export const isNullish = (v: any): v is null | undefined => v == null
+export const isNullish = (v: unknown): v is null | undefined => v == null
