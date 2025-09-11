@@ -118,7 +118,7 @@ export default function CreateAnnouncementPage() {
         district_id,
         entity_type,
         entity_id,
-        visibility: 'public',
+        visibility: 'public' as const,
         tags: data.tags || [],
         priority: data.priority,
         image_url: imageUrl,
