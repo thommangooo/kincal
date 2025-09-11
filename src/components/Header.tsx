@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Plus, Calendar, Users, LogOut, User } from 'lucide-react'
+import { Plus, Calendar, LogOut, User } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 
 export default function Header() {

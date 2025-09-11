@@ -1,4 +1,4 @@
-import { supabase, Event, Announcement, Club, Zone, District, UserEntityPermission, MagicLinkToken } from './supabase'
+import { supabase, Event, Announcement, Club, Zone, District, UserEntityPermission } from './supabase'
 
 // Re-export types for use in other files
 export type { Event, Announcement, Club, Zone, District, UserEntityPermission }

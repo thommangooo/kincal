@@ -12,13 +12,13 @@ import Header from '@/components/Header'
 import RichTextEditor from '@/components/RichTextEditor'
 import ImageUpload from '@/components/ImageUpload'
 import EntitySelector from '@/components/EntitySelector'
-import { ArrowLeft, Users, Globe, Lock, Star } from 'lucide-react'
+import { ArrowLeft, Users, Star } from 'lucide-react'
 
 export default function CreateAnnouncementPage() {
   const router = useRouter()
   const { user } = useAuth()
   const [loading, setLoading] = useState(false)
-  const [districts, setDistricts] = useState<District[]>([])
+  const [_districts, setDistricts] = useState<District[]>([])
   const [zones, setZones] = useState<Zone[]>([])
   const [clubs, setClubs] = useState<Club[]>([])
   const [content, setContent] = useState('')
@@ -29,8 +29,8 @@ export default function CreateAnnouncementPage() {
   const {
     register,
     handleSubmit,
-    watch,
-    setValue,
+    watch: _watch,
+    setValue: _setValue,
     formState: { errors }
   } = useForm<AnnouncementFormData>({
     resolver: zodResolver(announcementFormSchema),

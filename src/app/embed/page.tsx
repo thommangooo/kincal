@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { getEvents, Event } from '@/lib/database'
-import { formatDate, formatTime } from '@/lib/utils'
+// import { formatDate, formatTime } from '@/lib/utils'
 import EventCard from '@/components/EventCard'
 import { Calendar, List, Copy, Check } from 'lucide-react'
 

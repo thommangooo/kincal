@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import Header from '@/components/Header'
@@ -33,9 +33,9 @@ export default function UserPermissionsPage() {
     if (userId) {
       loadUserData()
     }
-  }, [userId])
+  }, [userId, loadUserData])
 
-  const loadUserData = async () => {
+  const loadUserData = useCallback(async () => {
     try {
       // Load user info
       const { data: userData, error: userError } = await supabase
@@ -92,7 +92,7 @@ export default function UserPermissionsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [userId])
 
   const addPermission = async (entityId: string, entityType: 'club' | 'zone' | 'district') => {
     if (!user) return // Ensure user exists before proceeding

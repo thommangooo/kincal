@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Calendar, List, ChevronLeft, ChevronRight } from 'lucide-react'
 import { getEvents, Event } from '@/lib/database'
-import { formatDate, formatTime, getEventStatus } from '@/lib/utils'
+import { formatTime } from '@/lib/utils'
 import EventCard from './EventCard'
 import EventModal from './EventModal'
 
@@ -92,7 +92,7 @@ export default function CalendarView({ filters }: CalendarViewProps) {
   }, [events, filters?.search])
 
   // Group events by date for calendar view
-  const eventsByDate = useMemo(() => {
+  const _eventsByDate = useMemo(() => {
     const grouped: { [key: string]: Event[] } = {}
     
     filteredEvents.forEach(event => {

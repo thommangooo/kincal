@@ -1,4 +1,4 @@
-import { supabase, MagicLinkToken } from './supabase'
+import { supabase } from './supabase'
 import crypto from 'crypto'
 
 // Generate a secure random token
