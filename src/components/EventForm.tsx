@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { eventFormSchema, EventFormData } from '@/lib/validations'
 import { getEvent, createEvent, updateEvent, getDistricts, getZones, getClubs, getUserRole, District, Zone, Club, Event } from '@/lib/database'
+import type { DbEvent } from '@/lib/supabase'
 import { toNull } from '@/lib/nullish'
 import { useAuth } from '@/contexts/AuthContext'
 import EntitySelector from '@/components/EntitySelector'
@@ -21,7 +22,7 @@ interface EventFormProps {
 export default function EventForm({ mode, eventId }: EventFormProps) {
   const [loading, setLoading] = useState(mode === 'edit')
   const [submitting, setSubmitting] = useState(false)
-  const [event, setEvent] = useState<Event | null>(null)
+  const [event, setEvent] = useState<DbEvent | null>(null)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [districts, setDistricts] = useState<District[]>([])
   const [zones, setZones] = useState<Zone[]>([])

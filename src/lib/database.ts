@@ -59,7 +59,7 @@ export async function getEventById(id: string) {
     .single()
 
   if (error) throw error
-  return data as Event
+  return data as DbEvent
 }
 
 // Alias for convenience
