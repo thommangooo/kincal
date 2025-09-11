@@ -44,7 +44,7 @@ interface CalendarViewProps {
     districtId: string
     zoneId: string
     clubId: string
-    visibility: 'all' | 'public' | 'private'
+    visibility: 'all' | 'public' | 'internal-use'
   }
 }
 
@@ -67,7 +67,9 @@ export default function CalendarView({ filters }: CalendarViewProps) {
           ...(filters?.districtId && { districtId: filters.districtId }),
           ...(filters?.zoneId && { zoneId: filters.zoneId }),
           ...(filters?.clubId && { clubId: filters.clubId }),
-          ...(filters?.visibility && filters.visibility !== 'all' && { visibility: filters.visibility })
+          ...(filters?.visibility && filters.visibility !== 'all' && { 
+            visibility: filters.visibility === 'internal-use' ? 'private' : filters.visibility 
+          })
         }
         
         const eventsData = await getEvents(eventFilters)
