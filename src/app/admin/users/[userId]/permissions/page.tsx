@@ -95,7 +95,7 @@ export default function UserPermissionsPage() {
   }
 
   const addPermission = async (entityId: string, entityType: 'club' | 'zone' | 'district') => {
-    if (!user) return
+    if (!user) return // Ensure user exists before proceeding
     
     try {
       const { error } = await supabase
