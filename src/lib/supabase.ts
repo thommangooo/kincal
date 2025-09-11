@@ -42,9 +42,9 @@ export interface Event {
   start_date: string
   end_date: string
   location?: string
-  club_id: string
-  zone_id: string
-  district_id: string
+  club_id: string | null
+  zone_id: string | null
+  district_id: string | null
   entity_type: 'club' | 'zone' | 'district'
   entity_id: string
   visibility: 'public' | 'private'

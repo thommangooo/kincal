@@ -187,10 +187,10 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
         district_id: districtId,
         entity_type: selectedEntity.type,
         entity_id: selectedEntity.id,
-        visibility: 'public',
+        visibility: 'public' as const,
         tags: data.tags || [],
-        event_url: data.event_url || null,
-        image_url: imageUrl,
+        event_url: data.event_url || undefined,
+        image_url: imageUrl || undefined,
         created_by_email: user?.email || 'demo@example.com'
       }
 

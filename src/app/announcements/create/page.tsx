@@ -112,7 +112,7 @@ export default function CreateAnnouncementPage() {
         title: data.title,
         content: content,
         publish_date: new Date(data.publish_date).toISOString(),
-        expiry_date: data.expiry_date ? new Date(data.expiry_date).toISOString() : null,
+        expiry_date: data.expiry_date ? new Date(data.expiry_date).toISOString() : undefined,
         club_id,
         zone_id,
         district_id,
