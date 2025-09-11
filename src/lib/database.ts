@@ -59,6 +59,9 @@ export async function getEventById(id: string) {
   return data as Event
 }
 
+// Alias for convenience
+export const getEvent = getEventById
+
 export async function createEvent(event: Omit<Event, 'id' | 'created_at' | 'updated_at'>) {
   console.log('Creating event with data:', event)
   
@@ -131,6 +134,7 @@ export async function deleteEvent(id: string) {
     .eq('id', id)
 
   if (error) throw error
+  return true
 }
 
 // Club operations

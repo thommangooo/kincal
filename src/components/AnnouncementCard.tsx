@@ -47,7 +47,7 @@ export default function AnnouncementCard({ announcement, showClub = true }: Anno
           <img
             src={announcement.image_url}
             alt={announcement.title}
-            className="w-full h-48 object-cover rounded-lg border border-gray-200"
+            className="max-w-full h-auto rounded-lg border border-gray-200"
           />
         </div>
       )}

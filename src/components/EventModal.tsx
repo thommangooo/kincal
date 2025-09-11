@@ -1,11 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Event } from '@/lib/database'
+import { useRouter } from 'next/navigation'
+import { Event, deleteEvent } from '@/lib/database'
 import { formatDate, formatTime, getEventStatus } from '@/lib/utils'
 import { getCalendarExportOptions, downloadICSFile, copyEventDetails } from '@/lib/calendarExport'
-import { Calendar, MapPin, Users, Globe, Lock, ExternalLink, X, Clock, Tag, Download } from 'lucide-react'
+import { Calendar, MapPin, Users, Globe, Lock, ExternalLink, X, Clock, Tag, Download, Edit, Trash2 } from 'lucide-react'
 import Toast from './Toast'
+import { useAuth } from '@/contexts/AuthContext'
 
 // Generate consistent colors for clubs (same as other components)
 const generateClubColor = (clubId: string): { bg: string; text: string; border: string } => {
@@ -41,12 +43,17 @@ interface EventModalProps {
 export default function EventModal({ event, isOpen, onClose }: EventModalProps) {
   const [toastMessage, setToastMessage] = useState('')
   const [showToast, setShowToast] = useState(false)
+  const router = useRouter()
+  const { user } = useAuth()
 
   // Show toast message
   const showToastMessage = (message: string) => {
     setToastMessage(message)
     setShowToast(true)
   }
+
+  // Check if user can edit/delete this event
+  const canEdit = user && event && user.email === event.created_by_email
 
   // Handle ESC key to close modal
   useEffect(() => {
@@ -94,7 +101,8 @@ export default function EventModal({ event, isOpen, onClose }: EventModalProps) 
     >
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+        className="fixed inset-0 bg-gray-900 transition-opacity"
+        style={{ opacity: 0.4 }}
         onClick={onClose}
         aria-hidden="true"
       />
@@ -138,13 +146,48 @@ export default function EventModal({ event, isOpen, onClose }: EventModalProps) 
               )}
             </div>
             
-            <button
-              onClick={onClose}
-              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-              aria-label="Close modal"
-            >
-              <X className="h-6 w-6" />
-            </button>
+            <div className="flex items-center space-x-2">
+              {canEdit && (
+                <>
+                  <button
+                    onClick={() => {
+                      onClose()
+                      router.push(`/events/edit/${event.id}`)
+                    }}
+                    className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                    aria-label="Edit event"
+                  >
+                    <Edit className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={async () => {
+                      if (confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
+                        try {
+                          await deleteEvent(event.id)
+                          showToastMessage('Event deleted successfully!')
+                          onClose()
+                          router.push('/')
+                        } catch (error) {
+                          console.error('Error deleting event:', error)
+                          showToastMessage('Error deleting event')
+                        }
+                      }
+                    }}
+                    className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                    aria-label="Delete event"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </button>
+                </>
+              )}
+              <button
+                onClick={onClose}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="Close modal"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
           </div>
 
           {/* Scrollable Content */}
@@ -156,7 +199,7 @@ export default function EventModal({ event, isOpen, onClose }: EventModalProps) 
                   <img
                     src={event.image_url}
                     alt={event.title}
-                    className="w-full h-64 object-cover rounded-lg border border-gray-200"
+                    className="max-w-full h-auto rounded-lg border border-gray-200"
                   />
                 </div>
               )}

@@ -88,7 +88,7 @@ export default function EventCard({ event, showClub = true }: EventCardProps) {
           <img
             src={event.image_url}
             alt={event.title}
-            className="w-full h-48 object-cover rounded-lg border border-gray-200"
+            className="max-w-full h-auto rounded-lg border border-gray-200"
           />
         </div>
       )}

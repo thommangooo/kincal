@@ -103,7 +103,7 @@ export default function ImageUpload({ value, onChange, className = '' }: ImageUp
           <img
             src={preview}
             alt="Preview"
-            className="w-full h-48 object-cover rounded-lg border border-gray-300"
+            className="max-w-full h-auto rounded-lg border border-gray-300"
           />
           <button
             type="button"
