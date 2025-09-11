@@ -56,24 +56,24 @@ export default function EntitySelector({ userEmail, userRole, selectedEntity, on
   const getEntityName = (permission: UserEntityPermission) => {
     switch (permission.entity_type) {
       case 'club':
-        return (permission.entity as any)?.name || 'Unknown Club'
+        return (permission.entity as Club)?.name || 'Unknown Club'
       case 'zone':
-        return (permission.entity as any)?.name || 'Unknown Zone'
+        return (permission.entity as Zone)?.name || 'Unknown Zone'
       case 'district':
-        return (permission.entity as any)?.name || 'Unknown District'
+        return (permission.entity as District)?.name || 'Unknown District'
     }
   }
 
   const getEntityDescription = (permission: UserEntityPermission) => {
     switch (permission.entity_type) {
       case 'club':
-        const club = permission.entity as any
+        const club = permission.entity as Club
         return `${club?.zone?.name || 'Unknown Zone'} • ${club?.district?.name || 'Unknown District'}`
       case 'zone':
-        const zone = permission.entity as any
+        const zone = permission.entity as Zone
         return `${zone?.district?.name || 'Unknown District'}`
       case 'district':
-        const district = permission.entity as any
+        const district = permission.entity as District
         return `${district?.province || 'Unknown Province'}`
     }
   }
@@ -172,7 +172,7 @@ export default function EntitySelector({ userEmail, userRole, selectedEntity, on
                           zone
                         </span>
                       </div>
-                      <p className="text-sm text-gray-600 mt-1">Zone {zone.zone_letter} • {(zone as any).district?.name || 'Unknown District'}</p>
+                      <p className="text-sm text-gray-600 mt-1">Zone {zone.zone_letter} • {zone.district?.name || 'Unknown District'}</p>
                     </div>
                     {isSelected && (
                       <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
@@ -207,7 +207,7 @@ export default function EntitySelector({ userEmail, userRole, selectedEntity, on
                           club
                         </span>
                       </div>
-                      <p className="text-sm text-gray-600 mt-1">{(club as any).zone?.name || 'Unknown Zone'} • {(club as any).district?.name || 'Unknown District'}</p>
+                      <p className="text-sm text-gray-600 mt-1">{club.zone?.name || 'Unknown Zone'} • {club.district?.name || 'Unknown District'}</p>
                     </div>
                     {isSelected && (
                       <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">

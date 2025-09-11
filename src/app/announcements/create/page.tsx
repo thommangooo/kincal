@@ -76,8 +76,8 @@ export default function CreateAnnouncementPage() {
       let club_id = null
       let zone_id = null
       let district_id = null
-      let entity_type = selectedEntity.type
-      let entity_id = selectedEntity.id
+      const entity_type = selectedEntity.type
+      const entity_id = selectedEntity.id
 
       switch (selectedEntity.type) {
         case 'club':

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { eventFormSchema, EventFormData } from '@/lib/validations'
-import { getEvent, createEvent, updateEvent, getDistricts, getZones, getClubs, getUserRole, District, Zone, Club } from '@/lib/database'
+import { getEvent, createEvent, updateEvent, getDistricts, getZones, getClubs, getUserRole, District, Zone, Club, Event } from '@/lib/database'
 import { useAuth } from '@/contexts/AuthContext'
 import EntitySelector from '@/components/EntitySelector'
 import ImageUpload from '@/components/ImageUpload'
@@ -20,7 +20,7 @@ interface EventFormProps {
 export default function EventForm({ mode, eventId }: EventFormProps) {
   const [loading, setLoading] = useState(mode === 'edit')
   const [submitting, setSubmitting] = useState(false)
-  const [event, setEvent] = useState<any>(null)
+  const [event, setEvent] = useState<Event | null>(null)
   const [districts, setDistricts] = useState<District[]>([])
   const [zones, setZones] = useState<Zone[]>([])
   const [clubs, setClubs] = useState<Club[]>([])
@@ -222,7 +222,7 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Event Not Found</h1>
-          <p className="text-gray-600">The event you're looking for doesn't exist.</p>
+          <p className="text-gray-600">The event you&apos;re looking for doesn&apos;t exist.</p>
         </div>
       </div>
     )

@@ -24,7 +24,7 @@ export default function UserPermissionsPage() {
   const router = useRouter()
   const userId = params.userId as string
   
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<{ email: string; role: string } | null>(null)
   const [permissions, setPermissions] = useState<EntityPermission[]>([])
   const [availableEntities, setAvailableEntities] = useState<AvailableEntity[]>([])
   const [loading, setLoading] = useState(true)
