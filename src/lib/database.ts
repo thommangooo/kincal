@@ -65,7 +65,7 @@ export async function getEventById(id: string) {
 // Alias for convenience
 export const getEvent = getEventById
 
-export async function createEvent(event: Omit<Event, 'id' | 'created_at' | 'updated_at'>) {
+export async function createEvent(event: Omit<DbEvent, 'id' | 'created_at' | 'updated_at'>) {
   console.log('Creating event with data:', event)
   
   // Validate required fields
@@ -113,7 +113,7 @@ export async function createEvent(event: Omit<Event, 'id' | 'created_at' | 'upda
   return data as Event
 }
 
-export async function updateEvent(id: string, updates: Partial<Event>) {
+export async function updateEvent(id: string, updates: Partial<DbEvent>) {
   const { data, error } = await supabase
     .from('events')
     .update({ ...updates, updated_at: new Date().toISOString() })
