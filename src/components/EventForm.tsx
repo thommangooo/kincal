@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { eventFormSchema, EventFormData } from '@/lib/validations'
 import { getEvent, createEvent, updateEvent, getDistricts, getZones, getClubs, getUserRole, District, Zone, Club, Event } from '@/lib/database'
+import { toNull, fromForm } from '@/lib/nullish'
 import { useAuth } from '@/contexts/AuthContext'
 import EntitySelector from '@/components/EntitySelector'
 import ImageUpload from '@/components/ImageUpload'
@@ -188,8 +189,8 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
         entity_type: selectedEntity.type,
         entity_id: selectedEntity.id,
         visibility: 'public' as const,
-        tags: data.tags || [],
-        event_url: data.event_url || null,
+        tags: data.tags || null,
+        event_url: toNull(data.event_url),
         image_url: imageUrl,
         created_by_email: user?.email || 'demo@example.com'
       }

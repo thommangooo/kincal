@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react'
 
 interface ImageUploadProps {
-  value?: string | null
+  value?: string | null | undefined
   onChange: (url: string | null) => void
   className?: string
 }

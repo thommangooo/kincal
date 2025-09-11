@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { announcementFormSchema, AnnouncementFormData } from '@/lib/validations'
 import { createAnnouncement } from '@/lib/database'
 import { getZones, getClubs, getUserRole, Zone, Club } from '@/lib/database'
+import { toNull } from '@/lib/nullish'
 import { useAuth } from '@/contexts/AuthContext'
 import Header from '@/components/Header'
 import RichTextEditor from '@/components/RichTextEditor'
@@ -112,7 +113,7 @@ export default function CreateAnnouncementPage() {
         entity_type,
         entity_id,
         visibility: 'public' as const,
-        tags: data.tags || [],
+        tags: data.tags || null,
         priority: data.priority,
         image_url: imageUrl,
         created_by_email: user?.email || 'demo@example.com'

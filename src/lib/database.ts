@@ -1,7 +1,7 @@
-import { supabase, Event, Announcement, Club, Zone, District, UserEntityPermission } from './supabase'
+import { supabase, DbEvent, Announcement, Club, Zone, District, UserEntityPermission } from './supabase'
 
 // Re-export types for use in other files
-export type { Event, Announcement, Club, Zone, District, UserEntityPermission }
+export type { DbEvent as Event, Announcement, Club, Zone, District, UserEntityPermission }
 
 // Event operations
 export async function getEvents(filters?: {
@@ -43,7 +43,7 @@ export async function getEvents(filters?: {
 
   const { data, error } = await query
   if (error) throw error
-  return data as Event[]
+  return data as DbEvent[]
 }
 
 export async function getEventById(id: string) {

@@ -38,24 +38,24 @@ export interface Club {
   district?: District
 }
 
-export interface Event {
+export interface DbEvent {
   id: string
   title: string
-  description?: string
+  description: string | null
   start_date: string
   end_date: string
-  start_time?: string
-  end_time?: string
-  location?: string
+  start_time: string | null
+  end_time: string | null
+  location: string | null
   club_id: string | null
   zone_id: string | null
   district_id: string | null
   entity_type: 'club' | 'zone' | 'district'
   entity_id: string
   visibility: 'public' | 'private'
-  tags?: string[]
-  event_url?: string | null
-  image_url?: string | null
+  tags: string[] | null
+  event_url: string | null
+  image_url: string | null
   created_by_email: string
   created_at: string
   updated_at: string
@@ -69,16 +69,16 @@ export interface Announcement {
   title: string
   content: string // HTML content
   publish_date: string
-  expiry_date?: string | null
+  expiry_date: string | null
   club_id: string | null
   zone_id: string | null
   district_id: string | null
   entity_type: 'club' | 'zone' | 'district'
   entity_id: string
   visibility: 'public' | 'private'
-  tags?: string[]
+  tags: string[] | null
   priority: number
-  image_url?: string | null
+  image_url: string | null
   created_by_email: string
   created_at: string
   updated_at: string
