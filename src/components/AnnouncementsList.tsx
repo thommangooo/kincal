@@ -57,7 +57,7 @@ export default function AnnouncementsList({ filters }: AnnouncementsListProps) {
           ...(filters?.zoneId && { zoneId: filters.zoneId }),
           ...(filters?.clubId && { clubId: filters.clubId }),
           ...(filters?.visibility && filters.visibility !== 'all' && { 
-            visibility: filters.visibility === 'internal-use' ? 'private' : filters.visibility 
+            visibility: (filters.visibility === 'internal-use' ? 'private' : filters.visibility) as 'public' | 'private' | 'internal-use'
           })
         }
         
