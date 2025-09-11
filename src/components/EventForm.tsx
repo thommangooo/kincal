@@ -183,6 +183,8 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
         description: data.description || null,
         start_date: startDateTime.toISOString(),
         end_date: endDateTime.toISOString(),
+        start_time: data.start_time || null,
+        end_time: data.end_time || null,
         location: data.location || null,
         club_id: clubId,
         zone_id: zoneId,
