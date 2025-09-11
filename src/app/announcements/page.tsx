@@ -2,12 +2,12 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import CalendarView from '@/components/CalendarView'
-import EventFilters from '@/components/EventFilters'
 import Header from '@/components/Header'
+import EventFilters from '@/components/EventFilters'
+import AnnouncementsList from '@/components/AnnouncementsList'
 import { Plus } from 'lucide-react'
 
-export default function Home() {
+export default function AnnouncementsPage() {
   const [filters, setFilters] = useState({
     search: '',
     districtId: '',
@@ -25,7 +25,7 @@ export default function Home() {
             <EventFilters onFiltersChange={setFilters} />
           </div>
           <div className="lg:col-span-3">
-            <CalendarView filters={filters} />
+            <AnnouncementsList filters={filters} />
           </div>
         </div>
       </main>

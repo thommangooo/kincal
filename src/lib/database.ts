@@ -244,7 +244,7 @@ export async function getAnnouncements(filters?: {
   clubId?: string
   zoneId?: string
   districtId?: string
-  visibility?: 'public' | 'private'
+  visibility?: 'public' | 'private' | 'internal-use'
   limit?: number
   includeExpired?: boolean
 }) {
@@ -269,7 +269,9 @@ export async function getAnnouncements(filters?: {
     query = query.eq('district_id', filters.districtId)
   }
   if (filters?.visibility) {
-    query = query.eq('visibility', filters.visibility)
+    // Map 'internal-use' to 'private' for database compatibility
+    const dbVisibility = filters.visibility === 'internal-use' ? 'private' : filters.visibility
+    query = query.eq('visibility', dbVisibility)
   }
   if (filters?.limit) {
     query = query.limit(filters.limit)

@@ -24,6 +24,7 @@ interface RichTextEditorProps {
 
 export default function RichTextEditor({ content, onChange, placeholder }: RichTextEditorProps) {
   const editor = useEditor({
+    immediatelyRender: false,
     extensions: [
       StarterKit,
       Image.configure({
@@ -73,6 +74,7 @@ export default function RichTextEditor({ content, onChange, placeholder }: RichT
       <div className="border-b border-gray-200 p-2 bg-gray-50 flex flex-wrap gap-1">
         <button
           type="button"
+          tabIndex={-1}
           onClick={() => editor.chain().focus().toggleBold().run()}
           className={`p-2 rounded hover:bg-gray-200 ${
             editor.isActive('bold') ? 'bg-gray-200' : ''
@@ -84,6 +86,7 @@ export default function RichTextEditor({ content, onChange, placeholder }: RichT
         
         <button
           type="button"
+          tabIndex={-1}
           onClick={() => editor.chain().focus().toggleItalic().run()}
           className={`p-2 rounded hover:bg-gray-200 ${
             editor.isActive('italic') ? 'bg-gray-200' : ''
@@ -97,6 +100,7 @@ export default function RichTextEditor({ content, onChange, placeholder }: RichT
 
         <button
           type="button"
+          tabIndex={-1}
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           className={`p-2 rounded hover:bg-gray-200 ${
             editor.isActive('bulletList') ? 'bg-gray-200' : ''
@@ -108,6 +112,7 @@ export default function RichTextEditor({ content, onChange, placeholder }: RichT
         
         <button
           type="button"
+          tabIndex={-1}
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
           className={`p-2 rounded hover:bg-gray-200 ${
             editor.isActive('orderedList') ? 'bg-gray-200' : ''
@@ -119,6 +124,7 @@ export default function RichTextEditor({ content, onChange, placeholder }: RichT
 
         <button
           type="button"
+          tabIndex={-1}
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
           className={`p-2 rounded hover:bg-gray-200 ${
             editor.isActive('blockquote') ? 'bg-gray-200' : ''
@@ -132,6 +138,7 @@ export default function RichTextEditor({ content, onChange, placeholder }: RichT
 
         <button
           type="button"
+          tabIndex={-1}
           onClick={addLink}
           className={`p-2 rounded hover:bg-gray-200 ${
             editor.isActive('link') ? 'bg-gray-200' : ''
@@ -143,6 +150,7 @@ export default function RichTextEditor({ content, onChange, placeholder }: RichT
         
         <button
           type="button"
+          tabIndex={-1}
           onClick={addImage}
           className="p-2 rounded hover:bg-gray-200"
           title="Add Image"
@@ -154,6 +162,7 @@ export default function RichTextEditor({ content, onChange, placeholder }: RichT
 
         <button
           type="button"
+          tabIndex={-1}
           onClick={() => editor.chain().focus().undo().run()}
           disabled={!editor.can().undo()}
           className="p-2 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -164,6 +173,7 @@ export default function RichTextEditor({ content, onChange, placeholder }: RichT
         
         <button
           type="button"
+          tabIndex={-1}
           onClick={() => editor.chain().focus().redo().run()}
           disabled={!editor.can().redo()}
           className="p-2 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"

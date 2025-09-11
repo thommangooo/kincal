@@ -12,6 +12,7 @@ import Header from '@/components/Header'
 import RichTextEditor from '@/components/RichTextEditor'
 import ImageUpload from '@/components/ImageUpload'
 import EntitySelector from '@/components/EntitySelector'
+import Toast from '@/components/Toast'
 import { ArrowLeft, Users, Star } from 'lucide-react'
 
 export default function CreateAnnouncementPage() {
@@ -24,20 +25,35 @@ export default function CreateAnnouncementPage() {
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [selectedEntity, setSelectedEntity] = useState<{type: 'club' | 'zone' | 'district', id: string} | null>(null)
   const [userRole, setUserRole] = useState<'superuser' | 'editor' | null>(null)
+  const [toastMessage, setToastMessage] = useState('')
+  const [showToast, setShowToast] = useState(false)
 
   const {
     register,
     handleSubmit,
     watch,
-    formState: { errors }
+    setValue,
+    formState: { errors, isValid }
   } = useForm<AnnouncementFormData>({
     resolver: zodResolver(announcementFormSchema),
     defaultValues: {
       visibility: 'public',
       priority: 0,
-      tags: []
+      tags: [],
+      publish_date: new Date().toISOString().split('T')[0] // Today's date in YYYY-MM-DD format
     }
   })
+
+  // Handle content changes and sync with form
+  const handleContentChange = (newContent: string) => {
+    setContent(newContent)
+    setValue('content', newContent, { shouldValidate: true })
+  }
+
+  // Debug form state
+  console.log('Form errors:', errors)
+  console.log('Form is valid:', isValid)
+  console.log('Content length:', content?.length || 0)
 
   // Load initial data
   useEffect(() => {
@@ -61,8 +77,17 @@ export default function CreateAnnouncementPage() {
   }, [user])
 
   const onSubmit = async (data: AnnouncementFormData) => {
+    console.log('Form submitted with data:', data)
+    console.log('Selected entity:', selectedEntity)
+    console.log('Content:', content)
+    
     if (!selectedEntity) {
       alert('Please select an entity to post on behalf of')
+      return
+    }
+
+    if (!content || content.trim() === '') {
+      alert('Please provide announcement content')
       return
     }
 
@@ -111,17 +136,28 @@ export default function CreateAnnouncementPage() {
         district_id,
         entity_type,
         entity_id,
-        visibility: 'public' as const,
+        visibility: data.visibility === 'internal-use' ? 'private' : 'public',
         tags: data.tags || null,
         priority: data.priority,
         image_url: imageUrl,
         created_by_email: user?.email || 'demo@example.com'
       }
 
-      await createAnnouncement(announcementData)
-      router.push('/')
+      console.log('Creating announcement with data:', announcementData)
+      const result = await createAnnouncement(announcementData)
+      console.log('Announcement created successfully:', result)
+      
+      // Show success message
+      setToastMessage('Announcement created successfully!')
+      setShowToast(true)
+      
+      // Redirect after a short delay
+      setTimeout(() => {
+        router.push('/announcements')
+      }, 1500)
     } catch (error) {
       console.error('Error creating announcement:', error)
+      alert('Failed to create announcement. Please check the console for details.')
     } finally {
       setLoading(false)
     }
@@ -172,7 +208,7 @@ export default function CreateAnnouncementPage() {
                     </label>
                     <RichTextEditor
                       content={content}
-                      onChange={setContent}
+                      onChange={handleContentChange}
                       placeholder="Write your announcement content here..."
                     />
                     {!content && (
@@ -203,7 +239,7 @@ export default function CreateAnnouncementPage() {
                     </label>
                     <input
                       {...register('publish_date')}
-                      type="datetime-local"
+                      type="date"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                     {errors.publish_date && (
@@ -217,31 +253,39 @@ export default function CreateAnnouncementPage() {
                     </label>
                     <input
                       {...register('expiry_date')}
-                      type="datetime-local"
+                      type="date"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
                 </div>
 
+
                 <div className="mt-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Priority Level
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    Visibility
                   </label>
-                  <div className="flex items-center space-x-4">
-                    <input
-                      {...register('priority', { valueAsNumber: true })}
-                      type="range"
-                      min="0"
-                      max="10"
-                      className="flex-1"
-                    />
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Star className="h-4 w-4 mr-1" />
-                      <span>{watch('priority') || 0}/10</span>
-                    </div>
+                  <div className="space-y-3">
+                    <label className="flex items-center">
+                      <input
+                        {...register('visibility')}
+                        type="radio"
+                        value="public"
+                        className="h-4 w-4 text-kin-red focus:ring-kin-red border-gray-300"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">Public</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        {...register('visibility')}
+                        type="radio"
+                        value="internal-use"
+                        className="h-4 w-4 text-kin-red focus:ring-kin-red border-gray-300"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">Internal Use</span>
+                    </label>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Higher priority announcements appear first in lists
+                  <p className="text-xs text-gray-500 mt-2">
+                    Public announcements are suitable for external sharing. Internal use announcements are for Kin members only.
                   </p>
                 </div>
               </div>
@@ -278,7 +322,7 @@ export default function CreateAnnouncementPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={loading || !content}
+                  disabled={loading || !isValid || !selectedEntity}
                   className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {loading ? 'Creating...' : 'Create Announcement'}
@@ -288,6 +332,13 @@ export default function CreateAnnouncementPage() {
           </form>
         </div>
       </main>
+      
+      {/* Toast Notification */}
+      <Toast
+        message={toastMessage}
+        isVisible={showToast}
+        onClose={() => setShowToast(false)}
+      />
     </div>
   )
 }

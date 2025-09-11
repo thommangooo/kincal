@@ -28,6 +28,12 @@ export default function Header() {
                 Calendar
               </Link>
               <Link 
+                href="/announcements" 
+                className="text-gray-600 hover:text-kin-red transition-colors font-medium"
+              >
+                Announcements
+              </Link>
+              <Link 
                 href="/embed" 
                 className="text-gray-600 hover:text-kin-red transition-colors font-medium"
               >
@@ -39,32 +45,7 @@ export default function Header() {
           <div className="flex items-center space-x-4">
             {user ? (
               <>
-                <div className="hidden md:flex items-center space-x-2">
-                  <Link
-                    href="/events/create"
-                    className="inline-flex items-center px-4 py-2 bg-kin-red text-white rounded-lg hover:bg-kin-red-dark transition-colors text-sm font-medium shadow-sm hover:shadow-md"
-                  >
-                    <Plus className="h-4 w-4 mr-1" />
-                    Event
-                  </Link>
-                  <Link
-                    href="/announcements/create"
-                    className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium border border-gray-200"
-                  >
-                    <Plus className="h-4 w-4 mr-1" />
-                    Announcement
-                  </Link>
-                </div>
                 
-                <div className="md:hidden">
-                  <Link
-                    href="/events/create"
-                    className="inline-flex items-center px-4 py-2 bg-kin-red text-white rounded-lg hover:bg-kin-red-dark transition-colors font-medium"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create
-                  </Link>
-                </div>
                 
                 <div className="flex items-center space-x-2">
                   <span className="text-sm text-gray-600 hidden md:block">

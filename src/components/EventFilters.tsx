@@ -10,8 +10,7 @@ interface EventFiltersProps {
     districtId: string
     zoneId: string
     clubId: string
-    visibility: 'all' | 'public' | 'private'
-    contentType: 'all' | 'events' | 'announcements'
+    visibility: 'all' | 'public' | 'internal-use'
   }) => void
 }
 
@@ -20,8 +19,7 @@ export default function EventFilters({ onFiltersChange }: EventFiltersProps) {
   const [districtId, setDistrictId] = useState('')
   const [zoneId, setZoneId] = useState('')
   const [clubId, setClubId] = useState('')
-  const [visibility, setVisibility] = useState<'all' | 'public' | 'private'>('all')
-  const [contentType, setContentType] = useState<'all' | 'events' | 'announcements'>('all')
+  const [visibility, setVisibility] = useState<'all' | 'public' | 'internal-use'>('all')
   
   const [districts, setDistricts] = useState<District[]>([])
   const [zones, setZones] = useState<Zone[]>([])
@@ -77,10 +75,9 @@ export default function EventFilters({ onFiltersChange }: EventFiltersProps) {
       districtId,
       zoneId,
       clubId,
-      visibility,
-      contentType
+      visibility
     })
-  }, [search, districtId, zoneId, clubId, visibility, contentType, onFiltersChange])
+  }, [search, districtId, zoneId, clubId, visibility, onFiltersChange])
 
   const clearFilters = () => {
     setSearch('')
@@ -88,7 +85,6 @@ export default function EventFilters({ onFiltersChange }: EventFiltersProps) {
     setZoneId('')
     setClubId('')
     setVisibility('all')
-    setContentType('all')
   }
 
   return (
@@ -107,22 +103,6 @@ export default function EventFilters({ onFiltersChange }: EventFiltersProps) {
       </div>
 
       <div className="space-y-4">
-        {/* Content Type Filter */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Content Type
-          </label>
-          <select
-            value={contentType}
-            onChange={(e) => setContentType(e.target.value as 'all' | 'events' | 'announcements')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-kin-red focus:border-transparent transition-colors"
-          >
-            <option value="all">All Content</option>
-            <option value="events">Events Only</option>
-            <option value="announcements">Announcements Only</option>
-          </select>
-        </div>
-
         {/* Search */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -209,12 +189,12 @@ export default function EventFilters({ onFiltersChange }: EventFiltersProps) {
           </label>
           <select
             value={visibility}
-            onChange={(e) => setVisibility(e.target.value as 'all' | 'public' | 'private')}
+            onChange={(e) => setVisibility(e.target.value as 'all' | 'public' | 'internal-use')}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-kin-red focus:border-transparent transition-colors"
           >
-            <option value="all">All Events</option>
+            <option value="all">All Content</option>
             <option value="public">Public Only</option>
-            <option value="private">Private Only</option>
+            <option value="internal-use">Internal Use Only</option>
           </select>
         </div>
       </div>

@@ -1,9 +1,11 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { Calendar, List, ChevronLeft, ChevronRight } from 'lucide-react'
+import Link from 'next/link'
+import { Calendar, List, ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import { getEvents, Event } from '@/lib/database'
 import { formatTime } from '@/lib/utils'
+import { useAuth } from '@/contexts/AuthContext'
 import EventCard from './EventCard'
 import EventModal from './EventModal'
 
@@ -47,6 +49,7 @@ interface CalendarViewProps {
 }
 
 export default function CalendarView({ filters }: CalendarViewProps) {
+  const { user } = useAuth()
   const [viewMode, setViewMode] = useState<ViewMode>('calendar')
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
@@ -167,29 +170,41 @@ export default function CalendarView({ filters }: CalendarViewProps) {
             </div>
           </div>
           
-          <div className="flex items-center space-x-2 bg-white rounded-lg p-1 shadow-sm">
-            <button
-              onClick={() => setViewMode('calendar')}
-              className={`p-2 rounded-md transition-all duration-200 ${
-                viewMode === 'calendar' 
-                  ? 'bg-blue-600 text-white shadow-sm' 
-                  : 'text-gray-600 hover:bg-gray-100'
-              }`}
-              title="Calendar View"
-            >
-              <Calendar className="h-4 w-4 sm:h-5 sm:w-5" />
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`p-2 rounded-md transition-all duration-200 ${
-                viewMode === 'list' 
-                  ? 'bg-blue-600 text-white shadow-sm' 
-                  : 'text-gray-600 hover:bg-gray-100'
-              }`}
-              title="List View"
-            >
-              <List className="h-4 w-4 sm:h-5 sm:w-5" />
-            </button>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 bg-white rounded-lg p-1 shadow-sm">
+              <button
+                onClick={() => setViewMode('calendar')}
+                className={`p-2 rounded-md transition-all duration-200 ${
+                  viewMode === 'calendar' 
+                    ? 'bg-blue-600 text-white shadow-sm' 
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+                title="Calendar View"
+              >
+                <Calendar className="h-4 w-4 sm:h-5 sm:w-5" />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-2 rounded-md transition-all duration-200 ${
+                  viewMode === 'list' 
+                    ? 'bg-blue-600 text-white shadow-sm' 
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+                title="List View"
+              >
+                <List className="h-4 w-4 sm:h-5 sm:w-5" />
+              </button>
+            </div>
+            
+            {user && (
+              <Link
+                href="/events/create"
+                className="inline-flex items-center px-4 py-2 bg-kin-red text-white rounded-lg hover:bg-kin-red-dark transition-colors text-sm font-medium shadow-sm hover:shadow-md"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Create Event
+              </Link>
+            )}
           </div>
         </div>
       </div>
