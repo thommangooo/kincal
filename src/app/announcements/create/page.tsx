@@ -29,9 +29,7 @@ export default function CreateAnnouncementPage() {
   const {
     register,
     handleSubmit,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     watch,
-    setValue,
     formState: { errors }
   } = useForm<AnnouncementFormData>({
     resolver: zodResolver(announcementFormSchema),

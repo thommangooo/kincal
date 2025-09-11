@@ -21,6 +21,7 @@ export interface Zone {
   zone_letter: string
   created_at: string
   updated_at: string
+  district?: District
 }
 
 export interface Club {
@@ -33,6 +34,8 @@ export interface Club {
   website?: string
   created_at: string
   updated_at: string
+  zone?: Zone
+  district?: District
 }
 
 export interface Event {
