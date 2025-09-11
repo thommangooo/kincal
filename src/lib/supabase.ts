@@ -65,9 +65,9 @@ export interface Announcement {
   content: string // HTML content
   publish_date: string
   expiry_date?: string
-  club_id: string
-  zone_id: string
-  district_id: string
+  club_id: string | null
+  zone_id: string | null
+  district_id: string | null
   entity_type: 'club' | 'zone' | 'district'
   entity_id: string
   visibility: 'public' | 'private'
