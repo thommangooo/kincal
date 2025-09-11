@@ -29,12 +29,6 @@ export default function UserPermissionsPage() {
   const [availableEntities, setAvailableEntities] = useState<AvailableEntity[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    if (userId) {
-      loadUserData()
-    }
-  }, [userId, loadUserData])
-
   const loadUserData = useCallback(async () => {
     try {
       // Load user info
@@ -93,6 +87,12 @@ export default function UserPermissionsPage() {
       setLoading(false)
     }
   }, [userId])
+
+  useEffect(() => {
+    if (userId) {
+      loadUserData()
+    }
+  }, [userId, loadUserData])
 
   const addPermission = async (entityId: string, entityType: 'club' | 'zone' | 'district') => {
     if (!user) return // Ensure user exists before proceeding
