@@ -431,12 +431,23 @@ function SelectedDatePanel({
                     {event.club && (
                       <p className="text-xs opacity-75 mt-1">{event.club.name}</p>
                     )}
-                    {event.start_time && (
-                      <p className="text-xs opacity-75 mt-1">
-                        {formatTime(event.start_time)}
-                        {event.end_time && ` - ${formatTime(event.end_time)}`}
-                      </p>
-                    )}
+                    {(() => {
+                      const startDate = new Date(event.start_date)
+                      const endDate = new Date(event.end_date)
+                      const startTime = startDate.toTimeString().slice(0, 5)
+                      const endTime = endDate.toTimeString().slice(0, 5)
+                      
+                      // Only show time if it's not a default all-day event
+                      if (startTime !== '00:00' || endTime !== '23:59') {
+                        return (
+                          <p className="text-xs opacity-75 mt-1">
+                            {formatTime(startTime)}
+                            {endTime !== '23:59' && ` - ${formatTime(endTime)}`}
+                          </p>
+                        )
+                      }
+                      return null
+                    })()}
                     {event.location && (
                       <p className="text-xs opacity-75 mt-1">📍 {event.location}</p>
                     )}
