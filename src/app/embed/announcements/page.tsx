@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { getAnnouncements, Announcement } from '@/lib/database'
-import { Megaphone } from 'lucide-react'
+import { Megaphone, ChevronDown, ChevronUp } from 'lucide-react'
 import Image from 'next/image'
 
 // Generate consistent colors for clubs
@@ -34,6 +34,7 @@ function AnnouncementsEmbedContent() {
   const searchParams = useSearchParams()
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const [loading, setLoading] = useState(true)
+  const [filtersCollapsed, setFiltersCollapsed] = useState(true)
 
   // Get URL parameters
   const clubId = searchParams.get('club')
@@ -94,13 +95,33 @@ function AnnouncementsEmbedContent() {
 
       {/* Filters */}
       {showFilters && (
-        <div className="bg-gray-50 border-b p-4">
-          <div className="flex flex-wrap gap-2 text-sm">
-            {clubId && <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded">Club Filter</span>}
-            {zoneId && <span className="px-2 py-1 bg-green-100 text-green-800 rounded">Zone Filter</span>}
-            {districtId && <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded">District Filter</span>}
-            {visibility && <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded">{visibility} announcements</span>}
-            {limit && <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded">Limit: {limit}</span>}
+        <div className="bg-gray-50 border-b">
+          <div className="flex items-center justify-between p-4">
+            <h3 className="text-sm font-medium text-gray-700">Active Filters</h3>
+            <button
+              onClick={() => setFiltersCollapsed(!filtersCollapsed)}
+              className="p-1 text-gray-500 hover:text-gray-700 transition-colors"
+              aria-label={filtersCollapsed ? 'Show filters' : 'Hide filters'}
+            >
+              {filtersCollapsed ? (
+                <ChevronDown className="h-4 w-4" />
+              ) : (
+                <ChevronUp className="h-4 w-4" />
+              )}
+            </button>
+          </div>
+          <div className={`transition-all duration-300 ease-in-out ${
+            filtersCollapsed ? 'max-h-0 overflow-hidden opacity-0' : 'max-h-screen opacity-100'
+          }`}>
+            <div className="px-4 pb-4">
+              <div className="flex flex-wrap gap-2 text-sm">
+                {clubId && <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded">Club Filter</span>}
+                {zoneId && <span className="px-2 py-1 bg-green-100 text-green-800 rounded">Zone Filter</span>}
+                {districtId && <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded">District Filter</span>}
+                {visibility && <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded">{visibility} announcements</span>}
+                {limit && <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded">Limit: {limit}</span>}
+              </div>
+            </div>
           </div>
         </div>
       )}

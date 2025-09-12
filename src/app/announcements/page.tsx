@@ -2,7 +2,6 @@
 
 import { useState, useCallback } from 'react'
 import AnnouncementsList from '@/components/AnnouncementsList'
-import EventFilters from '@/components/EventFilters'
 import Header from '@/components/Header'
 
 export default function AnnouncementsPage() {
@@ -32,14 +31,11 @@ export default function AnnouncementsPage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <Header />
       <main className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          <div className="lg:col-span-1">
-            <EventFilters onFiltersChange={handleFiltersChange} />
-          </div>
-          <div className="lg:col-span-3">
-            <AnnouncementsList filters={filters} />
-          </div>
-        </div>
+        <AnnouncementsList 
+          filters={filters}
+          showFilters={true}
+          onFiltersChange={handleFiltersChange}
+        />
       </main>
     </div>
   )

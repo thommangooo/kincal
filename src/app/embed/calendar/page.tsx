@@ -3,7 +3,6 @@
 import { Suspense, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import CalendarView from '@/components/CalendarView'
-import EventFilters from '@/components/EventFilters'
 import { Calendar } from 'lucide-react'
 
 function CalendarEmbedContent() {
@@ -51,18 +50,12 @@ function CalendarEmbedContent() {
 
       {/* Calendar Content */}
       <div className="p-4">
-        {showFilters ? (
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            <div className="lg:col-span-1">
-              <EventFilters onFiltersChange={handleFiltersChange} />
-            </div>
-            <div className="lg:col-span-3">
-              <CalendarView filters={filters} showCreateButton={false} />
-            </div>
-          </div>
-        ) : (
-          <CalendarView filters={filters} showCreateButton={false} />
-        )}
+        <CalendarView 
+          filters={filters} 
+          showCreateButton={false}
+          showFilters={showFilters}
+          onFiltersChange={handleFiltersChange}
+        />
       </div>
 
       {/* Footer */}

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Search, Filter, MapPin, Users, Building } from 'lucide-react'
+import { Search, Filter, MapPin, Users, Building, ChevronDown, ChevronUp } from 'lucide-react'
 import { getDistricts, getZones, getClubs, District, Zone, Club } from '@/lib/database'
 
 interface EventFiltersProps {
@@ -12,14 +12,17 @@ interface EventFiltersProps {
     clubId: string
     visibility: 'all' | 'public' | 'private'
   }) => void
+  collapsible?: boolean
+  defaultCollapsed?: boolean
 }
 
-export default function EventFilters({ onFiltersChange }: EventFiltersProps) {
+export default function EventFilters({ onFiltersChange, collapsible = false, defaultCollapsed = true }: EventFiltersProps) {
   const [search, setSearch] = useState('')
   const [districtId, setDistrictId] = useState('')
   const [zoneId, setZoneId] = useState('')
   const [clubId, setClubId] = useState('')
   const [visibility, setVisibility] = useState<'all' | 'public' | 'private'>('all')
+  const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed)
   
   const [districts, setDistricts] = useState<District[]>([])
   const [zones, setZones] = useState<Zone[]>([])
@@ -95,15 +98,32 @@ export default function EventFilters({ onFiltersChange }: EventFiltersProps) {
           <Filter className="h-5 w-5 mr-2 text-kin-red" />
           Filters
         </h2>
-        <button
-          onClick={clearFilters}
-          className="text-sm text-kin-red hover:text-kin-red-dark font-medium transition-colors"
-        >
-          Clear all
-        </button>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={clearFilters}
+            className="text-sm text-kin-red hover:text-kin-red-dark font-medium transition-colors"
+          >
+            Clear all
+          </button>
+          {collapsible && (
+            <button
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className="p-1 text-gray-500 hover:text-gray-700 transition-colors"
+              aria-label={isCollapsed ? 'Expand filters' : 'Collapse filters'}
+            >
+              {isCollapsed ? (
+                <ChevronDown className="h-5 w-5" />
+              ) : (
+                <ChevronUp className="h-5 w-5" />
+              )}
+            </button>
+          )}
+        </div>
       </div>
 
-      <div className="space-y-4">
+      <div className={`space-y-4 transition-all duration-300 ease-in-out ${
+        collapsible && isCollapsed ? 'max-h-0 overflow-hidden opacity-0' : 'max-h-screen opacity-100'
+      }`}>
 
         {/* Search */}
         <div>
