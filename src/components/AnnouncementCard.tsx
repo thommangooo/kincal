@@ -1,9 +1,14 @@
 'use client'
 
 import Image from 'next/image'
-import { Announcement } from '@/lib/database'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { Announcement, deleteAnnouncement } from '@/lib/database'
 import { formatDate } from '@/lib/utils'
-import { Users, Globe, Lock, Star, Calendar, Clock } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
+import { Users, Globe, Lock, Star, Calendar, Clock, Edit, Trash2 } from 'lucide-react'
+import { useState } from 'react'
+import Toast from './Toast'
 
 interface AnnouncementCardProps {
   announcement: Announcement
@@ -11,8 +16,35 @@ interface AnnouncementCardProps {
 }
 
 export default function AnnouncementCard({ announcement, showClub = true }: AnnouncementCardProps) {
+  const { user } = useAuth()
+  const router = useRouter()
+  const [toastMessage, setToastMessage] = useState('')
+  const [showToast, setShowToast] = useState(false)
   const isExpired = announcement.expiry_date && new Date(announcement.expiry_date) < new Date()
   const isHighPriority = announcement.priority >= 7
+  const canEdit = user?.email === announcement.created_by_email
+
+  const showToastMessage = (message: string) => {
+    setToastMessage(message)
+    setShowToast(true)
+    setTimeout(() => setShowToast(false), 3000)
+  }
+
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this announcement? This action cannot be undone.')) {
+      return
+    }
+
+    try {
+      await deleteAnnouncement(announcement.id)
+      showToastMessage('Announcement deleted successfully!')
+      // Refresh the page to update the list
+      router.refresh()
+    } catch (error) {
+      console.error('Error deleting announcement:', error)
+      showToastMessage('Error deleting announcement')
+    }
+  }
 
   return (
     <div className={`border rounded-lg p-6 hover:shadow-md transition-shadow ${
@@ -40,6 +72,26 @@ export default function AnnouncementCard({ announcement, showClub = true }: Anno
             )}
           </div>
         </div>
+        
+        {/* Edit/Delete Actions */}
+        {canEdit && (
+          <div className="flex items-center space-x-2 ml-4">
+            <Link
+              href={`/announcements/edit/${announcement.id}`}
+              className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
+              title="Edit announcement"
+            >
+              <Edit className="h-4 w-4" />
+            </Link>
+            <button
+              onClick={handleDelete}
+              className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+              title="Delete announcement"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Image */}
@@ -110,6 +162,8 @@ export default function AnnouncementCard({ announcement, showClub = true }: Anno
           ))}
         </div>
       )}
+      
+      <Toast message={toastMessage} isVisible={showToast} />
     </div>
   )
 }

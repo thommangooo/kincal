@@ -57,11 +57,11 @@ function CalendarEmbedContent() {
               <EventFilters onFiltersChange={handleFiltersChange} />
             </div>
             <div className="lg:col-span-3">
-              <CalendarView filters={filters} />
+              <CalendarView filters={filters} showCreateButton={false} />
             </div>
           </div>
         ) : (
-          <CalendarView filters={filters} />
+          <CalendarView filters={filters} showCreateButton={false} />
         )}
       </div>
 
