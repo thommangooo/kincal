@@ -12,7 +12,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import EntitySelector from '@/components/EntitySelector'
 import ImageUpload from '@/components/ImageUpload'
 import Toast from '@/components/Toast'
-import { Calendar } from 'lucide-react'
+import { Calendar, Users } from 'lucide-react'
 
 interface EventFormProps {
   mode: 'create' | 'edit'
@@ -151,7 +151,7 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
 
   const onSubmit = async (data: EventFormData) => {
     if (!selectedEntity) {
-      showToastMessage('Please select an entity to post on behalf of')
+      showToastMessage('Please select an organization to post on behalf of')
       return
     }
 
@@ -295,16 +295,6 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
                 </div>
               </div>
 
-              {/* Entity Selection */}
-              <div className="mb-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Posting Entity</h2>
-                <EntitySelector
-                  userEmail={user?.email || ''}
-                  userRole={userRole?.role || 'editor'}
-                  selectedEntity={selectedEntity}
-                  onEntitySelect={setSelectedEntity}
-                />
-              </div>
             </div>
 
             {/* Date and Time */}
@@ -420,6 +410,28 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
                       onChange={setImageUrl}
                     />
                   </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Organization */}
+            <div className="bg-white rounded-lg shadow-sm border p-6">
+              <div className="mb-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <Users className="h-5 w-5 mr-2" />
+                  Organization
+                </h2>
+                
+                <div className="space-y-4">
+                  <EntitySelector
+                    userEmail={user?.email || ''}
+                    userRole={userRole?.role || 'editor'}
+                    selectedEntity={selectedEntity}
+                    onEntitySelect={setSelectedEntity}
+                  />
+                  {!selectedEntity && (
+                    <p className="mt-1 text-sm text-red-600">Please select an organization to post on behalf of</p>
+                  )}
                 </div>
               </div>
             </div>
