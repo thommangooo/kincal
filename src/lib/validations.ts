@@ -9,7 +9,6 @@ export const eventFormSchema = z.object({
   end_time: z.string().optional(),
   location: z.string().optional(),
   visibility: z.enum(['public', 'private']).default('public'),
-  tags: z.array(z.string()).optional(),
   event_url: z.string().url('Must be a valid URL').optional().or(z.literal('')),
   image_url: z.string().url('Must be a valid URL').optional().or(z.literal(''))
 }).refine((data) => {

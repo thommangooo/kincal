@@ -51,8 +51,7 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
   } = useForm<EventFormData>({
     resolver: zodResolver(eventFormSchema),
     defaultValues: {
-      visibility: 'public',
-      tags: []
+      visibility: 'public'
     }
   })
 
@@ -94,7 +93,6 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
           setValue('description', eventData.description || '')
           setValue('location', eventData.location || '')
           setValue('event_url', eventData.event_url || '')
-          setValue('tags', eventData.tags || [])
           
           // Set dates
           const startDate = new Date(eventData.start_date)
@@ -188,8 +186,6 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
         description: data.description || null,
         start_date: startDateTime.toISOString(),
         end_date: endDateTime.toISOString(),
-        start_time: data.start_time || null,
-        end_time: data.end_time || null,
         location: data.location || null,
         club_id: clubId,
         zone_id: zoneId,
@@ -197,7 +193,7 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
         entity_type: selectedEntity.type,
         entity_id: selectedEntity.id,
         visibility: 'public' as const,
-        tags: data.tags || null,
+        tags: null,
         event_url: toNull(data.event_url),
         image_url: imageUrl,
         created_by_email: user?.email || 'demo@example.com'
@@ -366,6 +362,7 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
                     <p className="mt-1 text-xs text-gray-500">Leave blank for all-day events</p>
                   </div>
                 </div>
+
               </div>
             </div>
 
@@ -405,21 +402,6 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
                     )}
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Tags
-                    </label>
-                    <input
-                      {...register('tags')}
-                      type="text"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Enter tags separated by commas"
-                    />
-                    <p className="mt-1 text-xs text-gray-500">Separate multiple tags with commas</p>
-                    {errors.tags && (
-                      <p className="mt-1 text-sm text-red-600">{errors.tags.message}</p>
-                    )}
-                  </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
