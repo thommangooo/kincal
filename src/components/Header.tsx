@@ -39,6 +39,12 @@ export default function Header() {
               >
                 Widgets
               </Link>
+              <Link 
+                href="/about" 
+                className="text-gray-600 hover:text-kin-red transition-colors font-medium"
+              >
+                About
+              </Link>
             </nav>
           </div>
           
