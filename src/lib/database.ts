@@ -496,3 +496,109 @@ export async function getUserRole(userEmail: string): Promise<{
     district_id
   }
 }
+
+// Get clubs with their usage status (whether they have users with permissions)
+export async function getClubsWithUsageStatus(): Promise<(Club & { isActive: boolean })[]> {
+  try {
+    // Get all clubs with their zone and district info
+    const { data: clubs, error: clubsError } = await supabase
+      .from('clubs')
+      .select(`
+        *,
+        zone:zones(*, district:districts(*))
+      `)
+      .order('name')
+
+    if (clubsError) throw clubsError
+
+    // Get all club IDs that have users with permissions
+    const { data: activeClubIds, error: permissionsError } = await supabase
+      .from('user_entity_permissions')
+      .select('entity_id')
+      .eq('entity_type', 'club')
+
+    if (permissionsError) throw permissionsError
+
+    const activeClubIdSet = new Set(activeClubIds?.map(p => p.entity_id) || [])
+
+    // Add usage status to each club
+    return clubs?.map(club => ({
+      ...club,
+      isActive: activeClubIdSet.has(club.id)
+    })) || []
+
+  } catch (error) {
+    console.error('Error loading clubs with usage status:', error)
+    return []
+  }
+}
+
+// Get zones with their usage status and proper naming
+export async function getZonesWithUsageStatus(): Promise<(Zone & { isActive: boolean, displayName: string })[]> {
+  try {
+    // Get all zones with their district info
+    const { data: zones, error: zonesError } = await supabase
+      .from('zones')
+      .select(`
+        *,
+        district:districts(*)
+      `)
+      .order('name')
+
+    if (zonesError) throw zonesError
+
+    // Get all zone IDs that have users with permissions
+    const { data: activeZoneIds, error: permissionsError } = await supabase
+      .from('user_entity_permissions')
+      .select('entity_id')
+      .eq('entity_type', 'zone')
+
+    if (permissionsError) throw permissionsError
+
+    const activeZoneIdSet = new Set(activeZoneIds?.map(p => p.entity_id) || [])
+
+    // Add usage status and display name to each zone
+    return zones?.map(zone => ({
+      ...zone,
+      isActive: activeZoneIdSet.has(zone.id),
+      displayName: `${zone.name}, ${zone.district?.name || 'Unknown District'}`
+    })) || []
+
+  } catch (error) {
+    console.error('Error loading zones with usage status:', error)
+    return []
+  }
+}
+
+// Get districts with their usage status
+export async function getDistrictsWithUsageStatus(): Promise<(District & { isActive: boolean })[]> {
+  try {
+    // Get all districts
+    const { data: districts, error: districtsError } = await supabase
+      .from('districts')
+      .select('*')
+      .order('name')
+
+    if (districtsError) throw districtsError
+
+    // Get all district IDs that have users with permissions
+    const { data: activeDistrictIds, error: permissionsError } = await supabase
+      .from('user_entity_permissions')
+      .select('entity_id')
+      .eq('entity_type', 'district')
+
+    if (permissionsError) throw permissionsError
+
+    const activeDistrictIdSet = new Set(activeDistrictIds?.map(p => p.entity_id) || [])
+
+    // Add usage status to each district
+    return districts?.map(district => ({
+      ...district,
+      isActive: activeDistrictIdSet.has(district.id)
+    })) || []
+
+  } catch (error) {
+    console.error('Error loading districts with usage status:', error)
+    return []
+  }
+}

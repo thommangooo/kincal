@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
-import { Calendar, List, ChevronLeft, ChevronRight, Plus, ChevronDown, ChevronUp, Search, Filter, MapPin, Users, Building } from 'lucide-react'
-import { getEvents, Event, getDistricts, getZones, getClubs, District, Zone, Club } from '@/lib/database'
+import { Calendar, List, ChevronLeft, ChevronRight, Plus, ChevronDown, ChevronUp, Search, Filter } from 'lucide-react'
+import { getEvents, Event } from '@/lib/database'
 import { formatTime } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import EventCard from './EventCard'
 import EventModal from './EventModal'
+import ClubSearch from './ClubSearch'
 
 // Generate consistent colors for clubs
 const generateClubColor = (clubId: string): { bg: string; text: string; border: string } => {
@@ -69,70 +70,34 @@ export default function CalendarView({ filters, showCreateButton = true, showFil
   
   // Filter states
   const [search, setSearch] = useState(filters?.search || '')
-  const [districtId, setDistrictId] = useState(filters?.districtId || '')
-  const [zoneId, setZoneId] = useState(filters?.zoneId || '')
-  const [clubId, setClubId] = useState(filters?.clubId || '')
+  const [entityId, setEntityId] = useState(filters?.clubId || '')
+  const [entityType, setEntityType] = useState<'club' | 'zone' | 'district'>('club')
   const [visibility, setVisibility] = useState<'all' | 'public' | 'private'>(filters?.visibility || 'all')
   const [filtersCollapsed, setFiltersCollapsed] = useState(true)
-  
-  // Filter data
-  const [districts, setDistricts] = useState<District[]>([])
-  const [zones, setZones] = useState<Zone[]>([])
-  const [clubs, setClubs] = useState<Club[]>([])
-  const [filteredZones, setFilteredZones] = useState<Zone[]>([])
-  const [filteredClubs, setFilteredClubs] = useState<Club[]>([])
-
-  // Load filter data
-  useEffect(() => {
-    const loadFilterData = async () => {
-      try {
-        const [districtsData, zonesData, clubsData] = await Promise.all([
-          getDistricts(),
-          getZones(),
-          getClubs()
-        ])
-        setDistricts(districtsData)
-        setZones(zonesData)
-        setClubs(clubsData)
-      } catch (error) {
-        console.error('Error loading filter data:', error)
-      }
-    }
-    loadFilterData()
-  }, [])
-
-  // Filter zones when district changes
-  useEffect(() => {
-    if (districtId) {
-      const filtered = zones.filter(zone => zone.district_id === districtId)
-      setFilteredZones(filtered)
-      setZoneId('') // Reset zone selection
-    } else {
-      setFilteredZones(zones)
-    }
-  }, [districtId, zones])
-
-  // Filter clubs when zone changes
-  useEffect(() => {
-    if (zoneId) {
-      const filtered = clubs.filter(club => club.zone_id === zoneId)
-      setFilteredClubs(filtered)
-      setClubId('') // Reset club selection
-    } else {
-      setFilteredClubs(clubs)
-    }
-  }, [zoneId, clubs])
 
   // Load events
   useEffect(() => {
     const loadEvents = async () => {
       setLoading(true)
       try {
-        const eventFilters = {
-          ...(districtId && { districtId }),
-          ...(zoneId && { zoneId }),
-          ...(clubId && { clubId }),
+        const eventFilters: {
+          visibility?: 'public' | 'private'
+          clubId?: string
+          zoneId?: string
+          districtId?: string
+        } = {
           ...(visibility && visibility !== 'all' && { visibility })
+        }
+        
+        // Add entity-specific filter based on type
+        if (entityId) {
+          if (entityType === 'club') {
+            eventFilters.clubId = entityId
+          } else if (entityType === 'zone') {
+            eventFilters.zoneId = entityId
+          } else if (entityType === 'district') {
+            eventFilters.districtId = entityId
+          }
         }
         
         const eventsData = await getEvents(eventFilters)
@@ -144,18 +109,18 @@ export default function CalendarView({ filters, showCreateButton = true, showFil
       }
     }
     loadEvents()
-  }, [districtId, zoneId, clubId, visibility])
+  }, [entityId, entityType, visibility])
 
   // Notify parent of filter changes
   useEffect(() => {
     onFiltersChange?.({
       search,
-      districtId,
-      zoneId,
-      clubId,
+      districtId: entityType === 'district' ? entityId : '',
+      zoneId: entityType === 'zone' ? entityId : '',
+      clubId: entityType === 'club' ? entityId : '',
       visibility
     })
-  }, [search, districtId, zoneId, clubId, visibility, onFiltersChange])
+  }, [search, entityId, entityType, visibility, onFiltersChange])
 
   // Filter events by search term
   const filteredEvents = useMemo(() => {
@@ -213,9 +178,8 @@ export default function CalendarView({ filters, showCreateButton = true, showFil
 
   const clearFilters = () => {
     setSearch('')
-    setDistrictId('')
-    setZoneId('')
-    setClubId('')
+    setEntityId('')
+    setEntityType('club')
     setVisibility('all')
   }
 
@@ -223,17 +187,9 @@ export default function CalendarView({ filters, showCreateButton = true, showFil
   const getFilterStateText = () => {
     const activeFilters = []
     if (search) activeFilters.push(`"${search}"`)
-    if (districtId) {
-      const district = districts.find(d => d.id === districtId)
-      if (district) activeFilters.push(district.name)
-    }
-    if (zoneId) {
-      const zone = zones.find(z => z.id === zoneId)
-      if (zone) activeFilters.push(zone.name)
-    }
-    if (clubId) {
-      const club = clubs.find(c => c.id === clubId)
-      if (club) activeFilters.push(club.name)
+    if (entityId) {
+      // We'll get the entity name from the ClubSearch component's display
+      activeFilters.push(`${entityType} selected`)
     }
     if (visibility !== 'all') {
       activeFilters.push(visibility === 'public' ? 'Public' : 'Private')
@@ -353,9 +309,9 @@ export default function CalendarView({ filters, showCreateButton = true, showFil
             filtersCollapsed ? 'max-h-0 overflow-hidden opacity-0' : 'max-h-screen opacity-100'
           }`}>
             <div className="px-4 pb-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {/* Search */}
-                <div className="lg:col-span-2">
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Search content
                   </label>
@@ -371,72 +327,23 @@ export default function CalendarView({ filters, showCreateButton = true, showFil
                   </div>
                 </div>
 
-                {/* District Filter */}
+                {/* Entity Search */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <Building className="h-4 w-4 inline mr-1" />
-                    District
+                    Club, Zone, or District
                   </label>
-                  <select
-                    value={districtId}
-                    onChange={(e) => setDistrictId(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-kin-red focus:border-transparent transition-colors text-sm"
-                  >
-                    <option value="">All Districts</option>
-                    {districts.map((district) => (
-                      <option key={district.id} value={district.id}>
-                        {district.name}
-                      </option>
-                    ))}
-                  </select>
+                  <ClubSearch
+                    value={entityId}
+                    onChange={(id, type) => {
+                      setEntityId(id)
+                      setEntityType(type)
+                    }}
+                    placeholder="Search for a club, zone, or district..."
+                  />
                 </div>
 
-                {/* Zone Filter */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <MapPin className="h-4 w-4 inline mr-1" />
-                    Zone
-                  </label>
-                  <select
-                    value={zoneId}
-                    onChange={(e) => setZoneId(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-kin-red focus:border-transparent transition-colors text-sm"
-                    disabled={!districtId}
-                  >
-                    <option value="">All Zones</option>
-                    {filteredZones.map((zone) => (
-                      <option key={zone.id} value={zone.id}>
-                        {zone.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Club Filter */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <Users className="h-4 w-4 inline mr-1" />
-                    Club
-                  </label>
-                  <select
-                    value={clubId}
-                    onChange={(e) => setClubId(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-kin-red focus:border-transparent transition-colors text-sm"
-                    disabled={!zoneId}
-                  >
-                    <option value="">All Clubs</option>
-                    {filteredClubs.map((club) => (
-                      <option key={club.id} value={club.id}>
-                        {club.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              
-              <div className="mt-4">
                 {/* Visibility Filter */}
-                <div className="max-w-xs">
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Visibility
                   </label>
