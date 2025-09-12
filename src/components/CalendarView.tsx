@@ -44,10 +44,9 @@ interface CalendarViewProps {
     clubId: string
     visibility: 'all' | 'public' | 'private'
   }
-  showFilters?: boolean
 }
 
-export default function CalendarView({ filters, showFilters = true }: CalendarViewProps) {
+export default function CalendarView({ filters }: CalendarViewProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('calendar')
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)

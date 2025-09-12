@@ -16,8 +16,8 @@ function CalendarEmbedContent() {
   const visibility = searchParams.get('visibility') as 'public' | 'private' | 'internal-use' | null
   const showFilters = searchParams.get('showFilters') !== 'false' // Default to true unless explicitly false
 
-  // Convert visibility parameter to match CalendarView expectations
-  const visibilityFilter = visibility === 'private' ? 'internal-use' : visibility || 'all'
+  // Convert visibility parameter to match component expectations
+  const visibilityFilter = visibility === 'internal-use' ? 'private' : visibility || 'all'
 
   // State for filters (can be modified by user if showFilters is true)
   const [filters, setFilters] = useState({
@@ -25,8 +25,19 @@ function CalendarEmbedContent() {
     districtId: districtId || '',
     zoneId: zoneId || '',
     clubId: clubId || '',
-    visibility: visibilityFilter as 'all' | 'public' | 'internal-use'
+    visibility: visibilityFilter as 'all' | 'public' | 'private'
   })
+
+  // Wrapper function to handle type conversion between EventFilters and CalendarView
+  const handleFiltersChange = (newFilters: {
+    search: string
+    districtId: string
+    zoneId: string
+    clubId: string
+    visibility: 'all' | 'public' | 'private'
+  }) => {
+    setFilters(newFilters)
+  }
 
   return (
     <div className="min-h-screen bg-white">
@@ -43,7 +54,7 @@ function CalendarEmbedContent() {
         {showFilters ? (
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             <div className="lg:col-span-1">
-              <EventFilters onFiltersChange={setFilters} />
+              <EventFilters onFiltersChange={handleFiltersChange} />
             </div>
             <div className="lg:col-span-3">
               <CalendarView filters={filters} />

@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { getAnnouncements, Announcement } from '@/lib/database'
-import { Megaphone, Filter } from 'lucide-react'
+import { Megaphone } from 'lucide-react'
 import Image from 'next/image'
 
 // Generate consistent colors for clubs

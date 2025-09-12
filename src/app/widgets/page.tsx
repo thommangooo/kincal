@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { getZones, getClubs, getUserRole } from '@/lib/database'
 import Header from '@/components/Header'
-import { Monitor, Calendar, Megaphone, Code, Copy, Check, Users, Building, ExternalLink } from 'lucide-react'
+import { Monitor, Calendar, Megaphone, Code, Copy, Check, Users, Building } from 'lucide-react'
 
 interface UserEntity {
   type: 'club' | 'zone' | 'district'
