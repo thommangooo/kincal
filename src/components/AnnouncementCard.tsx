@@ -27,7 +27,6 @@ export default function AnnouncementCard({ announcement, showClub = true }: Anno
   const showToastMessage = (message: string) => {
     setToastMessage(message)
     setShowToast(true)
-    setTimeout(() => setShowToast(false), 3000)
   }
 
   const handleDelete = async () => {
@@ -163,7 +162,11 @@ export default function AnnouncementCard({ announcement, showClub = true }: Anno
         </div>
       )}
       
-      <Toast message={toastMessage} isVisible={showToast} />
+      <Toast 
+        message={toastMessage} 
+        isVisible={showToast} 
+        onClose={() => setShowToast(false)} 
+      />
     </div>
   )
 }

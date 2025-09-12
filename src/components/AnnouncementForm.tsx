@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { announcementFormSchema, AnnouncementFormData } from '@/lib/validations'
-import { getAnnouncementById, createAnnouncement, updateAnnouncement, deleteAnnouncement, getZones, getClubs, getUserRole, Zone, Club } from '@/lib/database'
+import { getAnnouncementById, createAnnouncement, updateAnnouncement, getZones, getClubs, getUserRole, Zone, Club } from '@/lib/database'
 import { useAuth } from '@/contexts/AuthContext'
 import RichTextEditor from '@/components/RichTextEditor'
 import ImageUpload from '@/components/ImageUpload'
@@ -54,7 +54,6 @@ export default function AnnouncementForm({ mode, announcementId }: AnnouncementF
   const showToastMessage = (message: string) => {
     setToastMessage(message)
     setShowToast(true)
-    setTimeout(() => setShowToast(false), 3000)
   }
 
   // Load initial data
@@ -243,7 +242,7 @@ export default function AnnouncementForm({ mode, announcementId }: AnnouncementF
     } finally {
       setSubmitting(false)
     }
-  }, [selectedEntity, content, clubs, zones, user, mode, announcementId, router])
+  }, [selectedEntity, content, clubs, zones, user, mode, announcementId, router, imageUrl])
 
 
   if (loading) {
@@ -421,7 +420,11 @@ export default function AnnouncementForm({ mode, announcementId }: AnnouncementF
           </form>
         </div>
       
-      <Toast message={toastMessage} isVisible={showToast} />
+      <Toast 
+        message={toastMessage} 
+        isVisible={showToast} 
+        onClose={() => setShowToast(false)} 
+      />
     </div>
   )
 }
