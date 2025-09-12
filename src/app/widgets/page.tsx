@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { getZones, getClubs, getUserRole } from '@/lib/database'
 import Header from '@/components/Header'
-import { Monitor, Calendar, Megaphone, Code, Copy, Check, Users, Building } from 'lucide-react'
+import { Monitor, Calendar, Megaphone, Code, Copy, Check, Users, Building, ExternalLink } from 'lucide-react'
 
 interface UserEntity {
   type: 'club' | 'zone' | 'district'
@@ -17,6 +17,13 @@ export default function WidgetsPage() {
   const [userEntities, setUserEntities] = useState<UserEntity[]>([])
   const [selectedEntity, setSelectedEntity] = useState<UserEntity | null>(null)
   const [loading, setLoading] = useState(true)
+  
+  // Widget configuration state
+  const [widgetConfig, setWidgetConfig] = useState({
+    calendarScope: 'club-only' as 'club-only' | 'club-and-zone' | 'all-clubs-in-zone', // Calendar scope options
+    showFilters: true,
+    visibility: 'all' as 'all' | 'public' | 'internal-use'
+  })
 
   // Load user's entities
   useEffect(() => {
@@ -85,40 +92,54 @@ export default function WidgetsPage() {
   }, [user])
 
   // Generate embed URL for a widget
-  const generateEmbedUrl = (widgetType: 'calendar' | 'announcements', params: {
-    visibility?: 'public' | 'internal-use' | 'all'
-    showFilters?: boolean
-  } = {}) => {
+  const generateEmbedUrl = (widgetType: 'calendar' | 'announcements') => {
     if (!selectedEntity) return ''
 
     const baseUrl = `${window.location.origin}/embed/${widgetType}`
     const urlParams = new URLSearchParams()
     
-    // Add entity parameter
-    urlParams.set(selectedEntity.type, selectedEntity.id)
+    // Add widget configuration parameters
+    if (widgetConfig.visibility !== 'all') {
+      urlParams.set('visibility', widgetConfig.visibility)
+    }
+    urlParams.set('showFilters', widgetConfig.showFilters.toString())
     
-    // Add optional parameters
-    if (params.visibility && params.visibility !== 'all') {
-      urlParams.set('visibility', params.visibility)
+    // Handle calendar scope for calendar widget
+    if (widgetType === 'calendar') {
+      switch (widgetConfig.calendarScope) {
+        case 'club-only':
+          // Find the user's club and set club parameter
+          const userClub = userEntities.find(e => e.type === 'club')
+          if (userClub) {
+            urlParams.set('club', userClub.id)
+          }
+          break
+        case 'club-and-zone':
+          // Set both club and zone parameters
+          const club = userEntities.find(e => e.type === 'club')
+          const zone = userEntities.find(e => e.type === 'zone')
+          if (club) urlParams.set('club', club.id)
+          if (zone) urlParams.set('zone', zone.id)
+          break
+        case 'all-clubs-in-zone':
+          // Set zone parameter to show all clubs in the zone
+          const userZone = userEntities.find(e => e.type === 'zone')
+          if (userZone) {
+            urlParams.set('zone', userZone.id)
+          }
+          break
+      }
+    } else {
+      // For announcements, use the selected entity
+      urlParams.set(selectedEntity.type, selectedEntity.id)
     }
     
-    if (params.showFilters !== undefined) {
-      urlParams.set('showFilters', params.showFilters.toString())
-    }
-
     return `${baseUrl}?${urlParams.toString()}`
   }
 
   // Generate iframe embed code
-  const generateEmbedCode = (widgetType: 'calendar' | 'announcements', params: {
-    visibility?: 'public' | 'internal-use' | 'all'
-    showFilters?: boolean
-    width?: string
-    height?: string
-  } = {}) => {
-    const url = generateEmbedUrl(widgetType, params)
-    const width = params.width || '100%'
-    const height = params.height || '600'
+  const generateEmbedCode = (widgetType: 'calendar' | 'announcements', width: string = '100%', height: string = '600') => {
+    const url = generateEmbedUrl(widgetType)
     
     return `<iframe src="${url}" width="${width}" height="${height}" frameborder="0" style="border: 1px solid #ccc;"></iframe>`
   }
@@ -230,6 +251,77 @@ export default function WidgetsPage() {
             </p>
           </div>
 
+          {/* Widget Configuration */}
+          <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <Code className="h-5 w-5 mr-2" />
+              Widget Configuration
+            </h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Calendar Scope */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Which calendar(s)?
+                </label>
+                <select
+                  value={widgetConfig.calendarScope}
+                  onChange={(e) => setWidgetConfig(prev => ({ ...prev, calendarScope: e.target.value as 'club-only' | 'club-and-zone' | 'all-clubs-in-zone' }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="club-only">Club Only</option>
+                  <option value="club-and-zone">Club and Zone</option>
+                  <option value="all-clubs-in-zone">All Clubs in the Zone + Zone</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  {widgetConfig.calendarScope === 'club-only' 
+                    ? 'Show events only from your club'
+                    : widgetConfig.calendarScope === 'club-and-zone'
+                    ? 'Show events from your club and zone'
+                    : 'Show events from all clubs in your zone plus zone events'
+                  }
+                </p>
+              </div>
+
+              {/* Visibility Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Content Visibility
+                </label>
+                <select
+                  value={widgetConfig.visibility}
+                  onChange={(e) => setWidgetConfig(prev => ({ ...prev, visibility: e.target.value as 'all' | 'public' | 'internal-use' }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="all">All Content</option>
+                  <option value="public">Public Only</option>
+                  <option value="internal-use">Internal Use Only</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Filter content by visibility level
+                </p>
+              </div>
+
+              {/* Show Filters */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Filter Controls
+                </label>
+                <select
+                  value={widgetConfig.showFilters ? 'true' : 'false'}
+                  onChange={(e) => setWidgetConfig(prev => ({ ...prev, showFilters: e.target.value === 'true' }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="true">Show Filters</option>
+                  <option value="false">Hide Filters</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Whether to show filter controls in the widget
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Entity Selector */}
           {userEntities.length > 1 && (
             <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
@@ -257,7 +349,7 @@ export default function WidgetsPage() {
           )}
 
           {selectedEntity && (
-            <div className="grid lg:grid-cols-2 gap-8">
+            <div className="space-y-8">
               {/* Calendar Widget */}
               <div className="bg-white rounded-lg shadow-sm border p-6">
                 <div className="flex items-center mb-4">
@@ -266,13 +358,16 @@ export default function WidgetsPage() {
                 </div>
                 
                 <div className="mb-6">
-                  <h3 className="font-medium text-gray-900 mb-2">Preview</h3>
-                  <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                    <div className="text-center text-gray-500 py-8">
-                      <Calendar className="h-12 w-12 mx-auto mb-2 text-gray-400" />
-                      <p>Calendar widget preview</p>
-                      <p className="text-sm">Shows events for {selectedEntity.name}</p>
-                    </div>
+                  <h3 className="font-medium text-gray-900 mb-2">Live Preview</h3>
+                  <div className="border border-gray-200 rounded-lg overflow-hidden bg-gray-50">
+                    <iframe
+                      src={generateEmbedUrl('calendar')}
+                      width="100%"
+                      height="600"
+                      frameBorder="0"
+                      style={{ border: 'none' }}
+                      title="Calendar Widget Preview"
+                    ></iframe>
                   </div>
                 </div>
 
@@ -297,25 +392,6 @@ export default function WidgetsPage() {
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Direct URL
-                    </label>
-                    <div className="flex space-x-2">
-                      <input
-                        type="text"
-                        value={generateEmbedUrl('calendar')}
-                        readOnly
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                      />
-                      <button
-                        onClick={() => copyToClipboard(generateEmbedUrl('calendar'), 'calendar-url')}
-                        className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                      >
-                        {copiedCode === 'calendar-url' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                      </button>
-                    </div>
-                  </div>
                 </div>
               </div>
 
@@ -327,13 +403,16 @@ export default function WidgetsPage() {
                 </div>
                 
                 <div className="mb-6">
-                  <h3 className="font-medium text-gray-900 mb-2">Preview</h3>
-                  <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                    <div className="text-center text-gray-500 py-8">
-                      <Megaphone className="h-12 w-12 mx-auto mb-2 text-gray-400" />
-                      <p>Announcements widget preview</p>
-                      <p className="text-sm">Shows announcements for {selectedEntity.name}</p>
-                    </div>
+                  <h3 className="font-medium text-gray-900 mb-2">Live Preview</h3>
+                  <div className="border border-gray-200 rounded-lg overflow-hidden bg-gray-50">
+                    <iframe
+                      src={generateEmbedUrl('announcements')}
+                      width="100%"
+                      height="600"
+                      frameBorder="0"
+                      style={{ border: 'none' }}
+                      title="Announcements Widget Preview"
+                    ></iframe>
                   </div>
                 </div>
 
@@ -358,25 +437,6 @@ export default function WidgetsPage() {
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Direct URL
-                    </label>
-                    <div className="flex space-x-2">
-                      <input
-                        type="text"
-                        value={generateEmbedUrl('announcements')}
-                        readOnly
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                      />
-                      <button
-                        onClick={() => copyToClipboard(generateEmbedUrl('announcements'), 'announcements-url')}
-                        className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                      >
-                        {copiedCode === 'announcements-url' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                      </button>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>

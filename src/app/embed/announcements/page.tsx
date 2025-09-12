@@ -34,19 +34,14 @@ function AnnouncementsEmbedContent() {
   const searchParams = useSearchParams()
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const [loading, setLoading] = useState(true)
-  const [showFilters, setShowFilters] = useState(true)
 
   // Get URL parameters
   const clubId = searchParams.get('club')
   const zoneId = searchParams.get('zone')
   const districtId = searchParams.get('district')
   const visibility = searchParams.get('visibility') as 'public' | 'private' | null
-  const showFiltersParam = searchParams.get('showFilters')
+  const showFilters = searchParams.get('showFilters') !== 'false' // Default to true unless explicitly false
   const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : 10
-
-  useEffect(() => {
-    setShowFilters(showFiltersParam !== 'false')
-  }, [showFiltersParam])
 
   // Load announcements
   useEffect(() => {
@@ -94,16 +89,6 @@ function AnnouncementsEmbedContent() {
             <Megaphone className="h-6 w-6" />
             <h1 className="text-lg font-semibold">Kin Announcements</h1>
           </div>
-          
-          {showFilters && (
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="p-2 rounded-lg hover:bg-green-700 transition-colors"
-              title="Toggle filters"
-            >
-              <Filter className="h-4 w-4" />
-            </button>
-          )}
         </div>
       </div>
 

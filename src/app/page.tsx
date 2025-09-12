@@ -11,8 +11,7 @@ export default function Home() {
     districtId: '',
     zoneId: '',
     clubId: '',
-    visibility: 'all' as 'all' | 'public' | 'private',
-    contentType: 'all' as 'all' | 'events' | 'announcements'
+    visibility: 'all' as 'all' | 'public' | 'private'
   })
 
   return (

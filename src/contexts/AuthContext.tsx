@@ -62,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     
     // Show success message
-    alert(`Check your email (${email}) for a magic link to sign in!`)
+    alert(`Check your email (${email}) for an access link to sign in!`)
   }
 
   const signOut = async () => {

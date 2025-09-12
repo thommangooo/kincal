@@ -22,12 +22,16 @@ export async function getEvents(filters?: {
     `)
     .order('start_date', { ascending: true })
 
-  if (filters?.clubId) {
+  // Handle entity filtering with OR logic when multiple entities are specified
+  if (filters?.clubId && filters?.zoneId) {
+    // Show events from the specific club OR the specific zone
+    query = query.or(`club_id.eq.${filters.clubId},zone_id.eq.${filters.zoneId}`)
+  } else if (filters?.clubId) {
     query = query.eq('club_id', filters.clubId)
-  }
-  if (filters?.zoneId) {
+  } else if (filters?.zoneId) {
     query = query.eq('zone_id', filters.zoneId)
   }
+  
   if (filters?.districtId) {
     query = query.eq('district_id', filters.districtId)
   }
@@ -259,12 +263,16 @@ export async function getAnnouncements(filters?: {
     .order('priority', { ascending: false })
     .order('publish_date', { ascending: false })
 
-  if (filters?.clubId) {
+  // Handle entity filtering with OR logic when multiple entities are specified
+  if (filters?.clubId && filters?.zoneId) {
+    // Show announcements from the specific club OR the specific zone
+    query = query.or(`club_id.eq.${filters.clubId},zone_id.eq.${filters.zoneId}`)
+  } else if (filters?.clubId) {
     query = query.eq('club_id', filters.clubId)
-  }
-  if (filters?.zoneId) {
+  } else if (filters?.zoneId) {
     query = query.eq('zone_id', filters.zoneId)
   }
+  
   if (filters?.districtId) {
     query = query.eq('district_id', filters.districtId)
   }
@@ -433,24 +441,53 @@ export async function getEntityDetails(entityType: 'club' | 'zone' | 'district',
   return data
 }
 
-// Get user role and entities from approved_users table
+// Get user role and entities from approved_users and user_entity_permissions tables
 export async function getUserRole(userEmail: string): Promise<{
   role: 'superuser' | 'editor'
   club_id?: string
   zone_id?: string
   district_id?: string
 } | null> {
-  const { data, error } = await supabase
+  
+  // Get user role from approved_users table
+  const { data: userData, error: userError } = await supabase
     .from('approved_users')
-    .select('role, club_id, zone_id, district_id')
+    .select('role')
     .eq('email', userEmail)
     .single()
+  
+  if (userError || !userData) {
+    return null
+  }
 
-  if (error || !data) return null
+  // If user is superuser, they don't need entity permissions
+  if (userData.role === 'superuser') {
+    return {
+      role: userData.role as 'superuser' | 'editor'
+    }
+  }
+
+  // Get user's entity permissions from user_entity_permissions table
+  const { data: permissionsData, error: permissionsError } = await supabase
+    .from('user_entity_permissions')
+    .select('entity_type, entity_id')
+    .eq('user_email', userEmail)
+  
+  if (permissionsError) {
+    return {
+      role: userData.role as 'superuser' | 'editor'
+    }
+  }
+
+  // Extract entity IDs by type
+  const club_id = permissionsData?.find(p => p.entity_type === 'club')?.entity_id
+  const zone_id = permissionsData?.find(p => p.entity_type === 'zone')?.entity_id
+  const district_id = permissionsData?.find(p => p.entity_type === 'district')?.entity_id
+
   return {
-    role: data.role as 'superuser' | 'editor',
-    club_id: data.club_id,
-    zone_id: data.zone_id,
-    district_id: data.district_id
+    role: userData.role as 'superuser' | 'editor',
+    club_id,
+    zone_id,
+    district_id
   }
 }

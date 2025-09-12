@@ -33,9 +33,9 @@ export default function SignInForm() {
 
       // If approved, send the magic link
       await signIn(email)
-      setMessage('Check your email for a magic link to sign in!')
+      setMessage('Check your email for an access link to sign in!')
     } catch (error) {
-      setMessage('Error sending magic link. Please try again.')
+      setMessage('Error sending access link. Please try again.')
       console.error('Sign in error:', error)
     } finally {
       setLoading(false)
@@ -47,7 +47,7 @@ export default function SignInForm() {
       <div className="text-center mb-6">
         <Mail className="h-12 w-12 text-blue-600 mx-auto mb-4" />
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Sign In</h2>
-        <p className="text-gray-600">Enter your email to receive a magic link</p>
+        <p className="text-gray-600">Enter your email to receive an access link</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -75,12 +75,12 @@ export default function SignInForm() {
           {loading ? (
             <>
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Sending Magic Link...
+              Sending Access Link...
             </>
           ) : (
             <>
               <Mail className="h-4 w-4 mr-2" />
-              Send Magic Link
+              Send Access Link
             </>
           )}
         </button>
@@ -102,9 +102,6 @@ export default function SignInForm() {
       <div className="mt-6 text-center">
         <p className="text-sm text-gray-500">
           Only pre-approved users can sign in. Contact an administrator to request access.
-        </p>
-        <p className="text-xs text-gray-400 mt-2">
-          For testing: <strong>demo@example.com</strong>
         </p>
       </div>
     </div>
