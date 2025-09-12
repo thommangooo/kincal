@@ -72,7 +72,7 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
             getDistricts(),
             getZones(),
             getClubs(),
-            getUserRole(user?.email || '')
+            user?.email ? getUserRole(user.email) : Promise.resolve(null)
           ])
           
           setEvent(eventData)
@@ -124,7 +124,7 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
             getDistricts(),
             getZones(),
             getClubs(),
-            getUserRole(user?.email || '')
+            user?.email ? getUserRole(user.email) : Promise.resolve(null)
           ])
           
           setDistricts(districtsData)

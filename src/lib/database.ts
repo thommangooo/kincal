@@ -449,6 +449,11 @@ export async function getUserRole(userEmail: string): Promise<{
   district_id?: string
 } | null> {
   
+  // Return null if no email provided
+  if (!userEmail || userEmail.trim() === '') {
+    return null
+  }
+  
   // Get user role from approved_users table
   const { data: userData, error: userError } = await supabase
     .from('approved_users')
