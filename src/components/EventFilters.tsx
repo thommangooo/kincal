@@ -77,7 +77,8 @@ export default function EventFilters({ onFiltersChange }: EventFiltersProps) {
       clubId,
       visibility
     })
-  }, [search, districtId, zoneId, clubId, visibility, onFiltersChange])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, districtId, zoneId, clubId, visibility])
 
   const clearFilters = () => {
     setSearch('')

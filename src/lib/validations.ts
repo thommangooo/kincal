@@ -32,12 +32,10 @@ export const eventFormSchema = z.object({
 
 export const announcementFormSchema = z.object({
   title: z.string().min(1, 'Title is required').max(255, 'Title must be less than 255 characters'),
-  content: z.string().min(1, 'Content is required'),
   publish_date: z.string().min(1, 'Publish date is required'),
   expiry_date: z.string().optional(),
   visibility: z.enum(['public', 'private']).default('public'),
   tags: z.array(z.string()).optional(),
-  priority: z.number().min(0).max(10).default(0),
   image_url: z.string().url('Must be a valid URL').optional().or(z.literal(''))
 })
 

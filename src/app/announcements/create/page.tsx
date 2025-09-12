@@ -12,7 +12,7 @@ import Header from '@/components/Header'
 import RichTextEditor from '@/components/RichTextEditor'
 import ImageUpload from '@/components/ImageUpload'
 import EntitySelector from '@/components/EntitySelector'
-import { ArrowLeft, Users, Star } from 'lucide-react'
+import { ArrowLeft, Users } from 'lucide-react'
 
 export default function CreateAnnouncementPage() {
   const router = useRouter()
@@ -23,6 +23,7 @@ export default function CreateAnnouncementPage() {
   const [content, setContent] = useState('')
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [selectedEntity, setSelectedEntity] = useState<{type: 'club' | 'zone' | 'district', id: string} | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const [userRole, setUserRole] = useState<{
     role: 'superuser' | 'editor'
     club_id?: string
@@ -33,13 +34,11 @@ export default function CreateAnnouncementPage() {
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors }
   } = useForm<AnnouncementFormData>({
     resolver: zodResolver(announcementFormSchema),
     defaultValues: {
       visibility: 'public',
-      priority: 0,
       tags: []
     }
   })
@@ -66,8 +65,20 @@ export default function CreateAnnouncementPage() {
   }, [user])
 
   const onSubmit = async (data: AnnouncementFormData) => {
+    console.log('Form submitted with data:', data)
+    console.log('Selected entity:', selectedEntity)
+    console.log('Content:', content)
+    
+    // Clear any previous errors
+    setError(null)
+    
     if (!selectedEntity) {
-      alert('Please select an entity to post on behalf of')
+      setError('Please select an organization to post on behalf of')
+      return
+    }
+
+    if (!content || content.trim() === '' || content === '<p></p>') {
+      setError('Please enter announcement content')
       return
     }
 
@@ -100,11 +111,40 @@ export default function CreateAnnouncementPage() {
           if (zone) {
             district_id = zone.district_id
           }
+          // For zone announcements, we need to find a representative club
+          const zoneClubs = clubs.filter(c => c.zone_id === selectedEntity.id)
+          if (zoneClubs.length > 0) {
+            club_id = zoneClubs[0].id // Use the first club in the zone as a placeholder
+          } else {
+            // If no clubs found in zone, this is an error
+            throw new Error(`No clubs found in the selected zone. Please contact an administrator.`)
+          }
           break
         case 'district':
           district_id = selectedEntity.id
+          // For district announcements, we need to find a representative club
+          const districtClubs = clubs.filter(c => {
+            const clubZone = zones.find(z => z.id === c.zone_id)
+            return clubZone && clubZone.district_id === selectedEntity.id
+          })
+          if (districtClubs.length > 0) {
+            club_id = districtClubs[0].id // Use the first club in the district as a placeholder
+            const firstClub = districtClubs[0]
+            zone_id = firstClub.zone_id
+          } else {
+            // If no clubs found in district, this is an error
+            throw new Error(`No clubs found in the selected district. Please contact an administrator.`)
+          }
           break
       }
+
+      // Validate that we have all required IDs
+      if (!club_id || !zone_id || !district_id) {
+        console.error('Missing required IDs:', { club_id, zone_id, district_id, selectedEntity })
+        throw new Error('Unable to determine required organization IDs. Please try selecting a different organization.')
+      }
+
+      console.log('Derived entity IDs:', { club_id, zone_id, district_id, entity_type, entity_id })
 
       const announcementData = {
         title: data.title,
@@ -118,15 +158,18 @@ export default function CreateAnnouncementPage() {
         entity_id,
         visibility: 'public' as const,
         tags: data.tags || null,
-        priority: data.priority,
+        priority: 0, // Default priority
         image_url: imageUrl,
         created_by_email: user?.email || 'demo@example.com'
       }
 
-      await createAnnouncement(announcementData)
+      console.log('Creating announcement with data:', announcementData)
+      const result = await createAnnouncement(announcementData)
+      console.log('Announcement created successfully:', result)
       router.push('/')
     } catch (error) {
       console.error('Error creating announcement:', error)
+      setError('Failed to create announcement. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -150,6 +193,11 @@ export default function CreateAnnouncementPage() {
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <p className="text-sm text-red-800">{error}</p>
+              </div>
+            )}
             <div className="bg-white rounded-lg shadow-sm border p-6">
               {/* Basic Information */}
               <div className="mb-6">
@@ -177,10 +225,16 @@ export default function CreateAnnouncementPage() {
                     </label>
                     <RichTextEditor
                       content={content}
-                      onChange={setContent}
+                      onChange={(newContent) => {
+                        console.log('Content changed:', newContent)
+                        setContent(newContent)
+                        if (error && newContent && newContent.trim() !== '' && newContent !== '<p></p>') {
+                          setError(null)
+                        }
+                      }}
                       placeholder="Write your announcement content here..."
                     />
-                    {!content && (
+                    {(!content || content.trim() === '' || content === '<p></p>') && (
                       <p className="mt-1 text-sm text-red-600">Content is required</p>
                     )}
                   </div>
@@ -228,27 +282,6 @@ export default function CreateAnnouncementPage() {
                   </div>
                 </div>
 
-                <div className="mt-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Priority Level
-                  </label>
-                  <div className="flex items-center space-x-4">
-                    <input
-                      {...register('priority', { valueAsNumber: true })}
-                      type="range"
-                      min="0"
-                      max="10"
-                      className="flex-1"
-                    />
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Star className="h-4 w-4 mr-1" />
-                      <span>{watch('priority') || 0}/10</span>
-                    </div>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Higher priority announcements appear first in lists
-                  </p>
-                </div>
               </div>
 
               {/* Organization */}
@@ -263,7 +296,12 @@ export default function CreateAnnouncementPage() {
                     userEmail={user?.email || ''}
                     userRole={userRole?.role || 'editor'}
                     selectedEntity={selectedEntity}
-                    onEntitySelect={setSelectedEntity}
+                    onEntitySelect={(entity) => {
+                      setSelectedEntity(entity)
+                      if (error && entity) {
+                        setError(null)
+                      }
+                    }}
                   />
                   {!selectedEntity && (
                     <p className="mt-1 text-sm text-red-600">Please select an organization to post on behalf of</p>
@@ -283,7 +321,7 @@ export default function CreateAnnouncementPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={loading || !content}
+                  disabled={loading || !content || content.trim() === '' || content === '<p></p>' || !selectedEntity}
                   className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {loading ? 'Creating...' : 'Create Announcement'}

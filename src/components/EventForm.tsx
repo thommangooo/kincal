@@ -168,18 +168,26 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
       // Get the related IDs based on the selected entity
       let clubId = '', zoneId = '', districtId = ''
       
+      console.log('Selected entity:', selectedEntity)
+      console.log('Available clubs:', clubs)
+      console.log('Available zones:', zones)
+      
       if (selectedEntity.type === 'club') {
         const club = clubs.find(c => c.id === selectedEntity.id)
         clubId = selectedEntity.id
         zoneId = club?.zone_id || ''
         districtId = club?.district_id || ''
+        console.log('Club found:', club)
       } else if (selectedEntity.type === 'zone') {
         const zone = zones.find(z => z.id === selectedEntity.id)
         zoneId = selectedEntity.id
         districtId = zone?.district_id || ''
+        console.log('Zone found:', zone)
       } else if (selectedEntity.type === 'district') {
         districtId = selectedEntity.id
       }
+      
+      console.log('Derived IDs:', { clubId, zoneId, districtId })
 
       const eventData = {
         title: data.title,
