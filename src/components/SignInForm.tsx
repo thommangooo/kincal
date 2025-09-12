@@ -3,12 +3,13 @@
 import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
-import { Mail, Loader2, AlertCircle } from 'lucide-react'
+import { Mail, Loader2, AlertCircle, CheckCircle } from 'lucide-react'
 
 export default function SignInForm() {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
+  const [emailSent, setEmailSent] = useState(false)
   const { signIn } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -28,18 +29,60 @@ export default function SignInForm() {
 
       if (checkError || !approvedUser) {
         setMessage('This email address is not authorized to access the system. Please contact an administrator.')
+        setLoading(false)
         return
       }
 
       // If approved, send the magic link
       await signIn(email)
-      setMessage('Check your email for an access link to sign in!')
+      setEmailSent(true)
+      setMessage('')
     } catch (error) {
       setMessage('Error sending access link. Please try again.')
       console.error('Sign in error:', error)
     } finally {
       setLoading(false)
     }
+  }
+
+  if (emailSent) {
+    return (
+      <div className="max-w-md mx-auto bg-white rounded-lg shadow-sm border p-6">
+        <div className="text-center mb-6">
+          <CheckCircle className="h-12 w-12 text-green-600 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Email Sent!</h2>
+          <p className="text-gray-600">Check your email for an access link to sign in</p>
+        </div>
+
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+          <div className="flex items-start">
+            <CheckCircle className="h-5 w-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-green-800 font-medium mb-2">Access link sent to {email}</p>
+              <p className="text-green-700 text-sm">
+                Click the link in your email to sign into KinCal. The link will expire within an hour.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="text-center">
+          <p className="text-sm text-gray-500 mb-4">
+            You can now close this window and check your email.
+          </p>
+          <button
+            onClick={() => {
+              setEmailSent(false)
+              setEmail('')
+              setMessage('')
+            }}
+            className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+          >
+            Send another access link
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (

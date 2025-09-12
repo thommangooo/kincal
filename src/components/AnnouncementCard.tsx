@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Announcement, deleteAnnouncement } from '@/lib/database'
 import { formatDate } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
-import { Users, Globe, Lock, Star, Calendar, Clock, Edit, Trash2 } from 'lucide-react'
+import { Users, Globe, Lock, Star, Calendar, Clock, Edit, Trash2, Info } from 'lucide-react'
 import { useState } from 'react'
 import Toast from './Toast'
 
@@ -20,6 +20,7 @@ export default function AnnouncementCard({ announcement, showClub = true }: Anno
   const router = useRouter()
   const [toastMessage, setToastMessage] = useState('')
   const [showToast, setShowToast] = useState(false)
+  const [showMetadata, setShowMetadata] = useState(false)
   const isExpired = announcement.expiry_date && new Date(announcement.expiry_date) < new Date()
   const isHighPriority = announcement.priority >= 7
   const canEdit = user?.email === announcement.created_by_email
@@ -59,11 +60,6 @@ export default function AnnouncementCard({ announcement, showClub = true }: Anno
                 <span className="text-xs font-medium ml-1">High Priority</span>
               </div>
             )}
-            {announcement.visibility === 'private' ? (
-              <Lock className="h-4 w-4 text-gray-500" />
-            ) : (
-              <Globe className="h-4 w-4 text-gray-500" />
-            )}
             {isExpired && (
               <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
                 Expired
@@ -72,25 +68,41 @@ export default function AnnouncementCard({ announcement, showClub = true }: Anno
           </div>
         </div>
         
-        {/* Edit/Delete Actions */}
-        {canEdit && (
-          <div className="flex items-center space-x-2 ml-4">
-            <Link
-              href={`/announcements/edit/${announcement.id}`}
-              className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
-              title="Edit announcement"
-            >
-              <Edit className="h-4 w-4" />
-            </Link>
-            <button
-              onClick={handleDelete}
-              className="p-2 text-gray-400 hover:text-red-600 transition-colors"
-              title="Delete announcement"
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
-          </div>
-        )}
+        {/* Action Buttons */}
+        <div className="flex items-center space-x-2 ml-4">
+          {/* Details Toggle */}
+          <button
+            onClick={() => setShowMetadata(!showMetadata)}
+            className={`p-2 transition-colors ${
+              showMetadata 
+                ? 'text-blue-500 hover:text-blue-600' 
+                : 'text-gray-400 hover:text-gray-600'
+            }`}
+            title={showMetadata ? "Hide details" : "Show details"}
+          >
+            <Info className="h-4 w-4" />
+          </button>
+          
+          {/* Edit/Delete Actions */}
+          {canEdit && (
+            <>
+              <Link
+                href={`/announcements/edit/${announcement.id}`}
+                className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
+                title="Edit announcement"
+              >
+                <Edit className="h-4 w-4" />
+              </Link>
+              <button
+                onClick={handleDelete}
+                className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                title="Delete announcement"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Image */}
@@ -112,40 +124,59 @@ export default function AnnouncementCard({ announcement, showClub = true }: Anno
         dangerouslySetInnerHTML={{ __html: announcement.content }}
       />
 
-      {/* Metadata */}
-      <div className="space-y-2 mb-4">
-        {/* Date and Time */}
-        <div className="flex items-center text-sm text-gray-600">
-          <Calendar className="h-4 w-4 mr-2" />
-          <span>Published: {formatDate(announcement.publish_date)}</span>
-        </div>
-        
-        {announcement.expiry_date && (
+      {/* Collapsible Metadata */}
+      <div className={`space-y-2 mb-4 transition-all duration-200 ${
+        showMetadata 
+          ? 'max-h-96 opacity-100' 
+          : 'max-h-0 opacity-0 overflow-hidden'
+      }`}>
+          {/* Date and Time */}
           <div className="flex items-center text-sm text-gray-600">
-            <Clock className="h-4 w-4 mr-2" />
-            <span>Expires: {formatDate(announcement.expiry_date)}</span>
+            <Calendar className="h-4 w-4 mr-2" />
+            <span>Published: {formatDate(announcement.publish_date)}</span>
           </div>
-        )}
+          
+          {announcement.expiry_date && (
+            <div className="flex items-center text-sm text-gray-600">
+              <Clock className="h-4 w-4 mr-2" />
+              <span>Expires: {formatDate(announcement.expiry_date)}</span>
+            </div>
+          )}
 
-        {/* Club */}
-        {showClub && announcement.club && (
+          {/* Visibility */}
           <div className="flex items-center text-sm text-gray-600">
-            <Users className="h-4 w-4 mr-2" />
-            <span>{announcement.club.name}</span>
-            {announcement.zone && (
+            {announcement.visibility === 'private' ? (
               <>
-                <span className="mx-1">•</span>
-                <span>{announcement.zone.name}</span>
+                <Lock className="h-4 w-4 mr-2" />
+                <span>Visibility: Private (Internal Use)</span>
               </>
-            )}
-            {announcement.district && (
+            ) : (
               <>
-                <span className="mx-1">•</span>
-                <span>{announcement.district.name}</span>
+                <Globe className="h-4 w-4 mr-2" />
+                <span>Visibility: Public</span>
               </>
             )}
           </div>
-        )}
+
+          {/* Club */}
+          {showClub && announcement.club && (
+            <div className="flex items-center text-sm text-gray-600">
+              <Users className="h-4 w-4 mr-2" />
+              <span>{announcement.club.name}</span>
+              {announcement.zone && (
+                <>
+                  <span className="mx-1">•</span>
+                  <span>{announcement.zone.name}</span>
+                </>
+              )}
+              {announcement.district && (
+                <>
+                  <span className="mx-1">•</span>
+                  <span>{announcement.district.name}</span>
+                </>
+              )}
+            </div>
+          )}
       </div>
 
       {/* Tags */}

@@ -48,7 +48,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const signIn = async (email: string) => {
-    setLoading(true)
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
@@ -60,9 +59,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('Sign in error:', error)
       throw error
     }
-    
-    // Show success message
-    alert(`Check your email (${email}) for an access link to sign in!`)
   }
 
   const signOut = async () => {
