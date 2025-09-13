@@ -1,12 +1,25 @@
 'use client'
 
 import Link from 'next/link'
-import { LogOut, User } from 'lucide-react'
+import { LogOut, User, Users } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
+import { getUserRole } from '@/lib/database'
 import KinLogo from './KinLogo'
+import { useState, useEffect } from 'react'
 
 export default function Header() {
   const { user, signOut } = useAuth()
+  const [userRole, setUserRole] = useState<{ role: 'superuser' | 'editor' } | null>(null)
+
+  useEffect(() => {
+    const loadUserRole = async () => {
+      if (user?.email) {
+        const role = await getUserRole(user.email)
+        setUserRole(role)
+      }
+    }
+    loadUserRole()
+  }, [user])
 
   return (
     <header className="bg-white shadow-lg">
@@ -45,6 +58,14 @@ export default function Header() {
               >
                 About
               </Link>
+              {userRole?.role === 'superuser' && (
+                <Link 
+                  href="/users" 
+                  className="text-gray-600 hover:text-kin-red transition-colors font-medium"
+                >
+                  Users
+                </Link>
+              )}
             </nav>
           </div>
           

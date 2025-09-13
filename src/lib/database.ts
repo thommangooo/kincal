@@ -3,6 +3,16 @@ import { supabase, DbEvent, Announcement, Club, Zone, District, UserEntityPermis
 // Re-export types for use in other files
 export type { DbEvent as Event, Announcement, Club, Zone, District, UserEntityPermission }
 
+// User management types
+export interface ApprovedUser {
+  id: string
+  email: string
+  name: string | null
+  role: 'superuser' | 'editor'
+  created_at: string
+  updated_at: string
+}
+
 // Event operations
 export async function getEvents(filters?: {
   clubId?: string
@@ -601,4 +611,241 @@ export async function getDistrictsWithUsageStatus(): Promise<(District & { isAct
     console.error('Error loading districts with usage status:', error)
     return []
   }
+}
+
+// User Management operations
+export async function getApprovedUsers(): Promise<ApprovedUser[]> {
+  const { data: users, error } = await supabase
+    .from('approved_users')
+    .select('*')
+    .order('email')
+
+  if (error) throw error
+  return users || []
+}
+
+export async function createApprovedUser(user: {
+  email: string
+  name?: string
+  role: 'superuser' | 'editor'
+}): Promise<ApprovedUser> {
+  const { data, error } = await supabase
+    .from('approved_users')
+    .insert({
+      email: user.email.toLowerCase(),
+      name: user.name || null,
+      role: user.role
+    })
+    .select()
+    .single()
+
+  if (error) throw error
+  return data
+}
+
+export async function updateApprovedUser(id: string, updates: {
+  email?: string
+  name?: string
+  role?: 'superuser' | 'editor'
+}): Promise<ApprovedUser> {
+  const updateData: any = {}
+  if (updates.email) updateData.email = updates.email.toLowerCase()
+  if (updates.name !== undefined) updateData.name = updates.name
+  if (updates.role) updateData.role = updates.role
+
+  const { data, error } = await supabase
+    .from('approved_users')
+    .update(updateData)
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) throw error
+  return data
+}
+
+export async function deleteApprovedUser(id: string): Promise<void> {
+  // First, delete all user entity permissions for this user
+  const { data: user } = await supabase
+    .from('approved_users')
+    .select('email')
+    .eq('id', id)
+    .single()
+
+  if (user) {
+    await supabase
+      .from('user_entity_permissions')
+      .delete()
+      .eq('user_email', user.email)
+  }
+
+  // Then delete the user
+  const { error } = await supabase
+    .from('approved_users')
+    .delete()
+    .eq('id', id)
+
+  if (error) throw error
+}
+
+export async function getUserWithPermissions(userId: string): Promise<{
+  user: ApprovedUser
+  permissions: UserEntityPermission[]
+} | null> {
+  // Get user details
+  const { data: user, error: userError } = await supabase
+    .from('approved_users')
+    .select('*')
+    .eq('id', userId)
+    .single()
+
+  if (userError || !user) return null
+
+  // Get user permissions
+  const permissions = await getUserEntityPermissions(user.email)
+
+  return {
+    user,
+    permissions
+  }
+}
+
+// Create user with entity permissions in a single transaction
+export async function createUserWithPermissions(user: {
+  email: string
+  name?: string
+  role: 'superuser' | 'editor'
+  entityIds?: string[]
+}): Promise<ApprovedUser> {
+  // If superuser, no need for entity permissions
+  if (user.role === 'superuser') {
+    return await createApprovedUser({
+      email: user.email,
+      name: user.name,
+      role: user.role
+    })
+  }
+
+  // For editors, require at least one entity assignment
+  if (!user.entityIds || user.entityIds.length === 0) {
+    throw new Error('Editor users must be assigned to at least one entity (club, zone, or district)')
+  }
+
+  // Create the user first
+  const newUser = await createApprovedUser({
+    email: user.email,
+    name: user.name,
+    role: user.role
+  })
+
+  // Get all entities to determine types
+  const entities = await getAllEntitiesForAssignment()
+  
+  // Then create the entity permissions
+  for (const entityId of user.entityIds) {
+    const entityType = getEntityType(entityId, entities)
+    await createUserEntityPermission({
+      user_email: user.email.toLowerCase(),
+      entity_id: entityId,
+      entity_type: entityType
+    })
+  }
+
+  return newUser
+}
+
+// Update user with entity permissions
+export async function updateUserWithPermissions(
+  userId: string, 
+  updates: {
+    email?: string
+    name?: string
+    role?: 'superuser' | 'editor'
+    entityIds?: string[]
+  }
+): Promise<ApprovedUser> {
+  // If superuser, no need for entity permissions
+  if (updates.role === 'superuser') {
+    // Remove all existing permissions for superusers
+    const { data: user } = await supabase
+      .from('approved_users')
+      .select('email')
+      .eq('id', userId)
+      .single()
+
+    if (user) {
+      await supabase
+        .from('user_entity_permissions')
+        .delete()
+        .eq('user_email', user.email)
+    }
+
+    return await updateApprovedUser(userId, updates)
+  }
+
+  // For editors, require at least one entity assignment
+  if (updates.role === 'editor' && (!updates.entityIds || updates.entityIds.length === 0)) {
+    throw new Error('Editor users must be assigned to at least one entity (club, zone, or district)')
+  }
+
+  // Update the user first
+  const updatedUser = await updateApprovedUser(userId, updates)
+
+  // If entityIds are provided, update the permissions
+  if (updates.entityIds !== undefined) {
+    // Get current user email (in case it was updated)
+    const { data: user } = await supabase
+      .from('approved_users')
+      .select('email')
+      .eq('id', userId)
+      .single()
+
+    if (user) {
+      // Remove all existing permissions
+      await supabase
+        .from('user_entity_permissions')
+        .delete()
+        .eq('user_email', user.email)
+
+      // Add new permissions if any
+      if (updates.entityIds.length > 0) {
+        // Get all entities to determine types
+        const entities = await getAllEntitiesForAssignment()
+        
+        for (const entityId of updates.entityIds) {
+          const entityType = getEntityType(entityId, entities)
+          await createUserEntityPermission({
+            user_email: user.email.toLowerCase(),
+            entity_id: entityId,
+            entity_type: entityType
+          })
+        }
+      }
+    }
+  }
+
+  return updatedUser
+}
+
+// Get all available entities (clubs, zones, districts) for user assignment
+export async function getAllEntitiesForAssignment(): Promise<{
+  clubs: Club[]
+  zones: Zone[]
+  districts: District[]
+}> {
+  const [clubs, zones, districts] = await Promise.all([
+    getClubs(),
+    getZones(),
+    getDistricts()
+  ])
+
+  return { clubs, zones, districts }
+}
+
+// Helper function to determine entity type from entity ID
+export function getEntityType(entityId: string, entities: { clubs: Club[], zones: Zone[], districts: District[] }): 'club' | 'zone' | 'district' {
+  if (entities.clubs.some(club => club.id === entityId)) return 'club'
+  if (entities.zones.some(zone => zone.id === entityId)) return 'zone'
+  if (entities.districts.some(district => district.id === entityId)) return 'district'
+  throw new Error(`Unknown entity ID: ${entityId}`)
 }
