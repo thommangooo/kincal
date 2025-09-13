@@ -56,9 +56,10 @@ interface CalendarViewProps {
     clubId: string
     visibility: 'all' | 'public' | 'private'
   }) => void
+  onClearFilters?: () => void
 }
 
-export default function CalendarView({ filters, showCreateButton = true, showFilters = false, onFiltersChange }: CalendarViewProps) {
+export default function CalendarView({ filters, showCreateButton = true, showFilters = false, onFiltersChange, onClearFilters }: CalendarViewProps) {
   const { user } = useAuth()
   const [viewMode, setViewMode] = useState<ViewMode>('calendar')
   const [events, setEvents] = useState<Event[]>([])
@@ -74,6 +75,15 @@ export default function CalendarView({ filters, showCreateButton = true, showFil
   const [entityType, setEntityType] = useState<'club' | 'zone' | 'district'>('club')
   const [visibility, setVisibility] = useState<'all' | 'public' | 'private'>(filters?.visibility || 'all')
   const [filtersCollapsed, setFiltersCollapsed] = useState(true)
+
+  // Sync local state with global filters
+  useEffect(() => {
+    if (filters) {
+      setSearch(filters.search || '')
+      setEntityId(filters.clubId || '')
+      setVisibility(filters.visibility || 'all')
+    }
+  }, [filters])
 
   // Load events
   useEffect(() => {
@@ -177,10 +187,15 @@ export default function CalendarView({ filters, showCreateButton = true, showFil
   }
 
   const clearFilters = () => {
-    setSearch('')
-    setEntityId('')
-    setEntityType('club')
-    setVisibility('all')
+    if (onClearFilters) {
+      onClearFilters()
+    } else {
+      // Fallback to local state clearing if no global clear function provided
+      setSearch('')
+      setEntityId('')
+      setEntityType('club')
+      setVisibility('all')
+    }
   }
 
   // Get current filter state text

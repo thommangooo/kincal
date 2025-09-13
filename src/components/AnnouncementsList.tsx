@@ -25,9 +25,10 @@ interface AnnouncementsListProps {
     clubId: string
     visibility: 'all' | 'public' | 'private'
   }) => void
+  onClearFilters?: () => void
 }
 
-export default function AnnouncementsList({ filters, showFilters = false, onFiltersChange }: AnnouncementsListProps) {
+export default function AnnouncementsList({ filters, showFilters = false, onFiltersChange, onClearFilters }: AnnouncementsListProps) {
   const { user } = useAuth()
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const [loading, setLoading] = useState(true)
@@ -38,6 +39,15 @@ export default function AnnouncementsList({ filters, showFilters = false, onFilt
   const [entityType, setEntityType] = useState<'club' | 'zone' | 'district'>('club')
   const [visibility, setVisibility] = useState<'all' | 'public' | 'private'>(filters?.visibility === 'internal-use' ? 'private' : (filters?.visibility as 'all' | 'public' | 'private') || 'all')
   const [filtersCollapsed, setFiltersCollapsed] = useState(true)
+
+  // Sync local state with global filters
+  useEffect(() => {
+    if (filters) {
+      setSearch(filters.search || '')
+      setEntityId(filters.clubId || '')
+      setVisibility(filters.visibility === 'internal-use' ? 'private' : (filters.visibility as 'all' | 'public' | 'private') || 'all')
+    }
+  }, [filters])
 
   useEffect(() => {
     const loadAnnouncements = async () => {
@@ -98,10 +108,15 @@ export default function AnnouncementsList({ filters, showFilters = false, onFilt
   })
 
   const clearFilters = () => {
-    setSearch('')
-    setEntityId('')
-    setEntityType('club')
-    setVisibility('all')
+    if (onClearFilters) {
+      onClearFilters()
+    } else {
+      // Fallback to local state clearing if no global clear function provided
+      setSearch('')
+      setEntityId('')
+      setEntityType('club')
+      setVisibility('all')
+    }
   }
 
   // Get current filter state text

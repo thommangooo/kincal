@@ -1,17 +1,11 @@
 'use client'
 
-import { useState } from 'react'
 import CalendarView from '@/components/CalendarView'
 import Header from '@/components/Header'
+import { useFilters } from '@/contexts/FilterContext'
 
 export default function Home() {
-  const [filters, setFilters] = useState({
-    search: '',
-    districtId: '',
-    zoneId: '',
-    clubId: '',
-    visibility: 'all' as 'all' | 'public' | 'private'
-  })
+  const { filters, setFilters, clearFilters } = useFilters()
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -21,6 +15,7 @@ export default function Home() {
           filters={filters}
           showFilters={true}
           onFiltersChange={setFilters}
+          onClearFilters={clearFilters}
         />
       </main>
     </div>
