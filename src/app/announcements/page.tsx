@@ -30,7 +30,7 @@ export default function AnnouncementsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <Header />
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-2 sm:px-4 py-2 sm:py-8">
         <AnnouncementsList 
           filters={filters}
           showFilters={true}

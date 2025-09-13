@@ -213,60 +213,58 @@ export default function CalendarView({ filters, showCreateButton = true, showFil
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200">
       {/* Header */}
-      <div className="p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-4 sm:space-y-0">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
-              </div>
-              <div>
-                <h2 className="text-lg sm:text-xl font-bold text-gray-900">
-                  {viewMode === 'calendar' ? 'Calendar View' : 'List View'}
-                </h2>
-                <p className="text-sm text-gray-600 mb-1">
-                  Discover and share events across Kin clubs, zones, and districts. Stay connected with your Kin community.
-                </p>
-                <p className="text-xs text-gray-500">
-                  {filteredEvents.length} event{filteredEvents.length !== 1 ? 's' : ''} found
-                </p>
-              </div>
+      <div className="p-2 sm:p-4 md:p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <div className="p-1 sm:p-2 bg-blue-100 rounded-lg">
+              <Calendar className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-blue-600" />
+            </div>
+            <div>
+              <h2 className="text-base sm:text-lg md:text-xl font-bold text-gray-900">
+                {viewMode === 'calendar' ? 'Calendar' : 'List View'}
+              </h2>
+              <p className="text-xs sm:text-sm text-gray-600 mb-1 hidden sm:block">
+                Discover and share events across Kin clubs, zones, and districts. Stay connected with your Kin community.
+              </p>
+              <p className="text-xs text-gray-500">
+                {filteredEvents.length} event{filteredEvents.length !== 1 ? 's' : ''} found
+              </p>
             </div>
           </div>
           
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-1 sm:space-x-2">
             {user && showCreateButton && (
               <Link
                 href="/events/create"
-                className="inline-flex items-center px-4 py-2 bg-kin-red text-white rounded-lg hover:bg-kin-red-dark transition-colors text-sm font-medium shadow-sm hover:shadow-md"
+                className="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 bg-kin-red text-white rounded-lg hover:bg-kin-red-dark transition-colors shadow-sm hover:shadow-md"
+                title="Create Event"
               >
-                <Plus className="h-4 w-4 mr-1" />
-                Create Event
+                <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
               </Link>
             )}
             
-            <div className="flex items-center space-x-2 bg-white rounded-lg p-1 shadow-sm">
+            <div className="flex items-center space-x-1 bg-white rounded-lg p-0.5 shadow-sm">
               <button
                 onClick={() => setViewMode('calendar')}
-                className={`p-2 rounded-md transition-all duration-200 ${
+                className={`p-1.5 sm:p-2 rounded-md transition-all duration-200 ${
                   viewMode === 'calendar' 
                     ? 'bg-blue-600 text-white shadow-sm' 
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
                 title="Calendar View"
               >
-                <Calendar className="h-4 w-4 sm:h-5 sm:w-5" />
+                <Calendar className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5" />
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`p-2 rounded-md transition-all duration-200 ${
+                className={`p-1.5 sm:p-2 rounded-md transition-all duration-200 ${
                   viewMode === 'list' 
                     ? 'bg-blue-600 text-white shadow-sm' 
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
                 title="List View"
               >
-                <List className="h-4 w-4 sm:h-5 sm:w-5" />
+                <List className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5" />
               </button>
             </div>
           </div>
@@ -276,30 +274,36 @@ export default function CalendarView({ filters, showCreateButton = true, showFil
       {/* Integrated Filters */}
       {showFilters && (
         <div className="border-b border-gray-200 bg-gray-50">
-          <div className="p-4">
+          <div className="p-2 sm:p-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2 sm:space-x-3">
                 <button
                   onClick={() => setFiltersCollapsed(!filtersCollapsed)}
-                  className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors group"
+                  className="flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors group"
                 >
-                  <Filter className="h-4 w-4 mr-2 text-kin-red group-hover:text-kin-red-dark transition-colors" />
+                  <Filter className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 text-kin-red group-hover:text-kin-red-dark transition-colors" />
                   Filters
-                  <span className="ml-2">
+                  <span className="ml-1 sm:ml-2">
                     {filtersCollapsed ? (
-                      <ChevronDown className="h-4 w-4" />
+                      <ChevronDown className="h-3 w-3 sm:h-4 sm:w-4" />
                     ) : (
-                      <ChevronUp className="h-4 w-4" />
+                      <ChevronUp className="h-3 w-3 sm:h-4 sm:w-4" />
                     )}
                   </span>
                 </button>
                 <div className="text-xs text-gray-500">
-                  {getFilterStateText()}
+                  <span className="hidden sm:inline">{getFilterStateText()}</span>
+                  <span className="sm:hidden">
+                    {getFilterStateText().length > 20 
+                      ? getFilterStateText().substring(0, 20) + '...' 
+                      : getFilterStateText()
+                    }
+                  </span>
                 </div>
               </div>
               <button
                 onClick={clearFilters}
-                className="text-sm text-kin-red hover:text-kin-red-dark font-medium transition-colors"
+                className="text-xs sm:text-sm text-kin-red hover:text-kin-red-dark font-medium transition-colors"
               >
                 Clear all
               </button>
@@ -450,27 +454,27 @@ function CalendarGrid({
   return (
     <div>
       {/* Month Navigation */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 space-y-3 sm:space-y-0">
-        <div className="flex items-center space-x-2">
+      <div className="flex items-center justify-between mb-2 sm:mb-4 md:mb-6">
+        <div className="flex items-center space-x-1 sm:space-x-2">
           <button
             onClick={() => onNavigate('prev')}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-600 hover:text-gray-900"
+            className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-600 hover:text-gray-900"
           >
-            <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
+            <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5" />
           </button>
           <button
             onClick={() => onNavigate('next')}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-600 hover:text-gray-900"
+            className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-600 hover:text-gray-900"
           >
-            <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
+            <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5" />
           </button>
         </div>
         
-        <h3 className="text-lg sm:text-xl font-bold text-gray-900 text-center">{monthName}</h3>
+        <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 text-center">{monthName}</h3>
         
         <button
           onClick={() => onNavigate('today')}
-          className="px-3 sm:px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+          className="px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 bg-blue-600 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
         >
           Today
         </button>
@@ -480,7 +484,7 @@ function CalendarGrid({
       <div className="grid grid-cols-7 gap-px bg-gray-200 rounded-lg overflow-hidden">
         {/* Day headers */}
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-          <div key={day} className="bg-gray-50 p-3 text-center text-sm font-semibold text-gray-700 border-b border-gray-200">
+          <div key={day} className="bg-gray-50 p-1 sm:p-2 md:p-3 text-center text-xs sm:text-sm font-semibold text-gray-700 border-b border-gray-200">
             {day}
           </div>
         ))}
@@ -488,7 +492,7 @@ function CalendarGrid({
         {/* Calendar days */}
         {calendarDays.map((day, index) => {
           if (day === null) {
-            return <div key={index} className="bg-white h-24 sm:h-32"></div>
+            return <div key={index} className="bg-white h-16 sm:h-24 md:h-32"></div>
           }
           
           const dayEvents = getEventsForDay(day)
@@ -500,9 +504,9 @@ function CalendarGrid({
             <div
               key={`${currentDate.getFullYear()}-${currentDate.getMonth()}-${day}`}
               onClick={() => onDayClick(day)}
-              className={`bg-white h-24 sm:h-32 p-1 sm:p-2 hover:bg-gray-50 transition-colors cursor-pointer ${
-                isToday ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
-              } ${isSelected ? 'bg-yellow-50 border-l-4 border-l-yellow-500' : ''} ${
+              className={`bg-white h-16 sm:h-24 md:h-32 p-0.5 sm:p-1 md:p-2 hover:bg-gray-50 transition-colors cursor-pointer ${
+                isToday ? 'bg-blue-50 border-l-2 sm:border-l-4 border-l-blue-500' : ''
+              } ${isSelected ? 'bg-yellow-50 border-l-2 sm:border-l-4 border-l-yellow-500' : ''} ${
                 isWeekend ? 'bg-gray-25' : ''
               }`}
             >
@@ -523,7 +527,7 @@ function CalendarGrid({
                         e.stopPropagation()
                         onEventClick(event)
                       }}
-                      className={`text-xs px-1 sm:px-2 py-0.5 sm:py-1 rounded-full truncate cursor-pointer hover:opacity-80 transition-opacity font-medium ${clubColor.bg} ${clubColor.text}`}
+                      className={`text-xs px-0.5 sm:px-1 md:px-2 py-0.5 sm:py-1 rounded-full truncate cursor-pointer hover:opacity-80 transition-opacity font-medium ${clubColor.bg} ${clubColor.text}`}
                       title={`${event.title} - ${event.club?.name || 'Unknown Club'}`}
                     >
                       {event.title}
