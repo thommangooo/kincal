@@ -1,14 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import Header from '@/components/Header'
 import { 
   getApprovedUsers, 
-  createApprovedUser, 
   createUserWithPermissions,
-  updateApprovedUser,
   updateUserWithPermissions, 
   deleteApprovedUser,
   getUserWithPermissions,
@@ -27,8 +25,6 @@ import {
   Shield, 
   User as UserIcon,
   Mail,
-  Calendar,
-  AlertCircle,
   CheckCircle
 } from 'lucide-react'
 import Toast from '@/components/Toast'
@@ -64,28 +60,12 @@ export default function UsersPage() {
     districts: []
   })
 
-  // Check if user is superuser
-  useEffect(() => {
-    if (!authLoading && user) {
-      // Check user role - this would need to be implemented
-      // For now, we'll allow access if user exists
-      loadUsers()
-      loadEntities()
-    } else if (!authLoading && !user) {
-      router.push('/signin')
-    }
-  }, [user, authLoading, router])
+  const showToastMessage = useCallback((message: string) => {
+    setToastMessage(message)
+    setShowToast(true)
+  }, [])
 
-  const loadEntities = async () => {
-    try {
-      const entitiesData = await getAllEntitiesForAssignment()
-      setEntities(entitiesData)
-    } catch (error) {
-      console.error('Error loading entities:', error)
-    }
-  }
-
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     try {
       setLoading(true)
       const usersData = await getApprovedUsers()
@@ -108,12 +88,28 @@ export default function UsersPage() {
     } finally {
       setLoading(false)
     }
+  }, [showToastMessage])
+
+  const loadEntities = async () => {
+    try {
+      const entitiesData = await getAllEntitiesForAssignment()
+      setEntities(entitiesData)
+    } catch (error) {
+      console.error('Error loading entities:', error)
+    }
   }
 
-  const showToastMessage = (message: string) => {
-    setToastMessage(message)
-    setShowToast(true)
-  }
+  // Check if user is superuser
+  useEffect(() => {
+    if (!authLoading && user) {
+      // Check user role - this would need to be implemented
+      // For now, we'll allow access if user exists
+      loadUsers()
+      loadEntities()
+    } else if (!authLoading && !user) {
+      router.push('/signin')
+    }
+  }, [user, authLoading, router, loadUsers])
 
   const resetForm = () => {
     setFormData({
@@ -339,7 +335,7 @@ export default function UsersPage() {
                                     }}
                                     className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                                   />
-                                  <span className="ml-2 text-sm text-gray-700">{zone.name}, {zone.district_name}</span>
+                                  <span className="ml-2 text-sm text-gray-700">{zone.name}, {zone.district?.name || 'Unknown District'}</span>
                                 </label>
                               ))}
                             </div>

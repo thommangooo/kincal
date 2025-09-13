@@ -648,7 +648,7 @@ export async function updateApprovedUser(id: string, updates: {
   name?: string
   role?: 'superuser' | 'editor'
 }): Promise<ApprovedUser> {
-  const updateData: any = {}
+  const updateData: Partial<Pick<ApprovedUser, 'email' | 'name' | 'role'>> = {}
   if (updates.email) updateData.email = updates.email.toLowerCase()
   if (updates.name !== undefined) updateData.name = updates.name
   if (updates.role) updateData.role = updates.role
