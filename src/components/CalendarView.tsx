@@ -45,7 +45,7 @@ interface CalendarViewProps {
     districtId: string
     zoneId: string
     clubId: string
-    visibility: 'all' | 'public' | 'private'
+    visibility: 'all' | 'public' | 'private' | 'internal-use'
   }
   showCreateButton?: boolean
   showFilters?: boolean
@@ -54,7 +54,7 @@ interface CalendarViewProps {
     districtId: string
     zoneId: string
     clubId: string
-    visibility: 'all' | 'public' | 'private'
+    visibility: 'all' | 'public' | 'private' | 'internal-use'
   }) => void
   onClearFilters?: () => void
 }
@@ -73,7 +73,7 @@ export default function CalendarView({ filters, showCreateButton = true, showFil
   const [search, setSearch] = useState(filters?.search || '')
   const [entityId, setEntityId] = useState(filters?.clubId || '')
   const [entityType, setEntityType] = useState<'club' | 'zone' | 'district'>('club')
-  const [visibility, setVisibility] = useState<'all' | 'public' | 'private'>(filters?.visibility || 'all')
+  const [visibility, setVisibility] = useState<'all' | 'public' | 'private' | 'internal-use'>(filters?.visibility || 'all')
   const [filtersCollapsed, setFiltersCollapsed] = useState(true)
 
   // Sync local state with global filters
@@ -91,12 +91,14 @@ export default function CalendarView({ filters, showCreateButton = true, showFil
       setLoading(true)
       try {
         const eventFilters: {
-          visibility?: 'public' | 'private'
+          visibility?: 'public' | 'private' | 'internal-use'
           clubId?: string
           zoneId?: string
           districtId?: string
         } = {
-          ...(visibility && visibility !== 'all' && { visibility })
+          ...(visibility && visibility !== 'all' && { 
+            visibility: visibility as 'public' | 'private' | 'internal-use'
+          })
         }
         
         // Add entity-specific filter based on type
@@ -368,7 +370,7 @@ export default function CalendarView({ filters, showCreateButton = true, showFil
                   </label>
                   <select
                     value={visibility}
-                    onChange={(e) => setVisibility(e.target.value as 'all' | 'public' | 'private')}
+                    onChange={(e) => setVisibility(e.target.value as 'all' | 'public' | 'private' | 'internal-use')}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-kin-red focus:border-transparent transition-colors text-sm"
                   >
                     <option value="all">All Events</option>

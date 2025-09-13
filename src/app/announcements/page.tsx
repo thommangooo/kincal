@@ -14,11 +14,11 @@ export default function AnnouncementsPage() {
     districtId: string
     zoneId: string
     clubId: string
-    visibility: 'all' | 'public' | 'private'
+    visibility: 'all' | 'public' | 'private' | 'internal-use'
   }) => {
     setFilters({
       ...newFilters,
-      visibility: newFilters.visibility === 'private' ? 'internal-use' : newFilters.visibility
+      visibility: newFilters.visibility
     })
   }, [setFilters])
 

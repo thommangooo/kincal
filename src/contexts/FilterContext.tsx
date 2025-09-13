@@ -7,7 +7,7 @@ export interface GlobalFilters {
   districtId: string
   zoneId: string
   clubId: string
-  visibility: 'all' | 'public' | 'private'
+  visibility: 'all' | 'public' | 'private' | 'internal-use'
 }
 
 interface FilterContextType {

@@ -18,7 +18,7 @@ export async function getEvents(filters?: {
   clubId?: string
   zoneId?: string
   districtId?: string
-  visibility?: 'public' | 'private'
+  visibility?: 'public' | 'private' | 'internal-use'
   startDate?: Date
   endDate?: Date
 }) {
@@ -258,7 +258,7 @@ export async function getAnnouncements(filters?: {
   clubId?: string
   zoneId?: string
   districtId?: string
-  visibility?: 'public' | 'private'
+  visibility?: 'public' | 'private' | 'internal-use'
   limit?: number
   includeExpired?: boolean
 }) {

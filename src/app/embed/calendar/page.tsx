@@ -24,7 +24,7 @@ function CalendarEmbedContent() {
     districtId: districtId || '',
     zoneId: zoneId || '',
     clubId: clubId || '',
-    visibility: visibilityFilter as 'all' | 'public' | 'private'
+    visibility: visibilityFilter as 'all' | 'public' | 'private' | 'internal-use'
   })
 
   // Wrapper function to handle type conversion between EventFilters and CalendarView
@@ -33,7 +33,7 @@ function CalendarEmbedContent() {
     districtId: string
     zoneId: string
     clubId: string
-    visibility: 'all' | 'public' | 'private'
+    visibility: 'all' | 'public' | 'private' | 'internal-use'
   }) => {
     setFilters(newFilters)
   }

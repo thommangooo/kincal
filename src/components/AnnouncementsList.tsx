@@ -15,7 +15,7 @@ interface AnnouncementsListProps {
     districtId: string
     zoneId: string
     clubId: string
-    visibility: 'all' | 'public' | 'internal-use'
+    visibility: 'all' | 'public' | 'private' | 'internal-use'
   }
   showFilters?: boolean
   onFiltersChange?: (filters: {
@@ -23,7 +23,7 @@ interface AnnouncementsListProps {
     districtId: string
     zoneId: string
     clubId: string
-    visibility: 'all' | 'public' | 'private'
+    visibility: 'all' | 'public' | 'private' | 'internal-use'
   }) => void
   onClearFilters?: () => void
 }
@@ -37,7 +37,7 @@ export default function AnnouncementsList({ filters, showFilters = false, onFilt
   const [search, setSearch] = useState(filters?.search || '')
   const [entityId, setEntityId] = useState(filters?.clubId || '')
   const [entityType, setEntityType] = useState<'club' | 'zone' | 'district'>('club')
-  const [visibility, setVisibility] = useState<'all' | 'public' | 'private'>(filters?.visibility === 'internal-use' ? 'private' : (filters?.visibility as 'all' | 'public' | 'private') || 'all')
+  const [visibility, setVisibility] = useState<'all' | 'public' | 'private' | 'internal-use'>(filters?.visibility || 'all')
   const [filtersCollapsed, setFiltersCollapsed] = useState(true)
 
   // Sync local state with global filters
@@ -45,7 +45,7 @@ export default function AnnouncementsList({ filters, showFilters = false, onFilt
     if (filters) {
       setSearch(filters.search || '')
       setEntityId(filters.clubId || '')
-      setVisibility(filters.visibility === 'internal-use' ? 'private' : (filters.visibility as 'all' | 'public' | 'private') || 'all')
+      setVisibility(filters.visibility || 'all')
     }
   }, [filters])
 
@@ -54,13 +54,13 @@ export default function AnnouncementsList({ filters, showFilters = false, onFilt
       setLoading(true)
       try {
         const announcementFilters: {
-          visibility?: 'public' | 'private'
+          visibility?: 'public' | 'private' | 'internal-use'
           clubId?: string
           zoneId?: string
           districtId?: string
         } = {
           ...(visibility && visibility !== 'all' && { 
-            visibility: visibility === 'private' ? 'private' as const : visibility as 'public' | 'private'
+            visibility: visibility as 'public' | 'private' | 'internal-use'
           })
         }
         
@@ -258,12 +258,13 @@ export default function AnnouncementsList({ filters, showFilters = false, onFilt
                   </label>
                   <select
                     value={visibility}
-                    onChange={(e) => setVisibility(e.target.value as 'all' | 'public' | 'private')}
+                    onChange={(e) => setVisibility(e.target.value as 'all' | 'public' | 'private' | 'internal-use')}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-kin-red focus:border-transparent transition-colors text-sm"
                   >
                     <option value="all">All Announcements</option>
                     <option value="public">Public Only</option>
-                    <option value="private">Internal Only</option>
+                    <option value="private">Private Only</option>
+                    <option value="internal-use">Internal Only</option>
                   </select>
                 </div>
               </div>
