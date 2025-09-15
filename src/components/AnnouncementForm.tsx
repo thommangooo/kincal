@@ -47,7 +47,8 @@ export default function AnnouncementForm({ mode, announcementId }: AnnouncementF
     resolver: zodResolver(announcementFormSchema),
     defaultValues: {
       visibility: 'public',
-      tags: []
+      tags: [],
+      publish_date: new Date().toISOString().split('T')[0] // Set today's date as default
     }
   })
 
@@ -89,13 +90,13 @@ export default function AnnouncementForm({ mode, announcementId }: AnnouncementF
           setContent(announcementData.content)
           setImageUrl(announcementData.image_url)
           
-          // Set dates
+          // Set dates (date-only format)
           const publishDate = new Date(announcementData.publish_date)
-          setValue('publish_date', publishDate.toISOString().slice(0, 16))
+          setValue('publish_date', publishDate.toISOString().split('T')[0])
           
           if (announcementData.expiry_date) {
             const expiryDate = new Date(announcementData.expiry_date)
-            setValue('expiry_date', expiryDate.toISOString().slice(0, 16))
+            setValue('expiry_date', expiryDate.toISOString().split('T')[0])
           }
           
           // Set entity
@@ -209,8 +210,8 @@ export default function AnnouncementForm({ mode, announcementId }: AnnouncementF
       const announcementData = {
         title: data.title,
         content: content,
-        publish_date: new Date(data.publish_date).toISOString(),
-        expiry_date: data.expiry_date ? new Date(data.expiry_date).toISOString() : null,
+        publish_date: new Date(data.publish_date + 'T00:00:00').toISOString(),
+        expiry_date: data.expiry_date ? new Date(data.expiry_date + 'T23:59:59').toISOString() : null,
         club_id,
         zone_id,
         district_id,
@@ -352,7 +353,7 @@ export default function AnnouncementForm({ mode, announcementId }: AnnouncementF
                     </label>
                     <input
                       {...register('publish_date')}
-                      type="datetime-local"
+                      type="date"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                     {errors.publish_date && (
@@ -366,7 +367,7 @@ export default function AnnouncementForm({ mode, announcementId }: AnnouncementF
                     </label>
                     <input
                       {...register('expiry_date')}
-                      type="datetime-local"
+                      type="date"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
