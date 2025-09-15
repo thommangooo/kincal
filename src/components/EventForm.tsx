@@ -166,28 +166,69 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
         : new Date(`${data.end_date}T23:59:59`)
 
       // Get the related IDs based on the selected entity
-      let clubId = '', zoneId = '', districtId = ''
+      let clubId: string = ''
+      let zoneId: string = ''
+      let districtId: string = ''
       
       console.log('Selected entity:', selectedEntity)
       console.log('Available clubs:', clubs)
       console.log('Available zones:', zones)
       
-      if (selectedEntity.type === 'club') {
-        const club = clubs.find(c => c.id === selectedEntity.id)
-        clubId = selectedEntity.id
-        zoneId = club?.zone_id || ''
-        districtId = club?.district_id || ''
-        console.log('Club found:', club)
-      } else if (selectedEntity.type === 'zone') {
-        const zone = zones.find(z => z.id === selectedEntity.id)
-        zoneId = selectedEntity.id
-        districtId = zone?.district_id || ''
-        console.log('Zone found:', zone)
-      } else if (selectedEntity.type === 'district') {
-        districtId = selectedEntity.id
+      switch (selectedEntity.type) {
+        case 'club':
+          clubId = selectedEntity.id
+          // Find the club to get its zone and district
+          const club = clubs.find(c => c.id === selectedEntity.id)
+          if (club) {
+            zoneId = club.zone_id
+            const clubZone = zones.find(z => z.id === club.zone_id)
+            if (clubZone) {
+              districtId = clubZone.district_id
+            }
+          }
+          console.log('Club found:', club)
+          break
+        case 'zone':
+          zoneId = selectedEntity.id
+          // Find the zone to get its district
+          const zone = zones.find(z => z.id === selectedEntity.id)
+          if (zone) {
+            districtId = zone.district_id
+          }
+          // For zone events, we need to find a representative club
+          const zoneClubs = clubs.filter(c => c.zone_id === selectedEntity.id)
+          if (zoneClubs.length > 0) {
+            clubId = zoneClubs[0].id // Use the first club in the zone as a placeholder
+          } else {
+            throw new Error(`No clubs found in the selected zone. Please contact an administrator.`)
+          }
+          console.log('Zone found:', zone)
+          break
+        case 'district':
+          districtId = selectedEntity.id
+          // For district events, we need to find a representative club
+          const districtClubs = clubs.filter(c => {
+            const clubZone = zones.find(z => z.id === c.zone_id)
+            return clubZone && clubZone.district_id === selectedEntity.id
+          })
+          if (districtClubs.length > 0) {
+            clubId = districtClubs[0].id // Use the first club in the district as a placeholder
+            const representativeClub = clubs.find(c => c.id === districtClubs[0].id)
+            if (representativeClub) {
+              zoneId = representativeClub.zone_id
+            }
+          } else {
+            throw new Error(`No clubs found in the selected district. Please contact an administrator.`)
+          }
+          break
       }
       
       console.log('Derived IDs:', { clubId, zoneId, districtId })
+
+      // Validate that we have all required IDs
+      if (!clubId || !zoneId || !districtId) {
+        throw new Error('Unable to determine club, zone, and district IDs for the selected entity. Please try selecting a different entity or contact an administrator.')
+      }
 
       const eventData = {
         title: data.title,
