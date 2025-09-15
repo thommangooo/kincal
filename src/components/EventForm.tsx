@@ -313,6 +313,12 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
                     <input
                       {...register('start_date')}
                       type="date"
+                      onChange={(e) => {
+                        // Copy start date to end date as soon as start date is entered
+                        if (e.target.value) {
+                          setValue('end_date', e.target.value)
+                        }
+                      }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                     {errors.start_date && (
