@@ -39,9 +39,10 @@ interface EventModalProps {
   event: Event | null
   isOpen: boolean
   onClose: () => void
+  onDelete?: () => void
 }
 
-export default function EventModal({ event, isOpen, onClose }: EventModalProps) {
+export default function EventModal({ event, isOpen, onClose, onDelete }: EventModalProps) {
   const [toastMessage, setToastMessage] = useState('')
   const [showToast, setShowToast] = useState(false)
   const router = useRouter()
@@ -167,7 +168,8 @@ export default function EventModal({ event, isOpen, onClose }: EventModalProps) 
                           await deleteEvent(event.id)
                           showToastMessage('Event deleted successfully!')
                           onClose()
-                          router.push('/')
+                          // Call the onDelete callback to refresh the calendar
+                          onDelete?.()
                         } catch (error) {
                           console.error('Error deleting event:', error)
                           showToastMessage('Error deleting event')

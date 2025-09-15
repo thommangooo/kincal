@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import Link from 'next/link'
 import { Calendar, List, ChevronLeft, ChevronRight, Plus, ChevronDown, ChevronUp, Search, Filter } from 'lucide-react'
 import { getEvents, Event } from '@/lib/database'
@@ -85,43 +85,45 @@ export default function CalendarView({ filters, showCreateButton = true, showFil
     }
   }, [filters])
 
-  // Load events
-  useEffect(() => {
-    const loadEvents = async () => {
-      setLoading(true)
-      try {
-        const eventFilters: {
-          visibility?: 'public' | 'private' | 'internal-use'
-          clubId?: string
-          zoneId?: string
-          districtId?: string
-        } = {
-          ...(visibility && visibility !== 'all' && { 
-            visibility: visibility as 'public' | 'private' | 'internal-use'
-          })
-        }
-        
-        // Add entity-specific filter based on type
-        if (entityId) {
-          if (entityType === 'club') {
-            eventFilters.clubId = entityId
-          } else if (entityType === 'zone') {
-            eventFilters.zoneId = entityId
-          } else if (entityType === 'district') {
-            eventFilters.districtId = entityId
-          }
-        }
-        
-        const eventsData = await getEvents(eventFilters)
-        setEvents(eventsData)
-      } catch (error) {
-        console.error('Error loading events:', error)
-      } finally {
-        setLoading(false)
+  // Load events function
+  const loadEvents = useCallback(async () => {
+    setLoading(true)
+    try {
+      const eventFilters: {
+        visibility?: 'public' | 'private' | 'internal-use'
+        clubId?: string
+        zoneId?: string
+        districtId?: string
+      } = {
+        ...(visibility && visibility !== 'all' && { 
+          visibility: visibility as 'public' | 'private' | 'internal-use'
+        })
       }
+      
+      // Add entity-specific filter based on type
+      if (entityId) {
+        if (entityType === 'club') {
+          eventFilters.clubId = entityId
+        } else if (entityType === 'zone') {
+          eventFilters.zoneId = entityId
+        } else if (entityType === 'district') {
+          eventFilters.districtId = entityId
+        }
+      }
+      
+      const eventsData = await getEvents(eventFilters)
+      setEvents(eventsData)
+    } catch (error) {
+      console.error('Error loading events:', error)
+    } finally {
+      setLoading(false)
     }
-    loadEvents()
   }, [entityId, entityType, visibility])
+
+  // Load events on mount and when filters change
+  useEffect(() => {
+    loadEvents()
+  }, [loadEvents])
 
   // Notify parent of filter changes
   useEffect(() => {
@@ -417,6 +419,7 @@ export default function CalendarView({ filters, showCreateButton = true, showFil
         event={selectedEvent}
         isOpen={isModalOpen}
         onClose={handleCloseModal}
+        onDelete={loadEvents}
       />
     </div>
   )
