@@ -2,7 +2,6 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { Announcement, deleteAnnouncement } from '@/lib/database'
 import { formatDate } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
@@ -13,11 +12,11 @@ import Toast from './Toast'
 interface AnnouncementCardProps {
   announcement: Announcement
   showClub?: boolean
+  onDelete?: () => void
 }
 
-export default function AnnouncementCard({ announcement, showClub = true }: AnnouncementCardProps) {
+export default function AnnouncementCard({ announcement, showClub = true, onDelete }: AnnouncementCardProps) {
   const { user } = useAuth()
-  const router = useRouter()
   const [toastMessage, setToastMessage] = useState('')
   const [showToast, setShowToast] = useState(false)
   const [showMetadata, setShowMetadata] = useState(false)
@@ -38,8 +37,8 @@ export default function AnnouncementCard({ announcement, showClub = true }: Anno
     try {
       await deleteAnnouncement(announcement.id)
       showToastMessage('Announcement deleted successfully!')
-      // Refresh the page to update the list
-      router.refresh()
+      // Call the onDelete callback to refresh the list
+      onDelete?.()
     } catch (error) {
       console.error('Error deleting announcement:', error)
       showToastMessage('Error deleting announcement')

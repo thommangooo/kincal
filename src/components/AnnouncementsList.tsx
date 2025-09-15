@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { Megaphone, Plus, ChevronDown, ChevronUp, Search, Filter } from 'lucide-react'
 import { getAnnouncements, Announcement } from '@/lib/database'
@@ -49,42 +49,43 @@ export default function AnnouncementsList({ filters, showFilters = false, onFilt
     }
   }, [filters])
 
-  useEffect(() => {
-    const loadAnnouncements = async () => {
-      setLoading(true)
-      try {
-        const announcementFilters: {
-          visibility?: 'public' | 'private' | 'internal-use'
-          clubId?: string
-          zoneId?: string
-          districtId?: string
-        } = {
-          ...(visibility && visibility !== 'all' && { 
-            visibility: visibility as 'public' | 'private' | 'internal-use'
-          })
-        }
-        
-        // Add entity-specific filter based on type
-        if (entityId) {
-          if (entityType === 'club') {
-            announcementFilters.clubId = entityId
-          } else if (entityType === 'zone') {
-            announcementFilters.zoneId = entityId
-          } else if (entityType === 'district') {
-            announcementFilters.districtId = entityId
-          }
-        }
-        
-        const announcementsData = await getAnnouncements(announcementFilters)
-        setAnnouncements(announcementsData)
-      } catch (error) {
-        console.error('Error loading announcements:', error)
-      } finally {
-        setLoading(false)
+  const loadAnnouncements = useCallback(async () => {
+    setLoading(true)
+    try {
+      const announcementFilters: {
+        visibility?: 'public' | 'private' | 'internal-use'
+        clubId?: string
+        zoneId?: string
+        districtId?: string
+      } = {
+        ...(visibility && visibility !== 'all' && { 
+          visibility: visibility as 'public' | 'private' | 'internal-use'
+        })
       }
+      
+      // Add entity-specific filter based on type
+      if (entityId) {
+        if (entityType === 'club') {
+          announcementFilters.clubId = entityId
+        } else if (entityType === 'zone') {
+          announcementFilters.zoneId = entityId
+        } else if (entityType === 'district') {
+          announcementFilters.districtId = entityId
+        }
+      }
+      
+      const announcementsData = await getAnnouncements(announcementFilters)
+      setAnnouncements(announcementsData)
+    } catch (error) {
+      console.error('Error loading announcements:', error)
+    } finally {
+      setLoading(false)
     }
-    loadAnnouncements()
   }, [entityId, entityType, visibility])
+
+  useEffect(() => {
+    loadAnnouncements()
+  }, [loadAnnouncements])
 
   // Notify parent of filter changes
   useEffect(() => {
@@ -286,7 +287,8 @@ export default function AnnouncementsList({ filters, showFilters = false, onFilt
             {filteredAnnouncements.map(announcement => (
               <AnnouncementCard 
                 key={announcement.id} 
-                announcement={announcement} 
+                announcement={announcement}
+                onDelete={loadAnnouncements}
               />
             ))}
           </div>
