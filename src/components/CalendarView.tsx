@@ -6,36 +6,10 @@ import { Calendar, List, ChevronLeft, ChevronRight, Plus, ChevronDown, ChevronUp
 import { getEvents, Event } from '@/lib/database'
 import { formatTime } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
+import { generateClubColor } from '@/lib/colors'
 import EventCard from './EventCard'
 import EventModal from './EventModal'
 import ClubSearch from './ClubSearch'
-
-// Generate consistent colors for clubs
-const generateClubColor = (clubId: string): { bg: string; text: string; border: string } => {
-  // Create a simple hash from the club ID
-  let hash = 0
-  for (let i = 0; i < clubId.length; i++) {
-    const char = clubId.charCodeAt(i)
-    hash = ((hash << 5) - hash) + char
-    hash = hash & hash // Convert to 32-bit integer
-  }
-  
-  // Use absolute value and modulo to get a consistent index
-  const colorIndex = Math.abs(hash) % 8
-  
-  const colors = [
-    { bg: 'bg-blue-100', text: 'text-blue-800', border: 'bg-blue-500' },
-    { bg: 'bg-green-100', text: 'text-green-800', border: 'bg-green-500' },
-    { bg: 'bg-purple-100', text: 'text-purple-800', border: 'bg-purple-500' },
-    { bg: 'bg-orange-100', text: 'text-orange-800', border: 'bg-orange-500' },
-    { bg: 'bg-pink-100', text: 'text-pink-800', border: 'bg-pink-500' },
-    { bg: 'bg-indigo-100', text: 'text-indigo-800', border: 'bg-indigo-500' },
-    { bg: 'bg-teal-100', text: 'text-teal-800', border: 'bg-teal-500' },
-    { bg: 'bg-amber-100', text: 'text-amber-800', border: 'bg-amber-500' }
-  ]
-  
-  return colors[colorIndex]
-}
 
 type ViewMode = 'calendar' | 'list'
 
@@ -150,14 +124,22 @@ export default function CalendarView({ filters, showCreateButton = true, showFil
   }, [events, search])
 
 
-  // Get events for current month
+  // Get events for current month (including multi-day events that span into this month)
   const currentMonthEvents = useMemo(() => {
     const year = currentDate.getFullYear()
     const month = currentDate.getMonth()
     
     return filteredEvents.filter(event => {
-      const eventDate = new Date(event.start_date)
-      return eventDate.getFullYear() === year && eventDate.getMonth() === month
+      const eventStartDate = new Date(event.start_date)
+      const eventEndDate = new Date(event.end_date)
+      
+      // Check if the event overlaps with the current month
+      // Event should be included if it starts in this month OR ends in this month OR spans across this month
+      const eventStartMonth = eventStartDate.getFullYear() === year && eventStartDate.getMonth() === month
+      const eventEndMonth = eventEndDate.getFullYear() === year && eventEndDate.getMonth() === month
+      const eventSpansMonth = eventStartDate <= new Date(year, month + 1, 0) && eventEndDate >= new Date(year, month, 1)
+      
+      return eventStartMonth || eventEndMonth || eventSpansMonth
     })
   }, [filteredEvents, currentDate])
 
@@ -450,7 +432,7 @@ function CalendarGrid({
   const startingDayOfWeek = firstDay.getDay()
 
   // Generate calendar days
-  const calendarDays = []
+  const calendarDays: (number | null)[] = []
   
   // Add empty cells for days before the first day of the month
   for (let i = 0; i < startingDayOfWeek; i++) {
@@ -462,13 +444,98 @@ function CalendarGrid({
     calendarDays.push(day)
   }
 
-  // Get events for a specific day
-  const getEventsForDay = (day: number) => {
+
+  // Get all events for a specific day, categorized by type
+  const getEventsForDayCategorized = (day: number) => {
     const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
-    return events.filter(event => {
-      const eventDate = new Date(event.start_date)
-      return eventDate.toDateString() === date.toDateString()
+    const singleDayEvents: Event[] = []
+    const multiDayEvents: (Event & { isStartDay: boolean; isEndDay: boolean })[] = []
+    
+    events.forEach(event => {
+      const eventStartDate = new Date(event.start_date)
+      const eventEndDate = new Date(event.end_date)
+      
+      // Normalize dates to compare only the date part (ignore time)
+      const eventStartDateOnly = new Date(eventStartDate.getFullYear(), eventStartDate.getMonth(), eventStartDate.getDate())
+      const eventEndDateOnly = new Date(eventEndDate.getFullYear(), eventEndDate.getMonth(), eventEndDate.getDate())
+      const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+      
+      const isMultiDay = eventStartDateOnly.getTime() !== eventEndDateOnly.getTime()
+      const isOnThisDay = dateOnly >= eventStartDateOnly && dateOnly <= eventEndDateOnly
+      const startsOnThisDay = eventStartDateOnly.getTime() === dateOnly.getTime()
+      
+      if (isOnThisDay) {
+        if (isMultiDay) {
+          // Multi-day event - show as spanning bar on all days it spans
+          multiDayEvents.push({
+            ...event,
+            isStartDay: startsOnThisDay,
+            isEndDay: eventEndDateOnly.getTime() === dateOnly.getTime()
+          })
+        } else {
+          // Single-day event - show as pill
+          singleDayEvents.push(event)
+        }
+      }
     })
+    
+    return { singleDayEvents, multiDayEvents }
+  }
+
+  // Calculate spanning bar properties for multi-day events
+  const getSpanningBarStyle = (event: Event, currentDayIndex: number) => {
+    const eventStartDate = new Date(event.start_date)
+    const eventEndDate = new Date(event.end_date)
+    
+    // Calculate the number of days the event spans
+    const daysSpan = Math.ceil((eventEndDate.getTime() - eventStartDate.getTime()) / (1000 * 60 * 60 * 24)) + 1
+    
+    // Calculate position within the week (0-6 for Sun-Sat)
+    const dayOfWeek = currentDayIndex % 7
+    const currentRow = Math.floor(currentDayIndex / 7)
+    
+    // Find the start day index for this event
+    const eventStartDateOnly = new Date(eventStartDate.getFullYear(), eventStartDate.getMonth(), eventStartDate.getDate())
+    const currentDay = calendarDays[currentDayIndex]
+    if (currentDay === null) {
+      // This shouldn't happen since we only call this for non-null days, but handle it gracefully
+      return {
+        left: '0%',
+        width: '0%',
+        daysSpan: 0,
+        currentRow: 0,
+        dayOfWeek: 0,
+        daysIntoEvent: 0,
+        isStartOfWeek: false,
+        isEndOfWeek: false
+      }
+    }
+    const currentDayDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDay)
+    const currentDateOnly = new Date(currentDayDate.getFullYear(), currentDayDate.getMonth(), currentDayDate.getDate())
+    
+    // Calculate how many days into the event we are
+    const daysIntoEvent = Math.ceil((currentDateOnly.getTime() - eventStartDateOnly.getTime()) / (1000 * 60 * 60 * 24))
+    
+    
+    // Calculate how many days remain in the current week from this day
+    const daysRemainingInWeek = 7 - dayOfWeek
+    
+    // Calculate how many days of the event remain from this day
+    const daysRemainingInEvent = daysSpan - daysIntoEvent
+    
+    // The bar width is the minimum of remaining days in week or remaining days in event
+    const actualSpan = Math.min(daysRemainingInWeek, daysRemainingInEvent)
+    
+    return {
+      left: `${(dayOfWeek * 100) / 7}%`,
+      width: `${(actualSpan * 100) / 7}%`,
+      daysSpan: actualSpan,
+      currentRow,
+      dayOfWeek,
+      daysIntoEvent,
+      isStartOfWeek: dayOfWeek === 0,
+      isEndOfWeek: dayOfWeek === 6
+    }
   }
 
   return (
@@ -501,67 +568,119 @@ function CalendarGrid({
       </div>
 
       {/* Calendar Grid */}
-      <div className="grid grid-cols-7 gap-px bg-gray-200 rounded-lg overflow-hidden">
-        {/* Day headers */}
-        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-          <div key={day} className="bg-gray-50 p-1 sm:p-2 md:p-3 text-center text-xs sm:text-sm font-semibold text-gray-700 border-b border-gray-200">
-            {day}
-          </div>
-        ))}
-        
-        {/* Calendar days */}
-        {calendarDays.map((day, index) => {
-          if (day === null) {
-            return <div key={index} className="bg-white h-16 sm:h-24 md:h-32"></div>
-          }
-          
-          const dayEvents = getEventsForDay(day)
-          const isToday = new Date().toDateString() === new Date(currentDate.getFullYear(), currentDate.getMonth(), day).toDateString()
-          const isWeekend = index % 7 === 0 || index % 7 === 6 // Sunday or Saturday
-          const isSelected = selectedDate && selectedDate.toDateString() === new Date(currentDate.getFullYear(), currentDate.getMonth(), day).toDateString()
-          
-          return (
-            <div
-              key={`${currentDate.getFullYear()}-${currentDate.getMonth()}-${day}`}
-              onClick={() => onDayClick(day)}
-              className={`bg-white h-16 sm:h-24 md:h-32 p-0.5 sm:p-1 md:p-2 hover:bg-gray-50 transition-colors cursor-pointer ${
-                isToday ? 'bg-blue-50 border-l-2 sm:border-l-4 border-l-blue-500' : ''
-              } ${isSelected ? 'bg-yellow-50 border-l-2 sm:border-l-4 border-l-yellow-500' : ''} ${
-                isWeekend ? 'bg-gray-25' : ''
-              }`}
-            >
-              <div className={`text-xs sm:text-sm font-medium mb-1 sm:mb-2 ${
-                isToday ? 'text-blue-600 font-bold' : 
-                isSelected ? 'text-yellow-600 font-bold' :
-                isWeekend ? 'text-gray-500' : 'text-gray-900'
-              }`}>
-                {day}
-              </div>
-              <div className="space-y-0.5 sm:space-y-1 overflow-hidden">
-                {dayEvents.slice(0, 3).map((event) => {
-                  const clubColor = event.club_id ? generateClubColor(event.club_id) : { bg: 'bg-gray-100', text: 'text-gray-800', border: 'bg-gray-500' }
-                  return (
-                    <div
-                      key={event.id}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onEventClick(event)
-                      }}
-                      className={`text-xs px-0.5 sm:px-1 md:px-2 py-0.5 sm:py-1 rounded-full truncate cursor-pointer hover:opacity-80 transition-opacity font-medium ${clubColor.bg} ${clubColor.text}`}
-                      title={`${event.title} - ${event.club?.name || 'Unknown Club'}`}
-                    >
-                      {event.title}
-                    </div>
-                  )
-                })}
-                {dayEvents.length > 3 && (
-                  <div className="text-xs text-gray-500 font-medium">
-                    +{dayEvents.length - 3} more
-                  </div>
-                )}
-              </div>
+      <div className="relative">
+        <div className="grid grid-cols-7 gap-px bg-gray-200 rounded-lg overflow-hidden">
+          {/* Day headers */}
+          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+            <div key={day} className="bg-gray-50 p-1 sm:p-2 md:p-3 text-center text-xs sm:text-sm font-semibold text-gray-700 border-b border-gray-200">
+              {day}
             </div>
-          )
+          ))}
+          
+          {/* Calendar days */}
+          {calendarDays.map((day, index) => {
+            if (day === null) {
+              return <div key={index} className="bg-white h-16 sm:h-24 md:h-32"></div>
+            }
+            
+            const { singleDayEvents } = getEventsForDayCategorized(day)
+            const isToday = new Date().toDateString() === new Date(currentDate.getFullYear(), currentDate.getMonth(), day).toDateString()
+            const isWeekend = index % 7 === 0 || index % 7 === 6 // Sunday or Saturday
+            const isSelected = selectedDate && selectedDate.toDateString() === new Date(currentDate.getFullYear(), currentDate.getMonth(), day).toDateString()
+            
+            return (
+              <div
+                key={`${currentDate.getFullYear()}-${currentDate.getMonth()}-${day}`}
+                onClick={() => onDayClick(day)}
+                className={`bg-white h-16 sm:h-24 md:h-32 p-0.5 sm:p-1 md:p-2 hover:bg-gray-50 transition-colors cursor-pointer ${
+                  isToday ? 'bg-blue-50 border-l-2 sm:border-l-4 border-l-blue-500' : ''
+                } ${isSelected ? 'bg-yellow-50 border-l-2 sm:border-l-4 border-l-yellow-500' : ''} ${
+                  isWeekend ? 'bg-gray-25' : ''
+                }`}
+              >
+                <div className={`text-xs sm:text-sm font-medium mb-1 sm:mb-2 ${
+                  isToday ? 'text-blue-600 font-bold' : 
+                  isSelected ? 'text-yellow-600 font-bold' :
+                  isWeekend ? 'text-gray-500' : 'text-gray-900'
+                }`}>
+                  {day}
+                </div>
+                <div className="space-y-0.5 sm:space-y-1 overflow-hidden relative">
+                  {/* Single-day events */}
+                  {singleDayEvents.slice(0, 3).map((event) => {
+                    const clubColor = event.entity_id ? generateClubColor(event.entity_id) : { bg: 'bg-gray-100', text: 'text-gray-800', border: 'bg-gray-500', bgStyle: 'background-color: #f3f4f6', textStyle: 'color: #1f2937', borderStyle: 'background-color: #6b7280' }
+                    return (
+                      <div
+                        key={event.id}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onEventClick(event)
+                        }}
+                        className={`text-xs px-0.5 sm:px-1 md:px-2 py-0.5 sm:py-1 rounded-full truncate cursor-pointer hover:opacity-80 transition-opacity font-medium ${clubColor.bg} ${clubColor.text}`}
+                        style={{
+                          backgroundColor: clubColor.bgStyle?.split(': ')[1],
+                          color: clubColor.textStyle?.split(': ')[1]
+                        }}
+                        title={`${event.title} - ${event.club?.name || 'Unknown Club'}`}
+                      >
+                        {event.title}
+                      </div>
+                    )
+                  })}
+                  
+                  {/* Show "more" indicator if there are too many single-day events */}
+                  {singleDayEvents.length > 3 && (
+                    <div className="text-xs text-gray-500 font-medium">
+                      +{singleDayEvents.length - 3} more
+                    </div>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+        
+        {/* Spanning bars for multi-day events */}
+        {calendarDays.map((day, index) => {
+          if (day === null) return null
+          
+          const { multiDayEvents } = getEventsForDayCategorized(day)
+          
+          return multiDayEvents.map((event) => {
+            const clubColor = event.entity_id ? generateClubColor(event.entity_id) : { bg: 'bg-gray-100', text: 'text-gray-800', border: 'bg-gray-500', bgStyle: 'background-color: #f3f4f6', textStyle: 'color: #1f2937', borderStyle: 'background-color: #6b7280' }
+            const barStyle = getSpanningBarStyle(event, index)
+            
+            // Calculate the top position based on the current row
+            // Header height (40px) + row height (96px) + gap (1px) * row number
+            const topPosition = 40 + (barStyle.currentRow * 97)
+            
+            // Only show text on the start day of the event to avoid repetition
+            const shouldShowText = event.isStartDay
+            
+            return (
+              <div
+                key={`spanning-${event.id}-${day}`}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onEventClick(event)
+                }}
+                className="absolute h-6 cursor-pointer hover:opacity-80 transition-opacity font-medium text-xs px-2 py-1 border-l-2 flex items-center"
+                style={{
+                  backgroundColor: clubColor.bgStyle?.split(': ')[1],
+                  color: clubColor.textStyle?.split(': ')[1],
+                  borderLeftColor: clubColor.borderStyle?.split(': ')[1],
+                  left: barStyle.left,
+                  width: barStyle.width,
+                  top: `${topPosition}px`,
+                  zIndex: 10,
+                  borderRadius: event.isStartDay ? '0 4px 4px 0' : event.isEndDay ? '4px 0 0 4px' : '0'
+                }}
+                title={`${event.title} - ${event.club?.name || 'Unknown Club'} (${barStyle.daysSpan} days)`}
+              >
+                {shouldShowText && <span className="truncate">{event.title}</span>}
+              </div>
+            )
+          })
         })}
       </div>
     </div>
@@ -580,10 +699,14 @@ function SelectedDatePanel({
   onEventClick: (event: Event) => void
   onClose: () => void
 }) {
-  const selectedDateString = selectedDate.toDateString()
-  const dayEvents = events.filter(event => 
-    new Date(event.start_date).toDateString() === selectedDateString
-  )
+  const dayEvents = events.filter(event => {
+    const eventStartDate = new Date(event.start_date)
+    const eventEndDate = new Date(event.end_date)
+    const selectedDateObj = new Date(selectedDate)
+    
+    // Check if the selected date falls within the event's date range
+    return selectedDateObj >= eventStartDate && selectedDateObj <= eventEndDate
+  })
 
   return (
     <div className="mt-6 bg-gray-50 rounded-lg p-4 border border-gray-200">
@@ -611,12 +734,16 @@ function SelectedDatePanel({
       ) : (
         <div className="space-y-3">
           {dayEvents.map(event => {
-            const clubColor = event.club_id ? generateClubColor(event.club_id) : { bg: 'bg-gray-100', text: 'text-gray-800', border: 'bg-gray-500' }
+            const clubColor = event.entity_id ? generateClubColor(event.entity_id) : { bg: 'bg-gray-100', text: 'text-gray-800', border: 'bg-gray-500', bgStyle: 'background-color: #f3f4f6', textStyle: 'color: #1f2937', borderStyle: 'background-color: #6b7280' }
             return (
               <div
                 key={event.id}
                 onClick={() => onEventClick(event)}
                 className={`p-3 rounded-lg cursor-pointer hover:shadow-sm transition-shadow ${clubColor.bg} ${clubColor.text}`}
+                style={{
+                  backgroundColor: clubColor.bgStyle?.split(': ')[1],
+                  color: clubColor.textStyle?.split(': ')[1]
+                }}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">

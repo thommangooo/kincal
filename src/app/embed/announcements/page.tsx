@@ -3,32 +3,9 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { getAnnouncements, Announcement } from '@/lib/database'
+import { generateClubColor } from '@/lib/colors'
 import { Megaphone, ChevronDown, ChevronUp } from 'lucide-react'
 import Image from 'next/image'
-
-// Generate consistent colors for clubs
-const generateClubColor = (clubId: string): { bg: string; text: string; border: string } => {
-  let hash = 0
-  for (let i = 0; i < clubId.length; i++) {
-    const char = clubId.charCodeAt(i)
-    hash = ((hash << 5) - hash) + char
-    hash = hash & hash
-  }
-  
-  const colors = [
-    { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-200' },
-    { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-200' },
-    { bg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-200' },
-    { bg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-200' },
-    { bg: 'bg-pink-100', text: 'text-pink-800', border: 'border-pink-200' },
-    { bg: 'bg-indigo-100', text: 'text-indigo-800', border: 'border-indigo-200' },
-    { bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-200' },
-    { bg: 'bg-red-100', text: 'text-red-800', border: 'border-red-200' },
-  ]
-  
-  const colorIndex = Math.abs(hash) % colors.length
-  return colors[colorIndex]
-}
 
 function AnnouncementsEmbedContent() {
   const searchParams = useSearchParams()
@@ -137,7 +114,7 @@ function AnnouncementsEmbedContent() {
         ) : (
           <div className="space-y-6">
             {announcements.map(announcement => {
-              const clubColor = announcement.club_id ? generateClubColor(announcement.club_id) : { bg: 'bg-gray-100', text: 'text-gray-800', border: 'border-gray-200' }
+              const clubColor = announcement.entity_id ? generateClubColor(announcement.entity_id) : { bg: 'bg-gray-100', text: 'text-gray-800', border: 'bg-gray-500', bgStyle: 'background-color: #f3f4f6', textStyle: 'color: #1f2937', borderStyle: 'background-color: #6b7280' }
               
               return (
                 <article key={announcement.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">

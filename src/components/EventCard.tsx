@@ -3,32 +3,8 @@
 import Image from 'next/image'
 import { Event } from '@/lib/database'
 import { formatDate, formatTime, getEventStatus } from '@/lib/utils'
+import { generateClubColor } from '@/lib/colors'
 import { Calendar, MapPin, Users, Globe, Lock, ExternalLink } from 'lucide-react'
-
-// Generate consistent colors for clubs (same as CalendarView)
-const generateClubColor = (clubId: string): { bg: string; text: string; border: string } => {
-  let hash = 0
-  for (let i = 0; i < clubId.length; i++) {
-    const char = clubId.charCodeAt(i)
-    hash = ((hash << 5) - hash) + char
-    hash = hash & hash
-  }
-  
-  const colorIndex = Math.abs(hash) % 8
-  
-  const colors = [
-    { bg: 'bg-blue-100', text: 'text-blue-800', border: 'bg-blue-500' },
-    { bg: 'bg-green-100', text: 'text-green-800', border: 'bg-green-500' },
-    { bg: 'bg-purple-100', text: 'text-purple-800', border: 'bg-purple-500' },
-    { bg: 'bg-orange-100', text: 'text-orange-800', border: 'bg-orange-500' },
-    { bg: 'bg-pink-100', text: 'text-pink-800', border: 'bg-pink-500' },
-    { bg: 'bg-indigo-100', text: 'text-indigo-800', border: 'bg-indigo-500' },
-    { bg: 'bg-teal-100', text: 'text-teal-800', border: 'bg-teal-500' },
-    { bg: 'bg-amber-100', text: 'text-amber-800', border: 'bg-amber-500' }
-  ]
-  
-  return colors[colorIndex]
-}
 
 interface EventCardProps {
   event: Event
@@ -43,13 +19,18 @@ export default function EventCard({ event, showClub = true }: EventCardProps) {
     past: 'bg-gray-100 text-gray-800'
   }
   
-  const clubColor = event.club_id ? generateClubColor(event.club_id) : { bg: 'bg-gray-100', text: 'text-gray-800', border: 'bg-gray-500' }
+  const clubColor = event.entity_id ? generateClubColor(event.entity_id) : { bg: 'bg-gray-100', text: 'text-gray-800', border: 'bg-gray-500', bgStyle: 'background-color: #f3f4f6', textStyle: 'color: #1f2937', borderStyle: 'background-color: #6b7280' }
 
   return (
     <div className="border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all duration-200 relative bg-white hover:border-gray-300">
       {/* Club Color Indicator */}
-      {event.club_id && (
-        <div className={`absolute top-0 left-0 w-1 h-full rounded-l-xl ${clubColor.border}`}></div>
+      {event.entity_id && (
+        <div 
+          className={`absolute top-0 left-0 w-1 h-full rounded-l-xl ${clubColor.border}`}
+          style={{
+            backgroundColor: clubColor.borderStyle?.split(': ')[1]
+          }}
+        ></div>
       )}
       
       <div className="flex items-start justify-between mb-4">
