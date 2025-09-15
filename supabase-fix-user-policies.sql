@@ -44,4 +44,5 @@ CREATE POLICY "Superusers can manage permissions" ON user_entity_permissions
   FOR ALL USING (is_superuser());
     
 
+
     
