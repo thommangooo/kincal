@@ -1,21 +1,12 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { 
   getEditorRequests, 
   approveEditorRequest, 
   rejectEditorRequest,
   EditorRequest 
 } from '@/lib/editorRequests'
-import { 
-  generateApprovalMailtoLink, 
-  generateRejectionMailtoLink, 
-  openMailtoLink,
-  generateApprovalEmailContent,
-  generateRejectionEmailContent,
-  ApprovalNotificationData,
-  RejectionNotificationData
-} from '@/lib/notifications'
 import { 
   Clock, 
   CheckCircle, 
@@ -48,11 +39,6 @@ export default function EditorRequestManagement({ currentUserEmail, onRequestPro
   const [approvalRequest, setApprovalRequest] = useState<EditorRequest | null>(null)
   const [approvalCompleted, setApprovalCompleted] = useState(false)
   const [rejectionCompleted, setRejectionCompleted] = useState(false)
-  const [showEmailContent, setShowEmailContent] = useState(false)
-  const [emailContentData, setEmailContentData] = useState<{
-    emailContent: string
-    mailtoLink: string
-  } | null>(null)
 
   const loadRequests = useCallback(async () => {
     try {
@@ -469,7 +455,7 @@ export default function EditorRequestManagement({ currentUserEmail, onRequestPro
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto border-4 border-red-500">
             <h3 className="text-lg font-medium text-gray-900 mb-4">
-              {emailContentData ? 'Send Approval Notification' : 'Approve Editor Request'}
+              {approvalCompleted ? 'Send Approval Notification' : 'Approve Editor Request'}
             </h3>
             
             {!approvalCompleted ? (

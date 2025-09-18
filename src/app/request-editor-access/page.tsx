@@ -83,8 +83,8 @@ export default function RequestEditorAccessPage() {
             <h3 className="text-sm font-medium text-blue-900 mb-2">What happens next?</h3>
             <ul className="text-sm text-blue-800 space-y-1">
               <li>• Your request will be reviewed by a system administrator</li>
-              <li>• You'll receive an email notification once your request is processed</li>
-              <li>• If approved, you'll be able to sign in and manage content for your selected entity</li>
+              <li>• You&apos;ll receive an email notification once your request is processed</li>
+              <li>• If approved, you&apos;ll be able to sign in and manage content for your selected entity</li>
               <li>• You can only submit one request per day</li>
             </ul>
           </div>
