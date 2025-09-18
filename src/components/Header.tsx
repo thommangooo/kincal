@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { LogOut, User, Menu, X } from 'lucide-react'
+import { LogOut, User, Menu, X, UserPlus } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { getUserRole } from '@/lib/database'
 import KinLogo from './KinLogo'
@@ -86,13 +86,22 @@ export default function Header() {
                 </button>
               </div>
             ) : (
-              <Link
-                href="/signin"
-                className="inline-flex items-center px-4 py-2 bg-kin-red text-white rounded-lg hover:bg-kin-red-dark transition-colors text-sm font-medium shadow-sm hover:shadow-md"
-              >
-                <User className="h-4 w-4 mr-1" />
-                Sign In
-              </Link>
+              <div className="flex items-center space-x-3">
+                <Link
+                  href="/request-editor-access"
+                  className="inline-flex items-center px-3 py-2 text-kin-red border border-kin-red rounded-lg hover:bg-kin-red hover:text-white transition-colors text-sm font-medium"
+                >
+                  <UserPlus className="h-4 w-4 mr-1" />
+                  Add My Kin Club
+                </Link>
+                <Link
+                  href="/signin"
+                  className="inline-flex items-center px-4 py-2 bg-kin-red text-white rounded-lg hover:bg-kin-red-dark transition-colors text-sm font-medium shadow-sm hover:shadow-md"
+                >
+                  <User className="h-4 w-4 mr-1" />
+                  Sign In
+                </Link>
+              </div>
             )}
           </div>
 
@@ -166,14 +175,24 @@ export default function Header() {
                   Sign Out
                 </button>
               ) : (
-                <Link
-                  href="/signin"
-                  className="inline-flex items-center px-4 py-2 bg-kin-red text-white rounded-lg hover:bg-kin-red-dark transition-colors text-sm font-medium shadow-sm hover:shadow-md mt-2"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <User className="h-4 w-4 mr-1" />
-                  Sign In
-                </Link>
+                <div className="mt-2 space-y-2">
+                  <Link
+                    href="/request-editor-access"
+                    className="inline-flex items-center px-4 py-2 text-kin-red border border-kin-red rounded-lg hover:bg-kin-red hover:text-white transition-colors text-sm font-medium w-full justify-center"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <UserPlus className="h-4 w-4 mr-1" />
+                    Add My Kin Club
+                  </Link>
+                  <Link
+                    href="/signin"
+                    className="inline-flex items-center px-4 py-2 bg-kin-red text-white rounded-lg hover:bg-kin-red-dark transition-colors text-sm font-medium shadow-sm hover:shadow-md w-full justify-center"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <User className="h-4 w-4 mr-1" />
+                    Sign In
+                  </Link>
+                </div>
               )}
             </nav>
           </div>

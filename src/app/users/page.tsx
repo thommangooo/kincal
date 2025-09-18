@@ -25,9 +25,11 @@ import {
   Shield, 
   User as UserIcon,
   Mail,
-  CheckCircle
+  CheckCircle,
+  Clock
 } from 'lucide-react'
 import Toast from '@/components/Toast'
+import EditorRequestManagement from '@/components/EditorRequestManagement'
 
 interface UserFormData {
   email: string
@@ -59,6 +61,7 @@ export default function UsersPage() {
     zones: [],
     districts: []
   })
+  const [activeTab, setActiveTab] = useState<'users' | 'requests'>('users')
 
   const showToastMessage = useCallback((message: string) => {
     setToastMessage(message)
@@ -218,21 +221,56 @@ export default function UsersPage() {
                   User Management
                 </h1>
                 <p className="text-gray-600">
-                  Manage approved users and their permissions for KinCal
+                  Manage approved users and editor requests for KinCal
                 </p>
               </div>
-              <button
-                onClick={() => setShowForm(true)}
-                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium shadow-sm hover:shadow-md"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add User
-              </button>
+              {activeTab === 'users' && (
+                <button
+                  onClick={() => setShowForm(true)}
+                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium shadow-sm hover:shadow-md"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add User
+                </button>
+              )}
             </div>
           </div>
 
-          {/* User Form Modal */}
-          {showForm && (
+          {/* Tab Navigation */}
+          <div className="mb-6">
+            <div className="border-b border-gray-200">
+              <nav className="-mb-px flex space-x-8">
+                <button
+                  onClick={() => setActiveTab('users')}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === 'users'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  <Users className="h-4 w-4 inline mr-2" />
+                  Approved Users
+                </button>
+                <button
+                  onClick={() => setActiveTab('requests')}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === 'requests'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  <Clock className="h-4 w-4 inline mr-2" />
+                  Club Requests
+                </button>
+              </nav>
+            </div>
+          </div>
+
+          {/* Tab Content */}
+          {activeTab === 'users' && (
+            <>
+              {/* User Form Modal */}
+              {showForm && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
               <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">
@@ -494,12 +532,26 @@ export default function UsersPage() {
             </div>
           </div>
 
-          {users.length === 0 && (
-            <div className="text-center py-12">
-              <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No users found</h3>
-              <p className="text-gray-500">Get started by adding your first user.</p>
-            </div>
+              {users.length === 0 && (
+                <div className="text-center py-12">
+                  <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No users found</h3>
+                  <p className="text-gray-500">Get started by adding your first user.</p>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Editor Requests Tab */}
+          {activeTab === 'requests' && user && (
+            <EditorRequestManagement 
+              currentUserEmail={user.email}
+              onRequestProcessed={() => {
+                showToastMessage('Request processed successfully!')
+                // Optionally reload users to show any new approved users
+                loadUsers()
+              }}
+            />
           )}
         </div>
       </main>

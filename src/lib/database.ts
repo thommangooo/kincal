@@ -639,7 +639,22 @@ export async function createApprovedUser(user: {
     .select()
     .single()
 
-  if (error) throw error
+  if (error) {
+    // If it's a duplicate key error, try to get the existing user
+    if (error.code === '23505') { // Unique constraint violation
+      const { data: existingUser, error: fetchError } = await supabase
+        .from('approved_users')
+        .select('*')
+        .eq('email', user.email.toLowerCase())
+        .single()
+      
+      if (fetchError) {
+        throw new Error(`User already exists but could not be retrieved: ${fetchError.message}`)
+      }
+      return existingUser
+    }
+    throw error
+  }
   return data
 }
 
