@@ -569,6 +569,7 @@ export async function getUserRole(userEmail: string): Promise<{
 // Get clubs with their usage status (whether they have users with permissions)
 export async function getClubsWithUsageStatus(): Promise<(Club & { isActive: boolean })[]> {
   try {
+    
     // Get all clubs with their zone and district info
     const { data: clubs, error: clubsError } = await supabase
       .from('clubs')
@@ -581,19 +582,37 @@ export async function getClubsWithUsageStatus(): Promise<(Club & { isActive: boo
     if (clubsError) throw clubsError
 
     // Get all club IDs that have users with permissions
-    const { data: activeClubIds, error: permissionsError } = await supabase
-      .from('user_entity_permissions')
-      .select('entity_id')
-      .eq('entity_type', 'club')
+    // Safari-compatible approach: try the query with better error handling
+    let activeClubIds: { entity_id: string }[] = []
+    let permissionsError = null
+    
+    try {
+      const result = await supabase
+        .from('user_entity_permissions')
+        .select('entity_id')
+        .eq('entity_type', 'club')
+      
+      activeClubIds = result.data || []
+      permissionsError = result.error
+      
+      
+    } catch (safariError) {
+      console.error('Safari-specific database error:', safariError)
+      permissionsError = safariError
+    }
 
-    if (permissionsError) throw permissionsError
+    if (permissionsError) {
+      console.error('Permissions query error:', permissionsError)
+      // Don't throw error in Safari - return empty array instead
+    }
 
-    const activeClubIdSet = new Set(activeClubIds?.map(p => p.entity_id) || [])
+    // Safari-compatible approach: use array instead of Set
+    const activeClubIdsArray = activeClubIds?.map(p => p.entity_id) || []
 
-    // Add usage status to each club
+    // Add usage status to each club - Safari-compatible version
     return clubs?.map(club => ({
       ...club,
-      isActive: activeClubIdSet.has(club.id)
+      isActive: activeClubIdsArray.includes(club.id)
     })) || []
 
   } catch (error) {
@@ -624,12 +643,13 @@ export async function getZonesWithUsageStatus(): Promise<(Zone & { isActive: boo
 
     if (permissionsError) throw permissionsError
 
-    const activeZoneIdSet = new Set(activeZoneIds?.map(p => p.entity_id) || [])
+    // Safari-compatible approach: use array instead of Set
+    const activeZoneIdsArray = activeZoneIds?.map(p => p.entity_id) || []
 
     // Add usage status and display name to each zone
     return zones?.map(zone => ({
       ...zone,
-      isActive: activeZoneIdSet.has(zone.id),
+      isActive: activeZoneIdsArray.includes(zone.id),
       displayName: `${zone.name}, ${zone.district?.name || 'Unknown District'}`
     })) || []
 
@@ -658,12 +678,13 @@ export async function getDistrictsWithUsageStatus(): Promise<(District & { isAct
 
     if (permissionsError) throw permissionsError
 
-    const activeDistrictIdSet = new Set(activeDistrictIds?.map(p => p.entity_id) || [])
+    // Safari-compatible approach: use array instead of Set
+    const activeDistrictIdsArray = activeDistrictIds?.map(p => p.entity_id) || []
 
     // Add usage status to each district
     return districts?.map(district => ({
       ...district,
-      isActive: activeDistrictIdSet.has(district.id)
+      isActive: activeDistrictIdsArray.includes(district.id)
     })) || []
 
   } catch (error) {

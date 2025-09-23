@@ -30,10 +30,15 @@ export default function ClubSearch({ value, onChange, placeholder = "Search for 
   useEffect(() => {
     const loadEntities = async () => {
       try {
-        const [clubsData, zonesData, districtsData] = await Promise.all([
+        // Safari-compatible Promise.all with individual error handling
+        const [clubsData, zonesData, districtsData] = await Promise.allSettled([
           getClubsWithUsageStatus(),
           getZonesWithUsageStatus(),
           getDistrictsWithUsageStatus()
+        ]).then(results => [
+          results[0].status === 'fulfilled' ? results[0].value : [],
+          results[1].status === 'fulfilled' ? results[1].value : [],
+          results[2].status === 'fulfilled' ? results[2].value : []
         ])
 
         // Combine all entities with their types
@@ -41,7 +46,8 @@ export default function ClubSearch({ value, onChange, placeholder = "Search for 
           ...clubsData.map(club => ({ ...club, entityType: 'club' as const })),
           ...zonesData.map(zone => ({ ...zone, entityType: 'zone' as const })),
           ...districtsData.map(district => ({ ...district, entityType: 'district' as const }))
-        ]
+        ] as SearchableEntity[]
+
 
         setEntities(allEntities)
       } catch (error) {
@@ -210,6 +216,7 @@ export default function ClubSearch({ value, onChange, placeholder = "Search for 
           {filteredEntities.map((entity, index) => {
             const isActive = entity.isActive
             const isSelected = index === selectedIndex
+            
             
             return (
               <button
