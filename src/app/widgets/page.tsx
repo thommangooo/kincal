@@ -137,6 +137,50 @@ export default function WidgetsPage() {
     return `${baseUrl}?${urlParams.toString()}`
   }
 
+  // Generate direct link URL for club pages
+  const generateDirectLinkUrl = (widgetType: 'calendar' | 'announcements') => {
+    if (!selectedEntity) return ''
+
+    // For direct links, we only support club-level pages
+    const userClub = userEntities.find(e => e.type === 'club')
+    if (!userClub) return ''
+
+    const baseUrl = `${window.location.origin}/club/${userClub.id}/${widgetType}`
+    const urlParams = new URLSearchParams()
+    
+    // Add widget configuration parameters
+    if (widgetConfig.visibility !== 'all') {
+      urlParams.set('visibility', widgetConfig.visibility)
+    }
+    urlParams.set('showFilters', widgetConfig.showFilters.toString())
+    
+    // Add return URL parameter (clubs can customize this)
+    urlParams.set('returnUrl', encodeURIComponent(window.location.origin))
+    
+    // Handle calendar scope for calendar widget
+    if (widgetType === 'calendar') {
+      switch (widgetConfig.calendarScope) {
+        case 'club-only':
+          // For club-only, no additional parameters needed (defaults to club)
+          break
+        case 'club-and-zone':
+          // Set zone parameter
+          const zone = userEntities.find(e => e.type === 'zone')
+          if (zone) urlParams.set('zone', zone.id)
+          break
+        case 'all-clubs-in-zone':
+          // Set zone parameter to show all clubs in the zone
+          const userZone = userEntities.find(e => e.type === 'zone')
+          if (userZone) {
+            urlParams.set('zone', userZone.id)
+          }
+          break
+      }
+    }
+    
+    return `${baseUrl}?${urlParams.toString()}`
+  }
+
   // Generate iframe embed code
   const generateEmbedCode = (widgetType: 'calendar' | 'announcements', width: string = '100%', height: string = '600') => {
     const url = generateEmbedUrl(widgetType)
@@ -374,7 +418,7 @@ export default function WidgetsPage() {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Embed Code
+                      Embed Code (iframe)
                     </label>
                     <div className="flex space-x-2">
                       <textarea
@@ -390,6 +434,30 @@ export default function WidgetsPage() {
                         {copiedCode === 'calendar' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                       </button>
                     </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Direct Link (for WordPress and sites that don&apos;t support iframes)
+                    </label>
+                    <div className="flex space-x-2">
+                      <input
+                        type="text"
+                        value={generateDirectLinkUrl('calendar')}
+                        readOnly
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono"
+                      />
+                      <button
+                        onClick={() => copyToClipboard(generateDirectLinkUrl('calendar'), 'calendar-direct')}
+                        className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                      >
+                        {copiedCode === 'calendar-direct' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Use this URL to link directly to your club&apos;s calendar page. 
+                      You can customize the return URL by adding <code className="bg-gray-100 px-1 rounded">returnUrl=YOUR_WEBSITE_URL</code> to the URL.
+                    </p>
                   </div>
 
                 </div>
@@ -419,7 +487,7 @@ export default function WidgetsPage() {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Embed Code
+                      Embed Code (iframe)
                     </label>
                     <div className="flex space-x-2">
                       <textarea
@@ -435,6 +503,30 @@ export default function WidgetsPage() {
                         {copiedCode === 'announcements' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                       </button>
                     </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Direct Link (for WordPress and sites that don&apos;t support iframes)
+                    </label>
+                    <div className="flex space-x-2">
+                      <input
+                        type="text"
+                        value={generateDirectLinkUrl('announcements')}
+                        readOnly
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono"
+                      />
+                      <button
+                        onClick={() => copyToClipboard(generateDirectLinkUrl('announcements'), 'announcements-direct')}
+                        className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                      >
+                        {copiedCode === 'announcements-direct' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Use this URL to link directly to your club&apos;s announcements page. 
+                      You can customize the return URL by adding <code className="bg-gray-100 px-1 rounded">returnUrl=YOUR_WEBSITE_URL</code> to the URL.
+                    </p>
                   </div>
 
                 </div>

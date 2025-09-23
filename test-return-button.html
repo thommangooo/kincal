@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Return Button - Kin Calendar</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #dc2626;
+            text-align: center;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-button {
+            display: inline-block;
+            background: #dc2626;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px 5px;
+            transition: background 0.3s;
+        }
+        .test-button:hover {
+            background: #b91c1c;
+        }
+        .info {
+            background: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        code {
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Return Button Functionality</h1>
+        
+        <div class="info">
+            <h3>📋 How to Test:</h3>
+            <ol>
+                <li>Click one of the test links below</li>
+                <li>You should see a red header with the Kin logo and club name</li>
+                <li>Look for a "← Back to [Club Name] Website" button in the top-right</li>
+                <li>Click the return button to come back to this test page</li>
+                <li>Open browser console (F12) to see debug messages</li>
+            </ol>
+        </div>
+
+        <div class="test-section">
+            <h3>🔗 Test Links (Replace CLUB_ID with actual club ID):</h3>
+            <p>These links will automatically include a return URL parameter:</p>
+            
+            <a href="/club/CLUB_ID/calendar?returnUrl=http%3A//localhost%3A3000/test-return-button.html" class="test-button">
+                📅 Test Calendar with Return URL
+            </a>
+            
+            <a href="/club/CLUB_ID/announcements?returnUrl=http%3A//localhost%3A3000/test-return-button.html" class="test-button">
+                📢 Test Announcements with Return URL
+            </a>
+        </div>
+
+        <div class="test-section">
+            <h3>🔗 Test Links (Without Return URL - Uses Referrer):</h3>
+            <p>These links rely on document.referrer (may not work in all cases):</p>
+            
+            <a href="/club/CLUB_ID/calendar" class="test-button">
+                📅 Test Calendar (Referrer Only)
+            </a>
+            
+            <a href="/club/CLUB_ID/announcements" class="test-button">
+                📢 Test Announcements (Referrer Only)
+            </a>
+        </div>
+
+        <div class="info">
+            <h3>🔧 Manual Testing:</h3>
+            <p>You can also manually test by:</p>
+            <ul>
+                <li>Going to <code>/widgets</code> page and copying a direct link</li>
+                <li>Adding <code>?returnUrl=http://yourclubwebsite.com</code> to the URL</li>
+                <li>Opening the link in a new tab</li>
+            </ul>
+        </div>
+
+        <div class="info">
+            <h3>🐛 Debugging:</h3>
+            <p>If the return button doesn't appear:</p>
+            <ul>
+                <li>Check browser console for debug messages</li>
+                <li>Verify the <code>returnUrl</code> parameter is properly encoded</li>
+                <li>Make sure you're using a valid club ID</li>
+                <li>Try the manual return URL parameter method</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
