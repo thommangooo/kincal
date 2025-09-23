@@ -2,6 +2,8 @@
 
 A centralized events calendar for Kin clubs across Canada, built with Next.js and Supabase.
 
+<!-- Deployment trigger -->
+
 ## Features
 
 - **Event Management**: Create, edit, and delete events with magic link authentication
