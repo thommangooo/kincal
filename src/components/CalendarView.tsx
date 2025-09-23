@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
-import { Calendar, List, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Search, Filter } from 'lucide-react'
+import { Calendar, List, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Search, Filter, Plus } from 'lucide-react'
 import { getEvents, Event } from '@/lib/database'
 import { formatTime } from '@/lib/utils'
 import { generateClubColor } from '@/lib/colors'
+import { useAuth } from '@/contexts/AuthContext'
 import EventCard from './EventCard'
 import EventModal from './EventModal'
 import ClubSearch from './ClubSearch'
@@ -18,6 +19,8 @@ interface CalendarViewProps {
     zoneId: string
     clubId: string
     visibility: 'all' | 'public' | 'private' | 'internal-use'
+    includeZoneEvents?: boolean
+    includeClubEvents?: boolean
   }
   showFilters?: boolean
   onFiltersChange?: (filters: {
@@ -26,11 +29,14 @@ interface CalendarViewProps {
     zoneId: string
     clubId: string
     visibility: 'all' | 'public' | 'private' | 'internal-use'
+    includeZoneEvents?: boolean
+    includeClubEvents?: boolean
   }) => void
   onClearFilters?: () => void
 }
 
 export default function CalendarView({ filters, showFilters = false, onFiltersChange, onClearFilters }: CalendarViewProps) {
+  const { user } = useAuth()
   const [viewMode, setViewMode] = useState<ViewMode>('calendar')
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
@@ -53,7 +59,8 @@ export default function CalendarView({ filters, showFilters = false, onFiltersCh
   useEffect(() => {
     if (filters) {
       const newSearch = filters.search || ''
-      const newEntityId = filters.clubId || ''
+      // Get the entity ID from the appropriate filter field
+      const newEntityId = filters.clubId || filters.zoneId || filters.districtId || ''
       const newVisibility = filters.visibility || 'all'
       
       // Only update if values actually changed to prevent infinite loops
@@ -63,10 +70,13 @@ export default function CalendarView({ filters, showFilters = false, onFiltersCh
         setVisibility(newVisibility)
       }
     }
-  }, [filters, search, entityId, visibility])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters])
 
   // Load events function
   const loadEvents = useCallback(async () => {
+    console.log('loadEvents called with filters:', filters)
+    console.log('loadEvents includeClubEvents:', filters?.includeClubEvents)
     setLoading(true)
     try {
       const eventFilters: {
@@ -74,6 +84,8 @@ export default function CalendarView({ filters, showFilters = false, onFiltersCh
         clubId?: string
         zoneId?: string
         districtId?: string
+        includeZoneEvents?: boolean
+        includeClubEvents?: boolean
       } = {
         ...(visibility && visibility !== 'all' && { 
           visibility: visibility as 'public' | 'private' | 'internal-use'
@@ -86,8 +98,11 @@ export default function CalendarView({ filters, showFilters = false, onFiltersCh
           eventFilters.clubId = entityId
         } else if (entityType === 'zone') {
           eventFilters.zoneId = entityId
+          eventFilters.includeClubEvents = filters?.includeClubEvents
         } else if (entityType === 'district') {
           eventFilters.districtId = entityId
+          eventFilters.includeZoneEvents = filters?.includeZoneEvents
+          eventFilters.includeClubEvents = filters?.includeClubEvents
         }
       }
       
@@ -98,7 +113,7 @@ export default function CalendarView({ filters, showFilters = false, onFiltersCh
     } finally {
       setLoading(false)
     }
-  }, [entityId, entityType, visibility])
+  }, [entityId, entityType, visibility, filters])
 
   // Load events on mount and when filters change
   useEffect(() => {
@@ -112,6 +127,8 @@ export default function CalendarView({ filters, showFilters = false, onFiltersCh
     zoneId: string
     clubId: string
     visibility: 'all' | 'public' | 'private' | 'internal-use'
+    includeZoneEvents?: boolean
+    includeClubEvents?: boolean
   }) => {
     onFiltersChange?.(newFilters)
   }, [onFiltersChange])
@@ -123,7 +140,9 @@ export default function CalendarView({ filters, showFilters = false, onFiltersCh
       districtId: entityType === 'district' ? entityId : '',
       zoneId: entityType === 'zone' ? entityId : '',
       clubId: entityType === 'club' ? entityId : '',
-      visibility
+      visibility,
+      includeZoneEvents: filters?.includeZoneEvents,
+      includeClubEvents: filters?.includeClubEvents
     }
     
     // Only call onFiltersChange if the filters object is different
@@ -133,7 +152,7 @@ export default function CalendarView({ filters, showFilters = false, onFiltersCh
       lastFiltersString.current = filtersString
       handleFiltersChange(currentFilters)
     }
-  }, [search, entityId, entityType, visibility, handleFiltersChange])
+  }, [search, entityId, entityType, visibility, filters?.includeClubEvents, filters?.includeZoneEvents, handleFiltersChange])
 
   // Filter events by search term
   const filteredEvents = useMemo(() => {
@@ -215,7 +234,23 @@ export default function CalendarView({ filters, showFilters = false, onFiltersCh
     if (search) activeFilters.push(`"${search}"`)
     if (entityId) {
       // We'll get the entity name from the ClubSearch component's display
-      activeFilters.push(`${entityType} selected`)
+      let entityText = `${entityType} selected`
+      
+      // Add checkbox context
+      if (entityType === 'district') {
+        const includes = []
+        if (filters?.includeZoneEvents !== false) includes.push('+Zones')
+        if (filters?.includeClubEvents !== false) includes.push('+Clubs')
+        if (includes.length > 0) {
+          entityText += ` (${includes.join(', ')})`
+        }
+      } else if (entityType === 'zone') {
+        if (filters?.includeClubEvents !== false) {
+          entityText += ' (+Clubs)'
+        }
+      }
+      
+      activeFilters.push(entityText)
     }
     if (visibility !== 'all') {
       activeFilters.push(visibility === 'public' ? 'Public' : 'Private')
@@ -312,6 +347,77 @@ export default function CalendarView({ filters, showFilters = false, onFiltersCh
                     }}
                     placeholder="Search for a club, zone, or district..."
                   />
+                  
+                  {/* Include Options - Compact, directly under dropdown */}
+                  {entityType === 'district' && entityId && (
+                    <div className="mt-2 flex items-center space-x-4 text-xs">
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={filters?.includeZoneEvents !== false}
+                          onChange={(e) => {
+                            const newFilters = {
+                              search: filters?.search || '',
+                              districtId: filters?.districtId || '',
+                              zoneId: filters?.zoneId || '',
+                              clubId: filters?.clubId || '',
+                              visibility: filters?.visibility || 'all',
+                              includeZoneEvents: e.target.checked,
+                              includeClubEvents: filters?.includeClubEvents
+                            }
+                            onFiltersChange?.(newFilters)
+                          }}
+                          className="h-3 w-3 text-kin-red focus:ring-kin-red border-gray-300 rounded"
+                        />
+                        <span className="ml-1 text-gray-600">+Zones</span>
+                      </label>
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={filters?.includeClubEvents !== false}
+                          onChange={(e) => {
+                            const newFilters = {
+                              search: filters?.search || '',
+                              districtId: filters?.districtId || '',
+                              zoneId: filters?.zoneId || '',
+                              clubId: filters?.clubId || '',
+                              visibility: filters?.visibility || 'all',
+                              includeZoneEvents: filters?.includeZoneEvents,
+                              includeClubEvents: e.target.checked
+                            }
+                            onFiltersChange?.(newFilters)
+                          }}
+                          className="h-3 w-3 text-kin-red focus:ring-kin-red border-gray-300 rounded"
+                        />
+                        <span className="ml-1 text-gray-600">+Clubs</span>
+                      </label>
+                    </div>
+                  )}
+
+                  {entityType === 'zone' && entityId && (
+                    <div className="mt-2 flex items-center space-x-4 text-xs">
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={filters?.includeClubEvents !== false}
+                          onChange={(e) => {
+                            const newFilters = {
+                              search: filters?.search || '',
+                              districtId: filters?.districtId || '',
+                              zoneId: filters?.zoneId || '',
+                              clubId: filters?.clubId || '',
+                              visibility: filters?.visibility || 'all',
+                              includeZoneEvents: filters?.includeZoneEvents,
+                              includeClubEvents: e.target.checked
+                            }
+                            onFiltersChange?.(newFilters)
+                          }}
+                          className="h-3 w-3 text-kin-red focus:ring-kin-red border-gray-300 rounded"
+                        />
+                        <span className="ml-1 text-gray-600">+Clubs</span>
+                      </label>
+                    </div>
+                  )}
                 </div>
 
                 {/* Visibility Filter */}
@@ -348,6 +454,7 @@ export default function CalendarView({ filters, showFilters = false, onFiltersCh
               selectedDate={selectedDate}
               viewMode={viewMode}
               onViewModeChange={setViewMode}
+              user={user}
             />
             
             {/* Selected Date Events Panel */}
@@ -385,7 +492,8 @@ function CalendarGrid({
   onEventClick,
   selectedDate,
   viewMode,
-  onViewModeChange
+  onViewModeChange,
+  user
 }: { 
   currentDate: Date
   events: Event[]
@@ -395,6 +503,7 @@ function CalendarGrid({
   selectedDate: Date | null
   viewMode: ViewMode
   onViewModeChange: (mode: ViewMode) => void
+  user: { email: string } | null
 }) {
   const monthName = currentDate.toLocaleDateString('en-CA', { month: 'long', year: 'numeric' })
   
@@ -539,6 +648,16 @@ function CalendarGrid({
           >
             Today
           </button>
+          
+          {user && (
+            <button
+              onClick={() => window.location.href = '/events/create'}
+              className="px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 bg-kin-red text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-kin-red-dark transition-colors flex items-center space-x-1"
+            >
+              <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span>Add Event</span>
+            </button>
+          )}
           
           <div className="flex items-center space-x-1 bg-white rounded-lg p-0.5 shadow-sm border border-gray-200">
             <button

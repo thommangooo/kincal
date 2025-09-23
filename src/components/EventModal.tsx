@@ -103,22 +103,40 @@ export default function EventModal({ event, isOpen, onClose, onDelete }: EventMo
                 )}
               </div>
               
-              {/* Club indicator */}
-              {event.club && (
+              {/* Entity indicator */}
+              {(event.club || event.zone || event.district) && (
                 <div className="flex items-center space-x-2">
                   <div className={`w-3 h-3 rounded-full ${clubColor.border}`}></div>
-                  <span className="text-sm text-gray-600">{event.club.name}</span>
-                  {event.zone && (
+                  {event.club && (
                     <>
-                      <span className="text-gray-400">•</span>
-                      <span className="text-sm text-gray-600">{event.zone.name}</span>
+                      <span className="text-sm text-gray-600">{event.club.name}</span>
+                      {event.zone && (
+                        <>
+                          <span className="text-gray-400">•</span>
+                          <span className="text-sm text-gray-600">{event.zone.name}</span>
+                        </>
+                      )}
+                      {event.district && (
+                        <>
+                          <span className="text-gray-400">•</span>
+                          <span className="text-sm text-gray-600">{event.district.name}</span>
+                        </>
+                      )}
                     </>
                   )}
-                  {event.district && (
+                  {!event.club && event.zone && (
                     <>
-                      <span className="text-gray-400">•</span>
-                      <span className="text-sm text-gray-600">{event.district.name}</span>
+                      <span className="text-sm text-gray-600">{event.zone.name}</span>
+                      {event.district && (
+                        <>
+                          <span className="text-gray-400">•</span>
+                          <span className="text-sm text-gray-600">{event.district.name}</span>
+                        </>
+                      )}
                     </>
+                  )}
+                  {!event.club && !event.zone && event.district && (
+                    <span className="text-sm text-gray-600">{event.district.name}</span>
                   )}
                 </div>
               )}
@@ -252,13 +270,33 @@ export default function EventModal({ event, isOpen, onClose, onDelete }: EventMo
                     </div>
                   )}
 
-                  {/* Club */}
+                  {/* Entity Information */}
                   {event.club && (
                     <div className="flex items-start space-x-3">
                       <Users className="h-5 w-5 text-gray-400 mt-0.5" />
                       <div>
                         <p className="text-sm font-medium text-gray-900">Club</p>
                         <p className="text-sm text-gray-600">{event.club.name}</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {!event.club && event.zone && (
+                    <div className="flex items-start space-x-3">
+                      <Users className="h-5 w-5 text-gray-400 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">Zone</p>
+                        <p className="text-sm text-gray-600">{event.zone.name}</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {!event.club && !event.zone && event.district && (
+                    <div className="flex items-start space-x-3">
+                      <Users className="h-5 w-5 text-gray-400 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">District</p>
+                        <p className="text-sm text-gray-600">{event.district.name}</p>
                       </div>
                     </div>
                   )}

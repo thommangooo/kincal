@@ -11,6 +11,8 @@ interface EventFiltersProps {
     zoneId: string
     clubId: string
     visibility: 'all' | 'public' | 'private'
+    includeZoneEvents?: boolean
+    includeClubEvents?: boolean
   }) => void
   collapsible?: boolean
   defaultCollapsed?: boolean
@@ -22,6 +24,8 @@ export default function EventFilters({ onFiltersChange, collapsible = false, def
   const [zoneId, setZoneId] = useState('')
   const [clubId, setClubId] = useState('')
   const [visibility, setVisibility] = useState<'all' | 'public' | 'private'>('all')
+  const [includeZoneEvents, setIncludeZoneEvents] = useState(true)
+  const [includeClubEvents, setIncludeClubEvents] = useState(true)
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed)
   
   const [districts, setDistricts] = useState<District[]>([])
@@ -78,10 +82,12 @@ export default function EventFilters({ onFiltersChange, collapsible = false, def
       districtId,
       zoneId,
       clubId,
-      visibility
+      visibility,
+      includeZoneEvents,
+      includeClubEvents
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, districtId, zoneId, clubId, visibility])
+  }, [search, districtId, zoneId, clubId, visibility, includeZoneEvents, includeClubEvents])
 
   const clearFilters = () => {
     setSearch('')
@@ -89,6 +95,8 @@ export default function EventFilters({ onFiltersChange, collapsible = false, def
     setZoneId('')
     setClubId('')
     setVisibility('all')
+    setIncludeZoneEvents(true)
+    setIncludeClubEvents(true)
   }
 
   return (
@@ -203,6 +211,50 @@ export default function EventFilters({ onFiltersChange, collapsible = false, def
             ))}
           </select>
         </div>
+
+        {/* Include Options - Show based on selected entity */}
+        {districtId && !zoneId && !clubId && (
+          <div className="space-y-3 p-4 bg-gray-50 rounded-lg border">
+            <h4 className="text-sm font-medium text-gray-700">Include Events From:</h4>
+            <div className="space-y-2">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={includeZoneEvents}
+                  onChange={(e) => setIncludeZoneEvents(e.target.checked)}
+                  className="h-4 w-4 text-kin-red focus:ring-kin-red border-gray-300 rounded"
+                />
+                <span className="ml-2 text-sm text-gray-600">Zone events in this district</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={includeClubEvents}
+                  onChange={(e) => setIncludeClubEvents(e.target.checked)}
+                  className="h-4 w-4 text-kin-red focus:ring-kin-red border-gray-300 rounded"
+                />
+                <span className="ml-2 text-sm text-gray-600">Club events in this district</span>
+              </label>
+            </div>
+          </div>
+        )}
+
+        {zoneId && !clubId && (
+          <div className="space-y-3 p-4 bg-gray-50 rounded-lg border">
+            <h4 className="text-sm font-medium text-gray-700">Include Events From:</h4>
+            <div className="space-y-2">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={includeClubEvents}
+                  onChange={(e) => setIncludeClubEvents(e.target.checked)}
+                  className="h-4 w-4 text-kin-red focus:ring-kin-red border-gray-300 rounded"
+                />
+                <span className="ml-2 text-sm text-gray-600">Club events in this zone</span>
+              </label>
+            </div>
+          </div>
+        )}
 
         {/* Visibility Filter */}
         <div>

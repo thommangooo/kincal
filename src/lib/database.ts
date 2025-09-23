@@ -21,7 +21,10 @@ export async function getEvents(filters?: {
   visibility?: 'public' | 'private' | 'internal-use'
   startDate?: Date
   endDate?: Date
+  includeZoneEvents?: boolean
+  includeClubEvents?: boolean
 }) {
+  console.log('getEvents called with filters:', filters)
   let query = supabase
     .from('events')
     .select(`
@@ -32,18 +35,73 @@ export async function getEvents(filters?: {
     `)
     .order('start_date', { ascending: true })
 
-  // Handle entity filtering with OR logic when multiple entities are specified
-  if (filters?.clubId && filters?.zoneId) {
-    // Show events from the specific club OR the specific zone
-    query = query.or(`club_id.eq.${filters.clubId},zone_id.eq.${filters.zoneId}`)
-  } else if (filters?.clubId) {
+  // Handle entity filtering with include options
+  if (filters?.clubId) {
+    // Club selected - show only that club's events
     query = query.eq('club_id', filters.clubId)
   } else if (filters?.zoneId) {
-    query = query.eq('zone_id', filters.zoneId)
-  }
-  
-  if (filters?.districtId) {
-    query = query.eq('district_id', filters.districtId)
+    // Zone selected - show zone events and optionally club events in that zone
+    if (filters.includeClubEvents === false) {
+      // Only show zone-posted events (exclude club events)
+      query = query.eq('zone_id', filters.zoneId).is('club_id', null)
+    } else {
+      // Show zone events OR club events in this zone
+      // First get all clubs in this zone
+      const { data: zoneClubs } = await supabase
+        .from('clubs')
+        .select('id')
+        .eq('zone_id', filters.zoneId)
+      
+      const clubIds = zoneClubs?.map(club => club.id) || []
+      if (clubIds.length > 0) {
+        // zone events (club_id is null) OR club events in this zone
+        query = query.or(`and(zone_id.eq.${filters.zoneId},club_id.is.null),club_id.in.(${clubIds.join(',')})`)
+      } else {
+        // No clubs in zone, just zone-posted events
+        query = query.eq('zone_id', filters.zoneId).is('club_id', null)
+      }
+    }
+  } else if (filters?.districtId) {
+    // District selected - show district events and optionally zone/club events in that district
+    const conditions: string[] = []
+    // Always include district-posted events unless explicitly filtered out (by unchecking both is still include district)
+    conditions.push(`and(district_id.eq.${filters.districtId},zone_id.is.null,club_id.is.null)`)
+    
+    if (filters.includeZoneEvents !== false) {
+      // Include zone-posted events in this district (exclude club events)
+      const { data: districtZones } = await supabase
+        .from('zones')
+        .select('id')
+        .eq('district_id', filters.districtId)
+      
+      const zoneIds = districtZones?.map(zone => zone.id) || []
+      if (zoneIds.length > 0) {
+        conditions.push(`and(zone_id.in.(${zoneIds.join(',')}),club_id.is.null)`)
+      }
+    }
+    
+    if (filters.includeClubEvents !== false) {
+      // Include club events for clubs whose zones are in this district
+      const { data: districtZones } = await supabase
+        .from('zones')
+        .select('id')
+        .eq('district_id', filters.districtId)
+      
+      const zoneIds = districtZones?.map(zone => zone.id) || []
+      if (zoneIds.length > 0) {
+        const { data: districtClubs } = await supabase
+          .from('clubs')
+          .select('id')
+          .in('zone_id', zoneIds)
+        
+        const clubIds = districtClubs?.map(club => club.id) || []
+        if (clubIds.length > 0) {
+          conditions.push(`club_id.in.(${clubIds.join(',')})`)
+        }
+      }
+    }
+    
+    query = query.or(conditions.join(','))
   }
   if (filters?.visibility) {
     query = query.eq('visibility', filters.visibility)
@@ -92,14 +150,15 @@ export async function createEvent(event: Omit<DbEvent, 'id' | 'created_at' | 'up
   if (!event.end_date) {
     throw new Error('Event end date is required')
   }
-  if (!event.club_id) {
-    throw new Error('Event club_id is required')
+  // Validate entity-specific required fields based on entity_type
+  if (event.entity_type === 'club' && !event.club_id) {
+    throw new Error('Event club_id is required for club events')
   }
-  if (!event.zone_id) {
-    throw new Error('Event zone_id is required')
+  if (event.entity_type === 'zone' && !event.zone_id) {
+    throw new Error('Event zone_id is required for zone events')
   }
-  if (!event.district_id) {
-    throw new Error('Event district_id is required')
+  if (event.entity_type === 'district' && !event.district_id) {
+    throw new Error('Event district_id is required for district events')
   }
   
   const { data, error } = await supabase

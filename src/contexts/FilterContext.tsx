@@ -8,6 +8,8 @@ export interface GlobalFilters {
   zoneId: string
   clubId: string
   visibility: 'all' | 'public' | 'private' | 'internal-use'
+  includeZoneEvents?: boolean
+  includeClubEvents?: boolean
 }
 
 interface FilterContextType {
@@ -24,7 +26,9 @@ const defaultFilters: GlobalFilters = {
   districtId: '',
   zoneId: '',
   clubId: '',
-  visibility: 'all'
+  visibility: 'all',
+  includeZoneEvents: true,
+  includeClubEvents: true
 }
 
 export function FilterProvider({ children }: { children: ReactNode }) {
