@@ -155,6 +155,7 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
       return
     }
 
+
     setSubmitting(true)
     try {
       // Combine date and time (use default times if not provided)

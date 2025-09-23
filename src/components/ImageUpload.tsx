@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react'
 import Image from 'next/image'
 import { supabase } from '@/lib/supabase'
-import { Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react'
+import { Upload, X, Loader2 } from 'lucide-react'
 
 interface ImageUploadProps {
   value?: string | null | undefined
@@ -142,25 +142,6 @@ export default function ImageUpload({ value, onChange, className = '' }: ImageUp
         </div>
       )}
 
-      {/* URL Input Fallback */}
-      <div className="mt-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Or enter image URL
-        </label>
-        <div className="relative">
-          <ImageIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <input
-            type="url"
-            value={value || ''}
-            onChange={(e) => {
-              onChange(e.target.value || null)
-              setPreview(e.target.value || null)
-            }}
-            placeholder="https://example.com/image.jpg"
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-      </div>
     </div>
   )
 }
