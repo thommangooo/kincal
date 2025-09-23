@@ -468,7 +468,12 @@ export default function CalendarView({ filters, showFilters = false, onFiltersCh
             )}
           </>
         ) : (
-          <EventList events={filteredEvents} onEventClick={handleEventClick} />
+          <EventList 
+            events={filteredEvents} 
+            onEventClick={handleEventClick}
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+          />
         )}
       </div>
       
@@ -902,7 +907,17 @@ function SelectedDatePanel({
 }
 
 // Event List Component
-function EventList({ events, onEventClick }: { events: Event[]; onEventClick: (event: Event) => void }) {
+function EventList({ 
+  events, 
+  onEventClick, 
+  viewMode, 
+  onViewModeChange 
+}: { 
+  events: Event[]
+  onEventClick: (event: Event) => void
+  viewMode: ViewMode
+  onViewModeChange: (mode: ViewMode) => void
+}) {
   if (events.length === 0) {
     return (
       <div className="text-center py-12">
@@ -914,12 +929,43 @@ function EventList({ events, onEventClick }: { events: Event[]; onEventClick: (e
   }
 
   return (
-    <div className="space-y-4">
-      {events.map(event => (
-        <div key={event.id} onClick={() => onEventClick(event)} className="cursor-pointer">
-          <EventCard event={event} />
+    <div>
+      {/* Compact View Toggle - positioned at top right */}
+      <div className="flex justify-end mb-4">
+        <div className="flex items-center space-x-1 bg-white rounded-lg p-0.5 shadow-sm border border-gray-200">
+          <button
+            onClick={() => onViewModeChange('calendar')}
+            className={`p-1.5 sm:p-2 rounded-md transition-all duration-200 ${
+              viewMode === 'calendar' 
+                ? 'bg-blue-600 text-white shadow-sm' 
+                : 'text-gray-600 hover:bg-gray-100'
+            }`}
+            title="Calendar View"
+          >
+            <Calendar className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5" />
+          </button>
+          <button
+            onClick={() => onViewModeChange('list')}
+            className={`p-1.5 sm:p-2 rounded-md transition-all duration-200 ${
+              viewMode === 'list' 
+                ? 'bg-blue-600 text-white shadow-sm' 
+                : 'text-gray-600 hover:bg-gray-100'
+            }`}
+            title="List View"
+          >
+            <List className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5" />
+          </button>
         </div>
-      ))}
+      </div>
+
+      {/* Events List */}
+      <div className="space-y-4">
+        {events.map(event => (
+          <div key={event.id} onClick={() => onEventClick(event)} className="cursor-pointer">
+            <EventCard event={event} />
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
