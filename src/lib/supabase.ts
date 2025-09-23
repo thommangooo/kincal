@@ -45,8 +45,6 @@ export interface DbEvent {
   description: string | null
   start_date: string
   end_date: string
-  start_time: string | null
-  end_time: string | null
   location: string | null
   club_id: string | null
   zone_id: string | null

@@ -226,8 +226,6 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
         description: data.description || null,
         start_date: startDateTime.toISOString(),
         end_date: endDateTime.toISOString(),
-        start_time: data.start_time || null,
-        end_time: data.end_time || null,
         location: data.location || null,
         club_id: clubId,
         zone_id: zoneId,
@@ -240,6 +238,11 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
         image_url: imageUrl,
         created_by_email: user?.email || 'demo@example.com'
       }
+      
+      // NOTE: We DO NOT store separate start_time and end_time fields in the database.
+      // Times are embedded in the start_date and end_date datetime fields.
+      // The form fields for start_time/end_time are used to build the datetime objects above.
+      // DO NOT add start_time or end_time to this eventData object.
 
       if (mode === 'edit' && eventId) {
         await updateEvent(eventId, eventData)
