@@ -1,11 +1,9 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
-import Link from 'next/link'
-import { Calendar, List, ChevronLeft, ChevronRight, Plus, ChevronDown, ChevronUp, Search, Filter } from 'lucide-react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import { Calendar, List, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Search, Filter } from 'lucide-react'
 import { getEvents, Event } from '@/lib/database'
 import { formatTime } from '@/lib/utils'
-import { useAuth } from '@/contexts/AuthContext'
 import { generateClubColor } from '@/lib/colors'
 import EventCard from './EventCard'
 import EventModal from './EventModal'
@@ -21,7 +19,6 @@ interface CalendarViewProps {
     clubId: string
     visibility: 'all' | 'public' | 'private' | 'internal-use'
   }
-  showCreateButton?: boolean
   showFilters?: boolean
   onFiltersChange?: (filters: {
     search: string
@@ -33,8 +30,7 @@ interface CalendarViewProps {
   onClearFilters?: () => void
 }
 
-export default function CalendarView({ filters, showCreateButton = true, showFilters = false, onFiltersChange, onClearFilters }: CalendarViewProps) {
-  const { user } = useAuth()
+export default function CalendarView({ filters, showFilters = false, onFiltersChange, onClearFilters }: CalendarViewProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('calendar')
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
@@ -49,15 +45,25 @@ export default function CalendarView({ filters, showCreateButton = true, showFil
   const [entityType, setEntityType] = useState<'club' | 'zone' | 'district'>('club')
   const [visibility, setVisibility] = useState<'all' | 'public' | 'private' | 'internal-use'>(filters?.visibility || 'all')
   const [filtersCollapsed, setFiltersCollapsed] = useState(true)
+  
+  // Ref to track last filters state to prevent infinite loops
+  const lastFiltersString = useRef('')
 
-  // Sync local state with global filters
+  // Sync local state with global filters - only when filters actually change
   useEffect(() => {
     if (filters) {
-      setSearch(filters.search || '')
-      setEntityId(filters.clubId || '')
-      setVisibility(filters.visibility || 'all')
+      const newSearch = filters.search || ''
+      const newEntityId = filters.clubId || ''
+      const newVisibility = filters.visibility || 'all'
+      
+      // Only update if values actually changed to prevent infinite loops
+      if (search !== newSearch || entityId !== newEntityId || visibility !== newVisibility) {
+        setSearch(newSearch)
+        setEntityId(newEntityId)
+        setVisibility(newVisibility)
+      }
     }
-  }, [filters])
+  }, [filters, search, entityId, visibility])
 
   // Load events function
   const loadEvents = useCallback(async () => {
@@ -99,16 +105,35 @@ export default function CalendarView({ filters, showCreateButton = true, showFil
     loadEvents()
   }, [loadEvents])
 
-  // Notify parent of filter changes
+  // Create stable filter change handler
+  const handleFiltersChange = useCallback((newFilters: {
+    search: string
+    districtId: string
+    zoneId: string
+    clubId: string
+    visibility: 'all' | 'public' | 'private' | 'internal-use'
+  }) => {
+    onFiltersChange?.(newFilters)
+  }, [onFiltersChange])
+
+  // Notify parent of filter changes - only when local state actually changes
   useEffect(() => {
-    onFiltersChange?.({
+    const currentFilters = {
       search,
       districtId: entityType === 'district' ? entityId : '',
       zoneId: entityType === 'zone' ? entityId : '',
       clubId: entityType === 'club' ? entityId : '',
       visibility
-    })
-  }, [search, entityId, entityType, visibility, onFiltersChange])
+    }
+    
+    // Only call onFiltersChange if the filters object is different
+    const filtersString = JSON.stringify(currentFilters)
+    
+    if (filtersString !== lastFiltersString.current) {
+      lastFiltersString.current = filtersString
+      handleFiltersChange(currentFilters)
+    }
+  }, [search, entityId, entityType, visibility, handleFiltersChange])
 
   // Filter events by search term
   const filteredEvents = useMemo(() => {
@@ -213,64 +238,6 @@ export default function CalendarView({ filters, showCreateButton = true, showFil
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-      {/* Header */}
-      <div className="p-2 sm:p-4 md:p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2 sm:space-x-3">
-            <div className="p-1 sm:p-2 bg-blue-100 rounded-lg">
-              <Calendar className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-blue-600" />
-            </div>
-            <div>
-              <h2 className="text-base sm:text-lg md:text-xl font-bold text-gray-900">
-                {viewMode === 'calendar' ? 'Calendar' : 'List View'}
-              </h2>
-              <p className="text-xs sm:text-sm text-gray-600 mb-1 hidden sm:block">
-                Discover and share events across Kin clubs, zones, and districts. Stay connected with your Kin community.
-              </p>
-              <p className="text-xs text-gray-500">
-                {filteredEvents.length} event{filteredEvents.length !== 1 ? 's' : ''} found
-              </p>
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-1 sm:space-x-2">
-            {user && showCreateButton && (
-              <Link
-                href="/events/create"
-                className="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 bg-kin-red text-white rounded-lg hover:bg-kin-red-dark transition-colors shadow-sm hover:shadow-md"
-                title="Create Event"
-              >
-                <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
-              </Link>
-            )}
-            
-            <div className="flex items-center space-x-1 bg-white rounded-lg p-0.5 shadow-sm">
-              <button
-                onClick={() => setViewMode('calendar')}
-                className={`p-1.5 sm:p-2 rounded-md transition-all duration-200 ${
-                  viewMode === 'calendar' 
-                    ? 'bg-blue-600 text-white shadow-sm' 
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-                title="Calendar View"
-              >
-                <Calendar className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5" />
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-1.5 sm:p-2 rounded-md transition-all duration-200 ${
-                  viewMode === 'list' 
-                    ? 'bg-blue-600 text-white shadow-sm' 
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-                title="List View"
-              >
-                <List className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Integrated Filters */}
       {showFilters && (
@@ -379,6 +346,8 @@ export default function CalendarView({ filters, showCreateButton = true, showFil
               onDayClick={handleDayClick}
               onEventClick={handleEventClick}
               selectedDate={selectedDate}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
             />
             
             {/* Selected Date Events Panel */}
@@ -414,7 +383,9 @@ function CalendarGrid({
   onNavigate,
   onDayClick,
   onEventClick,
-  selectedDate
+  selectedDate,
+  viewMode,
+  onViewModeChange
 }: { 
   currentDate: Date
   events: Event[]
@@ -422,6 +393,8 @@ function CalendarGrid({
   onDayClick: (day: number) => void
   onEventClick: (event: Event) => void
   selectedDate: Date | null
+  viewMode: ViewMode
+  onViewModeChange: (mode: ViewMode) => void
 }) {
   const monthName = currentDate.toLocaleDateString('en-CA', { month: 'long', year: 'numeric' })
   
@@ -559,12 +532,39 @@ function CalendarGrid({
         
         <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 text-center">{monthName}</h3>
         
-        <button
-          onClick={() => onNavigate('today')}
-          className="px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 bg-blue-600 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          Today
-        </button>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => onNavigate('today')}
+            className="px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 bg-blue-600 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Today
+          </button>
+          
+          <div className="flex items-center space-x-1 bg-white rounded-lg p-0.5 shadow-sm border border-gray-200">
+            <button
+              onClick={() => onViewModeChange('calendar')}
+              className={`p-1.5 sm:p-2 rounded-md transition-all duration-200 ${
+                viewMode === 'calendar' 
+                  ? 'bg-blue-600 text-white shadow-sm' 
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+              title="Calendar View"
+            >
+              <Calendar className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5" />
+            </button>
+            <button
+              onClick={() => onViewModeChange('list')}
+              className={`p-1.5 sm:p-2 rounded-md transition-all duration-200 ${
+                viewMode === 'list' 
+                  ? 'bg-blue-600 text-white shadow-sm' 
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+              title="List View"
+            >
+              <List className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5" />
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Calendar Grid */}

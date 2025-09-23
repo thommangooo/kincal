@@ -3,7 +3,6 @@
 import { Suspense, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import CalendarView from '@/components/CalendarView'
-import { Calendar } from 'lucide-react'
 
 function CalendarEmbedContent() {
   const searchParams = useSearchParams()
@@ -40,19 +39,10 @@ function CalendarEmbedContent() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <div className="bg-blue-600 text-white p-4">
-        <div className="flex items-center space-x-2">
-          <Calendar className="h-6 w-6" />
-          <h1 className="text-lg font-semibold">Kin Calendar</h1>
-        </div>
-      </div>
-
       {/* Calendar Content */}
       <div className="p-4">
         <CalendarView 
           filters={filters} 
-          showCreateButton={false}
           showFilters={showFilters}
           onFiltersChange={handleFiltersChange}
         />
