@@ -13,6 +13,7 @@ import EntitySelector from '@/components/EntitySelector'
 import ImageUpload from '@/components/ImageUpload'
 import Toast from '@/components/Toast'
 import { Calendar, Users } from 'lucide-react'
+// Removed dateUtils imports - using standard Date objects now
 
 interface EventFormProps {
   mode: 'create' | 'edit'
@@ -94,20 +95,37 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
           setValue('location', eventData.location || '')
           setValue('event_url', eventData.event_url || '')
           
-          // Set dates
-          const startDate = new Date(eventData.start_date)
-          const endDate = new Date(eventData.end_date)
-          setValue('start_date', startDate.toISOString().split('T')[0])
-          setValue('end_date', endDate.toISOString().split('T')[0])
+          // Extract dates and times from datetime fields
+          const startDateObj = new Date(eventData.start_date)
+          const endDateObj = new Date(eventData.end_date)
           
-          // Set times if they exist in the datetime
-          const startTime = startDate.toTimeString().slice(0, 5)
-          const endTime = endDate.toTimeString().slice(0, 5)
+          // Extract the actual date parts from the stored datetime
+          // This ensures we get the exact date that was originally entered
+          const startYear = startDateObj.getFullYear()
+          const startMonth = String(startDateObj.getMonth() + 1).padStart(2, '0')
+          const startDay = String(startDateObj.getDate()).padStart(2, '0')
+          const endYear = endDateObj.getFullYear()
+          const endMonth = String(endDateObj.getMonth() + 1).padStart(2, '0')
+          const endDay = String(endDateObj.getDate()).padStart(2, '0')
           
-          // Only set times if they're not default all-day times
-          if (startTime !== '00:00' || endTime !== '23:59') {
-            setValue('start_time', startTime)
-            setValue('end_time', endTime)
+          // Set dates using the exact date that was stored
+          setValue('start_date', `${startYear}-${startMonth}-${startDay}`)
+          setValue('end_date', `${endYear}-${endMonth}-${endDay}`)
+          
+          // Set times if this is not an all-day event
+          // Check if it's an all-day event (starts at midnight and ends at 23:59)
+          const isAllDayEvent = startDateObj.getHours() === 0 && startDateObj.getMinutes() === 0 && 
+                               endDateObj.getHours() === 23 && endDateObj.getMinutes() === 59
+          
+          if (!isAllDayEvent) {
+            // Extract time components and format as HH:MM
+            const startHour = String(startDateObj.getHours()).padStart(2, '0')
+            const startMinute = String(startDateObj.getMinutes()).padStart(2, '0')
+            const endHour = String(endDateObj.getHours()).padStart(2, '0')
+            const endMinute = String(endDateObj.getMinutes()).padStart(2, '0')
+            
+            setValue('start_time', `${startHour}:${startMinute}`)
+            setValue('end_time', `${endHour}:${endMinute}`)
           }
           
           // Set entity
@@ -158,13 +176,31 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
 
     setSubmitting(true)
     try {
-      // Combine date and time (use default times if not provided)
-      const startDateTime = data.start_time 
-        ? new Date(`${data.start_date}T${data.start_time}`)
-        : new Date(`${data.start_date}T00:00:00`)
-      const endDateTime = data.end_time 
-        ? new Date(`${data.end_date}T${data.end_time}`)
-        : new Date(`${data.end_date}T23:59:59`)
+      // Store dates and times separately - much simpler!
+      // For all-day events, we'll store just the date and null times
+      // For timed events, we'll store both date and time
+      
+      // Convert date strings to datetime for database storage
+      let startDateTime: string
+      let endDateTime: string
+      
+      if (data.start_time && data.end_time) {
+        // Timed event - combine date and time
+        startDateTime = new Date(`${data.start_date}T${data.start_time}:00`).toISOString()
+        endDateTime = new Date(`${data.end_date}T${data.end_time}:00`).toISOString()
+      } else {
+        // All-day event - store as local dates to preserve the intended date
+        // Parse dates manually and create local dates
+        const [startYear, startMonth, startDay] = data.start_date.split('-').map(Number)
+        const [endYear, endMonth, endDay] = data.end_date.split('-').map(Number)
+        
+        // Create local dates for the same day (start at 00:00 local, end at 23:59 local)
+        const startDate = new Date(startYear, startMonth - 1, startDay, 0, 0, 0)
+        const endDate = new Date(endYear, endMonth - 1, endDay, 23, 59, 59)
+        
+        startDateTime = startDate.toISOString()
+        endDateTime = endDate.toISOString()
+      }
 
       // Get the related IDs based on the selected entity
       let clubId: string | null = ''
@@ -224,8 +260,8 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
       const eventData = {
         title: data.title,
         description: data.description || null,
-        start_date: startDateTime.toISOString(),
-        end_date: endDateTime.toISOString(),
+        start_date: startDateTime,
+        end_date: endDateTime,
         location: data.location || null,
         club_id: clubId,
         zone_id: zoneId,
@@ -238,11 +274,6 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
         image_url: imageUrl,
         created_by_email: user?.email || 'demo@example.com'
       }
-      
-      // NOTE: We DO NOT store separate start_time and end_time fields in the database.
-      // Times are embedded in the start_date and end_date datetime fields.
-      // The form fields for start_time/end_time are used to build the datetime objects above.
-      // DO NOT add start_time or end_time to this eventData object.
 
       if (mode === 'edit' && eventId) {
         await updateEvent(eventId, eventData)
@@ -255,7 +286,14 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
       router.push('/')
     } catch (error) {
       console.error(`Error ${mode === 'edit' ? 'updating' : 'creating'} event:`, error)
-      showToastMessage(`Error ${mode === 'edit' ? 'updating' : 'creating'} event`)
+      
+      // Show more specific error message
+      let errorMessage = `Error ${mode === 'edit' ? 'updating' : 'creating'} event`
+      if (error && typeof error === 'object' && 'message' in error) {
+        errorMessage += `: ${error.message}`
+      }
+      
+      showToastMessage(errorMessage)
     } finally {
       setSubmitting(false)
     }

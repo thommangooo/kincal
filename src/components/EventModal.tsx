@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Event, deleteEvent } from '@/lib/database'
-import { formatDate, formatTime, getEventStatus } from '@/lib/utils'
+import { formatDate, getEventStatus } from '@/lib/utils'
 import { getCalendarExportOptions, downloadICSFile, copyEventDetails } from '@/lib/calendarExport'
 import { generateClubColor } from '@/lib/colors'
 import { Calendar, MapPin, Users, Globe, Lock, ExternalLink, X, Clock, Tag, Download, Edit, Trash2 } from 'lucide-react'
@@ -64,7 +64,7 @@ export default function EventModal({ event, isOpen, onClose, onDelete }: EventMo
   
   const clubColor = event.entity_id ? generateClubColor(event.entity_id) : { bg: 'bg-gray-100', text: 'text-gray-800', border: 'bg-gray-500', bgStyle: 'background-color: #f3f4f6', textStyle: 'color: #1f2937', borderStyle: 'background-color: #6b7280' }
 
-  // Check if it's an all-day event
+  // Check if it's an all-day event by examining the datetime fields
   const startTime = new Date(event.start_date)
   const endTime = new Date(event.end_date)
   const isAllDay = startTime.getHours() === 0 && startTime.getMinutes() === 0 && 
@@ -225,7 +225,7 @@ export default function EventModal({ event, isOpen, onClose, onDelete }: EventMo
                       <p className="text-sm font-medium text-gray-900">Date</p>
                       <p className="text-sm text-gray-600">
                         {formatDate(event.start_date)}
-                        {event.start_date !== event.end_date && (
+                        {new Date(event.start_date).toDateString() !== new Date(event.end_date).toDateString() && (
                           <> - {formatDate(event.end_date)}</>
                         )}
                       </p>
@@ -239,9 +239,17 @@ export default function EventModal({ event, isOpen, onClose, onDelete }: EventMo
                       <div>
                         <p className="text-sm font-medium text-gray-900">Time</p>
                         <p className="text-sm text-gray-600">
-                          {formatTime(event.start_date)}
-                          {event.end_date && (
-                            <> - {formatTime(event.end_date)}</>
+                          {startTime.toLocaleTimeString('en-US', { 
+                            hour: 'numeric', 
+                            minute: '2-digit', 
+                            hour12: true 
+                          })}
+                          {!isAllDay && endTime && (
+                            <> - {endTime.toLocaleTimeString('en-US', { 
+                              hour: 'numeric', 
+                              minute: '2-digit', 
+                              hour12: true 
+                            })}</>
                           )}
                         </p>
                       </div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, ReactNode } from 'react'
+import { createContext, useContext, useState, ReactNode, useMemo } from 'react'
 
 export interface GlobalFilters {
   search: string
@@ -45,13 +45,15 @@ export function FilterProvider({ children }: { children: ReactNode }) {
     }))
   }
 
+  const contextValue = useMemo(() => ({
+    filters,
+    setFilters,
+    clearFilters,
+    updateFilter
+  }), [filters])
+
   return (
-    <FilterContext.Provider value={{
-      filters,
-      setFilters,
-      clearFilters,
-      updateFilter
-    }}>
+    <FilterContext.Provider value={contextValue}>
       {children}
     </FilterContext.Provider>
   )

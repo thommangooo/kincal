@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { createLocalDate } from './dateUtils'
 
 export const eventFormSchema = z.object({
   title: z.string().min(1, 'Title is required').max(255, 'Title must be less than 255 characters'),
@@ -12,18 +13,20 @@ export const eventFormSchema = z.object({
   event_url: z.string().url('Must be a valid URL').optional().or(z.literal('')),
   image_url: z.string().url('Must be a valid URL').optional().or(z.literal(''))
 }).refine((data) => {
-  // Only validate time order if both start and end times are provided
+  // Use timezone-safe date creation for validation
   if (data.start_time && data.end_time) {
-    const startDateTime = new Date(`${data.start_date}T${data.start_time}`)
-    const endDateTime = new Date(`${data.end_date}T${data.end_time}`)
+    const startDateTime = createLocalDate(data.start_date, data.start_time)
+    const endDateTime = createLocalDate(data.end_date, data.end_time)
     return endDateTime > startDateTime
   }
+  
   // If no times provided, just ensure end date is not before start date
   if (!data.start_time && !data.end_time) {
-    const startDate = new Date(data.start_date)
-    const endDate = new Date(data.end_date)
+    const startDate = createLocalDate(data.start_date)
+    const endDate = createLocalDate(data.end_date)
     return endDate >= startDate
   }
+  
   return true
 }, {
   message: 'End date/time must be after start date/time',

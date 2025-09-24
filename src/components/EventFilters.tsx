@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Search, Filter, MapPin, Users, Building, ChevronDown, ChevronUp } from 'lucide-react'
 import { getDistricts, getZones, getClubs, District, Zone, Club } from '@/lib/database'
 
@@ -27,6 +27,9 @@ export default function EventFilters({ onFiltersChange, collapsible = false, def
   const [includeZoneEvents, setIncludeZoneEvents] = useState(true)
   const [includeClubEvents, setIncludeClubEvents] = useState(true)
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed)
+  
+  // Track previous values to prevent unnecessary calls
+  const prevFiltersRef = useRef<string>('')
   
   const [districts, setDistricts] = useState<District[]>([])
   const [zones, setZones] = useState<Zone[]>([])
@@ -77,7 +80,7 @@ export default function EventFilters({ onFiltersChange, collapsible = false, def
 
   // Notify parent of filter changes
   useEffect(() => {
-    onFiltersChange?.({
+    const currentFilters = {
       search,
       districtId,
       zoneId,
@@ -85,7 +88,16 @@ export default function EventFilters({ onFiltersChange, collapsible = false, def
       visibility,
       includeZoneEvents,
       includeClubEvents
-    })
+    }
+    
+    // Create a string representation to compare with previous
+    const filtersString = JSON.stringify(currentFilters)
+    
+    // Only call onFiltersChange if filters actually changed
+    if (filtersString !== prevFiltersRef.current) {
+      prevFiltersRef.current = filtersString
+      onFiltersChange?.(currentFilters)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, districtId, zoneId, clubId, visibility, includeZoneEvents, includeClubEvents])
 
