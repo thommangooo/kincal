@@ -121,9 +121,9 @@ export default function CalendarView({
   const handleFilterChange = (newFilters: Partial<GlobalFilters>) => {
     const currentFilters = {
       search,
-      districtId: entityType === 'district' ? entityId : '',
-      zoneId: entityType === 'zone' ? entityId : '',
-      clubId: entityType === 'club' ? entityId : '',
+      districtId: newFilters.districtId ?? (entityType === 'district' ? entityId : ''),
+      zoneId: newFilters.zoneId ?? (entityType === 'zone' ? entityId : ''),
+      clubId: newFilters.clubId ?? (entityType === 'club' ? entityId : ''),
       visibility,
       includeZoneEvents: filters?.includeZoneEvents,
       includeClubEvents: filters?.includeClubEvents,
@@ -131,6 +131,19 @@ export default function CalendarView({
     }
     onFiltersChange?.(currentFilters)
   }
+
+  // Notify parent of filter changes when entity selection changes
+  useEffect(() => {
+    onFiltersChange?.({
+      search,
+      districtId: entityType === 'district' ? entityId : '',
+      zoneId: entityType === 'zone' ? entityId : '',
+      clubId: entityType === 'club' ? entityId : '',
+      visibility,
+      includeZoneEvents: filters?.includeZoneEvents,
+      includeClubEvents: filters?.includeClubEvents
+    })
+  }, [search, entityId, entityType, visibility, onFiltersChange, filters?.includeZoneEvents, filters?.includeClubEvents])
 
   // NO AUTOMATIC LOADING - Events will be passed in via props
 
