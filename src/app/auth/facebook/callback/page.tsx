@@ -1,26 +1,22 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { exchangeCodeForToken, getLongLivedToken, getUserPages } from '@/lib/facebook'
 import { createSocialMediaAccount } from '@/lib/socialMedia'
 import { useAuth } from '@/contexts/AuthContext'
-import Toast from '@/components/Toast'
 
-export default function FacebookCallbackPage() {
+function FacebookCallbackContent() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
-  const [toastMessage, setToastMessage] = useState('')
-  const [showToast, setShowToast] = useState(false)
   
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user } = useAuth()
 
   const showToastMessage = (message: string) => {
-    setToastMessage(message)
-    setShowToast(true)
+    console.log('Toast message:', message)
   }
 
   useEffect(() => {
@@ -171,4 +167,23 @@ export default function FacebookCallbackPage() {
   }
 
   return null
+}
+
+export default function FacebookCallbackPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-white rounded-lg shadow-sm border p-8">
+            <div className="flex items-center justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <span className="ml-2 text-gray-600">Loading...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    }>
+      <FacebookCallbackContent />
+    </Suspense>
+  )
 }

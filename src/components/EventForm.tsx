@@ -39,7 +39,11 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
   } | null>(null)
   const [toastMessage, setToastMessage] = useState('')
   const [showToast, setShowToast] = useState(false)
-  const [socialMediaAccounts, setSocialMediaAccounts] = useState<any[]>([])
+  const [socialMediaAccounts, setSocialMediaAccounts] = useState<Array<{
+    id: string
+    account_name: string
+    platform: string
+  }>>([])
   const [postToFacebook, setPostToFacebook] = useState(false)
   
   const router = useRouter()
@@ -76,7 +80,11 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
     }
   }
 
-  const postEventToFacebook = async (eventId: string, eventData: EventFormData, accounts: any[]) => {
+  const postEventToFacebook = async (eventId: string, eventData: EventFormData, accounts: Array<{
+    id: string
+    account_name: string
+    platform: string
+  }>) => {
     // Post to each connected Facebook page
     for (const account of accounts) {
       try {
@@ -335,7 +343,7 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
         showToastMessage('Event updated successfully!')
       } else {
         const newEvent = await createEvent(eventData)
-        createdEventId = newEvent.id
+        createdEventId = (newEvent as unknown as { id: string }).id
         showToastMessage('Event created successfully!')
       }
       

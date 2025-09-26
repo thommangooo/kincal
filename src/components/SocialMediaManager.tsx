@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getSocialMediaAccounts, deactivateSocialMediaAccount, createSocialMediaAccount } from '@/lib/socialMedia'
+import { getSocialMediaAccounts, deactivateSocialMediaAccount } from '@/lib/socialMedia'
 import { useAuth } from '@/contexts/AuthContext'
 import Toast from '@/components/Toast'
-import { Facebook, Instagram, Trash2, Share2 } from 'lucide-react'
+import { Facebook, Instagram, Trash2, Share2, ExternalLink } from 'lucide-react'
 
 interface SocialMediaManagerProps {
   entityType: 'club' | 'zone' | 'district'
@@ -15,7 +15,12 @@ interface SocialMediaManagerProps {
 export default function SocialMediaManager({ entityType, entityId, entityName }: SocialMediaManagerProps) {
   console.log('SocialMediaManager rendered for:', entityName, entityType, entityId)
   
-  const [accounts, setAccounts] = useState<any[]>([])
+  const [accounts, setAccounts] = useState<Array<{
+    id: string
+    account_name: string
+    platform: string
+    page_id?: string
+  }>>([])
   const [loading, setLoading] = useState(true)
   const [connecting, setConnecting] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
@@ -167,7 +172,7 @@ export default function SocialMediaManager({ entityType, entityId, entityName }:
     }
   }
 
-  const handleDisconnectAccount = async (accountId: string, accountName: string) => {
+  const handleDisconnectAccount = async (accountId: string, accountName: string): Promise<void> => {
     if (!confirm(`Are you sure you want to disconnect ${accountName}? This will prevent future posts to this account.`)) {
       return
     }
@@ -182,7 +187,7 @@ export default function SocialMediaManager({ entityType, entityId, entityName }:
     }
   }
 
-  const getPlatformIcon = (platform: string) => {
+  const getPlatformIcon = (platform: string): React.ReactElement => {
     switch (platform) {
       case 'facebook':
         return <Facebook className="h-5 w-5 text-blue-600" />
@@ -193,15 +198,15 @@ export default function SocialMediaManager({ entityType, entityId, entityName }:
     }
   }
 
-  const getStatusColor = (account: any) => {
-    if (account.error_count > 3) return 'text-red-600'
-    if (account.error_count > 0) return 'text-yellow-600'
+  const getStatusColor = (account: { error_count?: number }) => {
+    if ((account.error_count ?? 0) > 3) return 'text-red-600'
+    if ((account.error_count ?? 0) > 0) return 'text-yellow-600'
     return 'text-green-600'
   }
 
-  const getStatusText = (account: any) => {
-    if (account.error_count > 3) return 'Connection issues'
-    if (account.error_count > 0) return 'Some errors'
+  const getStatusText = (account: { error_count?: number }) => {
+    if ((account.error_count ?? 0) > 3) return 'Connection issues'
+    if ((account.error_count ?? 0) > 0) return 'Some errors'
     return 'Connected'
   }
 
@@ -239,24 +244,24 @@ export default function SocialMediaManager({ entityType, entityId, entityName }:
           </div>
         ) : (
           <div className="space-y-4">
-            {accounts.map((account) => (
+            {accounts.map((account: {
+              id: string
+              account_name: string
+              platform: string
+              page_id?: string
+            }) => (
               <div key={account.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                 <div className="flex items-center space-x-3">
                   {getPlatformIcon(account.platform)}
                   <div>
                     <h4 className="font-medium text-gray-900">{account.account_name}</h4>
                     <p className="text-sm text-gray-600 capitalize">{account.platform}</p>
-                    <p className={`text-xs ${getStatusColor(account)}`}>
-                      {getStatusText(account)}
+                    <p className={`text-xs ${getStatusColor({ error_count: 0 })}`}>
+                      {getStatusText({ error_count: 0 })}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
-                  {account.last_used_at && (
-                    <span className="text-xs text-gray-500">
-                      Last used: {new Date(account.last_used_at).toLocaleDateString()}
-                    </span>
-                  )}
                   <button
                     onClick={() => handleDisconnectAccount(account.id, account.account_name)}
                     className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"

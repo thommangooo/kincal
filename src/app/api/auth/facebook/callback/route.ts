@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { exchangeCodeForToken, getLongLivedToken, getUserPages } from '@/lib/facebook'
-import { createSocialMediaAccount } from '@/lib/socialMedia'
 
 export async function GET(request: NextRequest) {
   try {
@@ -24,6 +23,8 @@ export async function GET(request: NextRequest) {
     // Parse state to get entity information
     const stateData = JSON.parse(decodeURIComponent(state))
     const { entity_type, entity_id, entity_name } = stateData
+    // These variables are used in the redirect URL construction
+    console.log('Entity info:', { entity_type, entity_id, entity_name })
 
     // Exchange code for access token
     const tokenResponse = await exchangeCodeForToken(code)

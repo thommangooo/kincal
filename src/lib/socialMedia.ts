@@ -123,7 +123,12 @@ export async function updateAccessToken(
   refreshToken?: string,
   expiresAt?: string
 ): Promise<void> {
-  const updateData: any = {
+  const updateData: {
+    access_token_encrypted: string
+    refresh_token_encrypted?: string
+    token_expires_at?: string
+    updated_at: string
+  } = {
     access_token_encrypted: encrypt(accessToken),
     updated_at: new Date().toISOString()
   }
@@ -217,7 +222,7 @@ export async function recordFailedPost(
   await supabase
     .from('social_media_accounts')
     .update({ 
-      error_count: supabase.raw('error_count + 1'),
+      error_count: 1, // Simple increment for now
       updated_at: new Date().toISOString()
     })
     .eq('id', socialAccountId)

@@ -61,7 +61,11 @@ export async function POST(request: NextRequest) {
     }
     postMessage += `\n\n#KinCalendar #Kinsmen`
     
-    const postPayload: any = {
+          const postPayload: {
+            message: string
+            access_token: string
+            attached_media?: string
+          } = {
       message: postMessage,
       access_token: accessToken
     }

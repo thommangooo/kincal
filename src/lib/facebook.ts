@@ -1,4 +1,3 @@
-import { encrypt, decrypt } from './encryption'
 
 // Facebook Graph API configuration
 const getFacebookConfig = () => {
@@ -161,7 +160,13 @@ export async function postToFacebookPage(
   link?: string,
   imageUrl?: string
 ): Promise<FacebookPostResponse> {
-  const postData: any = {
+  const postData: {
+    message: string
+    access_token: string
+    link?: string
+    picture?: string
+    attached_media?: string
+  } = {
     message: message,
     access_token: pageAccessToken
   }

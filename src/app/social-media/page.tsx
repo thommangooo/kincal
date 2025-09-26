@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import Header from '@/components/Header'
 import SocialMediaManager from '@/components/SocialMediaManager'
 import FacebookEventImporter from '@/components/FacebookEventImporter'
-import { getClubs, getZones, getDistricts, getUserEntityPermissions, getUserRole, Club, Zone, District } from '@/lib/database'
+import { getClubs, getZones, getDistricts, getUserEntityPermissions, getUserRole } from '@/lib/database'
 import { Share2, Users, Download, Info } from 'lucide-react'
 
 export default function SocialMediaPage() {
@@ -17,16 +17,7 @@ export default function SocialMediaPage() {
   }>>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    if (!authLoading && user) {
-      loadData()
-    } else if (!authLoading && !user) {
-      // Redirect to sign in if not authenticated
-      window.location.href = '/signin'
-    }
-  }, [user, authLoading])
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true)
       
@@ -81,7 +72,16 @@ export default function SocialMediaPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user?.email])
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      loadData()
+    } else if (!authLoading && !user) {
+      // Redirect to sign in if not authenticated
+      window.location.href = '/signin'
+    }
+  }, [user, authLoading, loadData])
 
   if (authLoading || loading) {
     return (

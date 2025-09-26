@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { getSocialMediaAccounts } from '@/lib/socialMedia'
-import { useAuth } from '@/contexts/AuthContext'
 import Toast from '@/components/Toast'
-import { Facebook, Calendar, MapPin, Clock, ExternalLink, Download } from 'lucide-react'
+import { Facebook, MapPin, Clock, ExternalLink, Download } from 'lucide-react'
+import Image from 'next/image'
 
 interface FacebookEvent {
   id: string
@@ -25,16 +25,20 @@ interface FacebookEventImporterProps {
 }
 
 export default function FacebookEventImporter({ entityType, entityId, entityName }: FacebookEventImporterProps) {
-  const [accounts, setAccounts] = useState<any[]>([])
+  const [accounts, setAccounts] = useState<Array<{
+    id: string
+    account_name: string
+    platform: string
+    page_id?: string
+  }>>([])
   const [selectedAccount, setSelectedAccount] = useState<string>('')
   const [events, setEvents] = useState<FacebookEvent[]>([])
   const [loading, setLoading] = useState(false)
-  const [importing, setImporting] = useState<string | null>(null)
+  const [importing] = useState<string | null>(null)
   const [toastMessage, setToastMessage] = useState('')
   const [showToast, setShowToast] = useState(false)
   const [accountsLoaded, setAccountsLoaded] = useState(false)
   
-  const { user } = useAuth()
 
   const showToastMessage = (message: string) => {
     setToastMessage(message)
@@ -123,7 +127,7 @@ export default function FacebookEventImporter({ entityType, entityId, entityName
           <div className="text-center py-4">
             <Facebook className="h-8 w-8 text-gray-400 mx-auto mb-2" />
             <p className="text-sm text-gray-600 mb-2">No Facebook pages connected for {entityName}.</p>
-            <p className="text-xs text-gray-500">Connect a Facebook page in the "Social Media Management" section below to import posts.</p>
+            <p className="text-xs text-gray-500">Connect a Facebook page in the &quot;Social Media Management&quot; section below to import posts.</p>
           </div>
         ) : (
           <div>
@@ -221,11 +225,13 @@ export default function FacebookEventImporter({ entityType, entityId, entityName
                   </div>
                   {event.cover_image && (
                     <div className="mt-3">
-                      <img
-                        src={event.cover_image}
-                        alt={event.title}
-                        className="w-full h-32 object-cover rounded-md"
-                      />
+                         <Image
+                           src={event.cover_image}
+                           alt={event.title}
+                           width={400}
+                           height={128}
+                           className="w-full h-32 object-cover rounded-md"
+                         />
                     </div>
                   )}
                 </div>
@@ -237,7 +243,7 @@ export default function FacebookEventImporter({ entityType, entityId, entityName
       
       <Toast 
         message={toastMessage} 
-        show={showToast} 
+        isVisible={showToast} 
         onClose={() => setShowToast(false)} 
       />
     </div>

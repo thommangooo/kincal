@@ -67,7 +67,20 @@ export async function GET(request: NextRequest) {
            // Show all posts (no filtering since we're importing as announcements)
            console.log('=== ALL POSTS ===')
            console.log('Total posts fetched:', posts.length)
-           posts.forEach((post, index) => {
+           posts.forEach((post: {
+            id: string
+            message?: string
+            created_time: string
+            attachments?: {
+              data?: Array<{
+                media?: {
+                  image?: {
+                    src: string
+                  }
+                }
+              }>
+            }
+          }, index: number) => {
              console.log(`Post ${index + 1}:`, {
                id: post.id,
                message: post.message?.substring(0, 200) + '...',
@@ -82,7 +95,20 @@ export async function GET(request: NextRequest) {
            const eventPosts = posts
 
            // Transform Facebook posts to our format
-           const transformedEvents = eventPosts.map((post: any) => ({
+           const transformedEvents = eventPosts.map((post: {
+            id: string
+            message?: string
+            created_time: string
+            attachments?: {
+              data?: Array<{
+                media?: {
+                  image?: {
+                    src: string
+                  }
+                }
+              }>
+            }
+          }) => ({
              id: post.id,
              title: post.message?.substring(0, 100) || 'Facebook Post',
              description: post.message || '',
