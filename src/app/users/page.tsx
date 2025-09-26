@@ -26,12 +26,10 @@ import {
   User as UserIcon,
   Mail,
   CheckCircle,
-  Clock,
-  Share2
+  Clock
 } from 'lucide-react'
 import Toast from '@/components/Toast'
 import EditorRequestManagement from '@/components/EditorRequestManagement'
-import SocialMediaManager from '@/components/SocialMediaManager'
 
 interface UserFormData {
   email: string
@@ -63,7 +61,7 @@ export default function UsersPage() {
     zones: [],
     districts: []
   })
-  const [activeTab, setActiveTab] = useState<'users' | 'requests' | 'social'>('users')
+  const [activeTab, setActiveTab] = useState<'users' | 'requests'>('users')
 
   const showToastMessage = useCallback((message: string) => {
     setToastMessage(message)
@@ -263,17 +261,6 @@ export default function UsersPage() {
                 >
                   <Clock className="h-4 w-4 inline mr-2" />
                   Club Requests
-                </button>
-                <button
-                  onClick={() => setActiveTab('social')}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === 'social'
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  <Share2 className="h-4 w-4 inline mr-2" />
-                  Social Media
                 </button>
               </nav>
             </div>
@@ -567,71 +554,6 @@ export default function UsersPage() {
             />
           )}
 
-          {/* Social Media Tab */}
-          {activeTab === 'social' && (
-            <div className="space-y-6">
-              <div className="bg-white rounded-lg shadow-sm border p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Social Media Integration</h2>
-                <p className="text-gray-600 mb-6">
-                  Connect Facebook accounts to automatically post events and announcements to social media.
-                </p>
-                
-                {/* Show social media managers for each entity type */}
-                <div className="space-y-6">
-                  {/* Clubs */}
-                  {entities.clubs.length > 0 && (
-                    <div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-4">Clubs</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {entities.clubs.map((club) => (
-                          <SocialMediaManager
-                            key={club.id}
-                            entityType="club"
-                            entityId={club.id}
-                            entityName={club.name}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Zones */}
-                  {entities.zones.length > 0 && (
-                    <div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-4">Zones</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {entities.zones.map((zone) => (
-                          <SocialMediaManager
-                            key={zone.id}
-                            entityType="zone"
-                            entityId={zone.id}
-                            entityName={zone.name}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Districts */}
-                  {entities.districts.length > 0 && (
-                    <div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-4">Districts</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {entities.districts.map((district) => (
-                          <SocialMediaManager
-                            key={district.id}
-                            entityType="district"
-                            entityId={district.id}
-                            entityName={district.name}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </main>
 
