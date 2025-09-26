@@ -60,6 +60,14 @@ export default function Header() {
             >
               About
             </Link>
+            {user && (
+              <Link 
+                href="/social-media" 
+                className="text-gray-600 hover:text-kin-red transition-colors font-medium"
+              >
+                Social Media
+              </Link>
+            )}
             {userRole?.role === 'superuser' && (
               <Link 
                 href="/users" 

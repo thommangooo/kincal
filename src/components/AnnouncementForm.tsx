@@ -37,6 +37,9 @@ export default function AnnouncementForm({ mode, announcementId }: AnnouncementF
   } | null>(null)
   const [toastMessage, setToastMessage] = useState('')
   const [showToast, setShowToast] = useState(false)
+  const [facebookDataLoaded, setFacebookDataLoaded] = useState(false)
+  const [forceRender, setForceRender] = useState(0)
+  const [isFromFacebook, setIsFromFacebook] = useState(false)
 
   const {
     register,
@@ -63,6 +66,35 @@ export default function AnnouncementForm({ mode, announcementId }: AnnouncementF
       if (!user?.email) return
       
       try {
+        // Check for Facebook data first
+        const facebookData = sessionStorage.getItem('facebookAnnouncementData')
+        console.log('Facebook data from sessionStorage:', facebookData)
+        if (facebookData && !facebookDataLoaded) {
+          const data = JSON.parse(facebookData)
+          console.log('Parsed Facebook data:', data)
+          
+          // Set the data immediately
+          console.log('Setting Facebook data immediately...')
+          setValue('title', data.title)
+          setValue('visibility', data.visibility)
+          setContent(data.description)
+          setImageUrl(data.image_url)
+          setSelectedEntity({
+            type: data.entity_type,
+            id: data.entity_id
+          })
+          console.log('Facebook data set in form fields')
+          console.log('Content set to:', data.description)
+          console.log('Image URL set to:', data.image_url)
+          console.log('Entity set to:', data.entity_type, data.entity_id)
+          
+          setFacebookDataLoaded(true)
+          setIsFromFacebook(true) // Mark as from Facebook
+          setForceRender(prev => prev + 1) // Force re-render
+          console.log('Facebook data loaded into form')
+          // Clear the stored data
+          sessionStorage.removeItem('facebookAnnouncementData')
+        }
         if (mode === 'edit' && announcementId) {
           // Load existing announcement data for editing
           const [announcementData, zonesData, clubsData, role] = await Promise.all([
@@ -315,6 +347,7 @@ export default function AnnouncementForm({ mode, announcementId }: AnnouncementF
                       Content *
                     </label>
                     <RichTextEditor
+                      key={`content-${forceRender}`}
                       content={content}
                       onChange={(newContent) => {
                         console.log('Content changed:', newContent)
@@ -335,6 +368,7 @@ export default function AnnouncementForm({ mode, announcementId }: AnnouncementF
                       Announcement Image
                     </label>
                     <ImageUpload
+                      key={`image-${forceRender}`}
                       value={imageUrl}
                       onChange={setImageUrl}
                     />
@@ -384,6 +418,7 @@ export default function AnnouncementForm({ mode, announcementId }: AnnouncementF
                 
                 <div className="space-y-4">
                   <EntitySelector
+                    key={`entity-${forceRender}`}
                     userEmail={user?.email || ''}
                     userRole={userRole?.role || 'editor'}
                     selectedEntity={selectedEntity}
@@ -399,6 +434,40 @@ export default function AnnouncementForm({ mode, announcementId }: AnnouncementF
                   )}
                 </div>
               </div>
+
+              {/* Social Media Posting - Hide when importing from Facebook */}
+              {!isFromFacebook && (
+              <div className="mb-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Social Media</h2>
+                
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <span className="text-blue-600 font-semibold text-sm">FB</span>
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-gray-900">Post to Facebook</h3>
+                        <p className="text-sm text-gray-600">Share this announcement on your Facebook pages</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        disabled
+                      />
+                      <span className="text-sm text-gray-500">Connect Facebook first</span>
+                    </div>
+                  </div>
+                  
+                  <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
+                    <p>To post announcements to Facebook, you need to connect your Facebook pages first.</p>
+                    <p>Go to the <strong>Users</strong> page and click the <strong>Social Media</strong> tab to get started.</p>
+                  </div>
+                </div>
+              </div>
+              )}
 
               {/* Submit Buttons */}
               <div className="flex justify-end space-x-4">

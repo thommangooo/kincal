@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { eventFormSchema, EventFormData } from '@/lib/validations'
 import { getEvent, createEvent, updateEvent, getDistricts, getZones, getClubs, getUserRole, District, Zone, Club } from '@/lib/database'
+import { getSocialMediaAccounts } from '@/lib/socialMedia'
 import type { DbEvent } from '@/lib/supabase'
 import { toNull } from '@/lib/nullish'
 import { useAuth } from '@/contexts/AuthContext'
@@ -38,6 +39,8 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
   } | null>(null)
   const [toastMessage, setToastMessage] = useState('')
   const [showToast, setShowToast] = useState(false)
+  const [socialMediaAccounts, setSocialMediaAccounts] = useState<any[]>([])
+  const [postToFacebook, setPostToFacebook] = useState(false)
   
   const router = useRouter()
   const { user } = useAuth()
@@ -61,6 +64,55 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
     setToastMessage(message)
     setShowToast(true)
   }
+
+  const loadSocialMediaAccounts = async () => {
+    if (selectedEntity) {
+      try {
+        const accounts = await getSocialMediaAccounts(selectedEntity.type, selectedEntity.id)
+        setSocialMediaAccounts(accounts)
+      } catch (error) {
+        console.error('Error loading social media accounts:', error)
+      }
+    }
+  }
+
+  const postEventToFacebook = async (eventId: string, eventData: EventFormData, accounts: any[]) => {
+    // Post to each connected Facebook page
+    for (const account of accounts) {
+      try {
+        const response = await fetch('/api/social-media/post', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            accountId: account.id,
+            eventData: {
+              title: eventData.title,
+              description: eventData.description || '',
+              start_date: eventData.start_date,
+              end_date: eventData.end_date,
+              location: eventData.location || '',
+              image_url: imageUrl
+            },
+            eventId: eventId
+          })
+        })
+        
+        if (!response.ok) {
+          throw new Error(`Failed to post to ${account.account_name}`)
+        }
+      } catch (error) {
+        console.error(`Error posting to ${account.account_name}:`, error)
+        throw error
+      }
+    }
+  }
+
+  // Load social media accounts when entity changes
+  useEffect(() => {
+    loadSocialMediaAccounts()
+  }, [selectedEntity])
 
   // Load initial data
   useEffect(() => {
@@ -275,12 +327,27 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
         created_by_email: user?.email || 'demo@example.com'
       }
 
+      let createdEventId: string
+      
       if (mode === 'edit' && eventId) {
         await updateEvent(eventId, eventData)
+        createdEventId = eventId
         showToastMessage('Event updated successfully!')
       } else {
-        await createEvent(eventData)
+        const newEvent = await createEvent(eventData)
+        createdEventId = newEvent.id
         showToastMessage('Event created successfully!')
+      }
+      
+      // Post to Facebook if requested and accounts are connected
+      if (postToFacebook && socialMediaAccounts.length > 0) {
+        try {
+          await postEventToFacebook(createdEventId, data, socialMediaAccounts)
+          showToastMessage('Event posted to Facebook successfully!')
+        } catch (error) {
+          console.error('Error posting to Facebook:', error)
+          showToastMessage('Event created, but Facebook posting failed. You can try again later.')
+        }
       }
       
       router.push('/')
@@ -491,6 +558,66 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
                       onChange={setImageUrl}
                     />
                   </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Social Media Posting */}
+            <div className="bg-white rounded-lg shadow-sm border p-6">
+              <div className="mb-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Social Media</h2>
+                
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <span className="text-blue-600 font-semibold text-sm">FB</span>
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-gray-900">Post to Facebook</h3>
+                        <p className="text-sm text-gray-600">
+                          {socialMediaAccounts.length > 0 
+                            ? `Share this event on ${socialMediaAccounts.length} Facebook page(s)`
+                            : 'Share this event on your Facebook pages'
+                          }
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        checked={postToFacebook}
+                        onChange={(e) => setPostToFacebook(e.target.checked)}
+                        disabled={socialMediaAccounts.length === 0}
+                      />
+                      {socialMediaAccounts.length === 0 ? (
+                        <span className="text-sm text-gray-500">Connect Facebook first</span>
+                      ) : (
+                        <span className="text-sm text-gray-600">Post to Facebook</span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {socialMediaAccounts.length > 0 && (
+                    <div className="text-sm text-gray-600 bg-green-50 p-3 rounded-lg">
+                      <p className="font-medium text-green-800">Connected Facebook Pages:</p>
+                      <ul className="mt-2 space-y-1">
+                        {socialMediaAccounts.map((account) => (
+                          <li key={account.id} className="text-green-700">
+                            • {account.account_name}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  
+                  {socialMediaAccounts.length === 0 && (
+                    <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
+                      <p>To post events to Facebook, you need to connect your Facebook pages first.</p>
+                      <p>Go to the <strong>Social Media</strong> page to get started.</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
