@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import Image from 'next/image'
 import { Event, deleteEvent } from '@/lib/database'
 import { formatDate, getEventStatus } from '@/lib/utils'
 import { getCalendarExportOptions, downloadICSFile, copyEventDetails } from '@/lib/calendarExport'
 import { generateClubColor } from '@/lib/colors'
-import { Calendar, MapPin, Users, Globe, Lock, ExternalLink, X, Clock, Tag, Download, Edit, Trash2 } from 'lucide-react'
+import { Calendar, MapPin, Users, Globe, Lock, ExternalLink, X, Clock, Tag, Download, Edit, Trash2, ExternalLink as ExternalLinkIcon } from 'lucide-react'
 import Toast from './Toast'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -143,6 +144,14 @@ export default function EventModal({ event, isOpen, onClose, onDelete }: EventMo
             </div>
             
             <div className="flex items-center space-x-2">
+              <Link
+                href={`/events/${event.id}`}
+                onClick={onClose}
+                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="View full event page"
+              >
+                <ExternalLinkIcon className="h-5 w-5" />
+              </Link>
               {canEdit && (
                 <>
                   <button
