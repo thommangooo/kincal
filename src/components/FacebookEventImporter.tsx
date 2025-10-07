@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { getSocialMediaAccounts } from '@/lib/socialMedia'
 import Toast from '@/components/Toast'
 import { Facebook, MapPin, Clock, ExternalLink, Download } from 'lucide-react'
@@ -45,7 +45,7 @@ export default function FacebookEventImporter({ entityType, entityId, entityName
     setShowToast(true)
   }
 
-  const loadAccounts = async () => {
+  const loadAccounts = useCallback(async () => {
     try {
       console.log('Loading accounts for:', entityName, entityType, entityId)
       const socialAccounts = await getSocialMediaAccounts(entityType, entityId)
@@ -57,7 +57,7 @@ export default function FacebookEventImporter({ entityType, entityId, entityName
       showToastMessage('Failed to load Facebook accounts')
       setAccountsLoaded(true)
     }
-  }
+  }, [entityName, entityType, entityId])
 
   const fetchFacebookEvents = async () => {
     if (!selectedAccount) return
@@ -105,7 +105,7 @@ export default function FacebookEventImporter({ entityType, entityId, entityName
 
   useEffect(() => {
     loadAccounts()
-  }, [entityType, entityId])
+  }, [loadAccounts])
 
   useEffect(() => {
     console.log('Accounts updated:', accounts.length, accounts)

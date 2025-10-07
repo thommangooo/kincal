@@ -217,7 +217,7 @@ export default function EditorRequestForm({ onSuccess, onCancel, className = '' 
   }
 
   return (
-    <div className={`bg-white rounded-lg shadow-sm border p-6 ${className}`}>
+    <div className={`form-container bg-white rounded-lg shadow-sm border p-6 ${className}`}>
       <div className="mb-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-2">Add My Kin Club</h2>
         <p className="text-gray-600">

@@ -40,7 +40,7 @@ function CalendarEmbedContent() {
   return (
     <div className="min-h-screen bg-white">
       {/* Calendar Content */}
-      <div className="p-4">
+      <div className="p-0 sm:p-4">
         <CalendarView 
           filters={filters} 
           showFilters={showFilters}

@@ -96,8 +96,8 @@ function ClubCalendarContent({ clubId }: ClubCalendarContentProps) {
     <div className="min-h-screen bg-white">
       {/* Custom Header */}
       <header className="bg-red-600 text-white border-b-4 border-red-700">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
+        <div className="container mx-auto px-2 sm:px-4 py-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             {/* Kin Logo */}
             <div className="flex-shrink-0">
               <Image
@@ -110,12 +110,12 @@ function ClubCalendarContent({ clubId }: ClubCalendarContentProps) {
             </div>
             
             {/* Club Name and Page Title */}
-            <div className="flex-1">
-              <h1 className="text-2xl font-bold">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-lg sm:text-2xl font-bold truncate">
                 {club?.name || 'Club'} Calendar
               </h1>
               {club && (
-                <p className="text-red-100 text-sm mt-1">
+                <p className="text-red-100 text-xs sm:text-sm mt-1 truncate">
                   {club.city} • {club.club_type}
                 </p>
               )}
@@ -126,9 +126,10 @@ function ClubCalendarContent({ clubId }: ClubCalendarContentProps) {
               <div className="flex-shrink-0">
                 <a
                   href={returnUrl}
-                  className="bg-white text-red-600 px-4 py-2 rounded-lg font-medium hover:bg-red-50 transition-colors"
+                  className="bg-white text-red-600 px-2 sm:px-4 py-2 rounded-lg font-medium hover:bg-red-50 transition-colors text-xs sm:text-sm whitespace-nowrap"
                 >
-                  ← Back to {club?.name || 'Club'} Website
+                  <span className="hidden sm:inline">← Back to {club?.name || 'Club'} Website</span>
+                  <span className="sm:hidden">← Back</span>
                 </a>
               </div>
             )}
@@ -137,7 +138,7 @@ function ClubCalendarContent({ clubId }: ClubCalendarContentProps) {
       </header>
 
       {/* Calendar Content */}
-      <div className="p-4">
+      <div className="p-0 sm:p-4">
         <CalendarView 
           filters={filters} 
           showFilters={showFilters}

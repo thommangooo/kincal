@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { getSocialMediaAccounts, deactivateSocialMediaAccount } from '@/lib/socialMedia'
 import { useAuth } from '@/contexts/AuthContext'
 import Toast from '@/components/Toast'
@@ -33,57 +33,19 @@ export default function SocialMediaManager({ entityType, entityId, entityName }:
     setShowToast(true)
   }
 
-  useEffect(() => {
-    loadAccounts()
+  const loadAccounts = useCallback(async () => {
+    try {
+      const socialAccounts = await getSocialMediaAccounts(entityType, entityId)
+      setAccounts(socialAccounts)
+    } catch (error) {
+      console.error('Error loading social media accounts:', error)
+      showToastMessage('Failed to load social media accounts')
+    } finally {
+      setLoading(false)
+    }
   }, [entityType, entityId])
 
-  useEffect(() => {
-    // Check for success/error messages from Facebook OAuth
-    const urlParams = new URLSearchParams(window.location.search)
-    const success = urlParams.get('success')
-    const error = urlParams.get('error')
-    const pages = urlParams.get('pages')
-    const state = urlParams.get('state')
-    const pagesData = urlParams.get('pagesData')
-    
-    console.log('SocialMediaManager useEffect for', entityName, ':', {
-      success,
-      error,
-      pages,
-      state,
-      pagesData: pagesData ? 'SET' : 'NOT SET',
-      url: window.location.href
-    })
-    
-    // Only process if we have callback parameters
-    if (success || error) {
-      console.log('Facebook callback parameters:', {
-        success,
-        error,
-        pages,
-        state,
-        pagesData: pagesData ? 'SET' : 'NOT SET',
-        url: window.location.href
-      })
-      
-      if (success === 'facebook_connected' && pages && state) {
-        // We need to complete the account creation
-        handleFacebookCallback(state, pages)
-        // Clean up the URL immediately to prevent re-processing
-        window.history.replaceState({}, '', window.location.pathname)
-      } else if (error) {
-        showToastMessage(`Facebook connection failed: ${error}`)
-        // Clean up the URL
-        window.history.replaceState({}, '', window.location.pathname)
-      } else if (success === 'facebook_connected') {
-        // Fallback: if we have success but missing other params, show a message
-        showToastMessage('Facebook connection successful, but some data may be missing')
-        window.history.replaceState({}, '', window.location.pathname)
-      }
-    }
-  }, []) // Empty dependency array to run only once
-
-  const handleFacebookCallback = async (state: string, pages: string) => {
+  const handleFacebookCallback = useCallback(async (state: string, pages: string) => {
     try {
       const stateData = JSON.parse(decodeURIComponent(state))
       
@@ -134,19 +96,57 @@ export default function SocialMediaManager({ entityType, entityId, entityName }:
       console.error('Error handling Facebook callback:', error)
       showToastMessage('Error processing Facebook connection')
     }
-  }
+  }, [loadAccounts, user?.email])
 
-  const loadAccounts = async () => {
-    try {
-      const socialAccounts = await getSocialMediaAccounts(entityType, entityId)
-      setAccounts(socialAccounts)
-    } catch (error) {
-      console.error('Error loading social media accounts:', error)
-      showToastMessage('Failed to load social media accounts')
-    } finally {
-      setLoading(false)
+  useEffect(() => {
+    loadAccounts()
+  }, [loadAccounts])
+
+  useEffect(() => {
+    // Check for success/error messages from Facebook OAuth
+    const urlParams = new URLSearchParams(window.location.search)
+    const success = urlParams.get('success')
+    const error = urlParams.get('error')
+    const pages = urlParams.get('pages')
+    const state = urlParams.get('state')
+    const pagesData = urlParams.get('pagesData')
+    
+    console.log('SocialMediaManager useEffect for', entityName, ':', {
+      success,
+      error,
+      pages,
+      state,
+      pagesData: pagesData ? 'SET' : 'NOT SET',
+      url: window.location.href
+    })
+    
+    // Only process if we have callback parameters
+    if (success || error) {
+      console.log('Facebook callback parameters:', {
+        success,
+        error,
+        pages,
+        state,
+        pagesData: pagesData ? 'SET' : 'NOT SET',
+        url: window.location.href
+      })
+      
+      if (success === 'facebook_connected' && pages && state) {
+        // We need to complete the account creation
+        handleFacebookCallback(state, pages)
+        // Clean up the URL immediately to prevent re-processing
+        window.history.replaceState({}, '', window.location.pathname)
+      } else if (error) {
+        showToastMessage(`Facebook connection failed: ${error}`)
+        // Clean up the URL
+        window.history.replaceState({}, '', window.location.pathname)
+      } else if (success === 'facebook_connected') {
+        // Fallback: if we have success but missing other params, show a message
+        showToastMessage('Facebook connection successful, but some data may be missing')
+        window.history.replaceState({}, '', window.location.pathname)
+      }
     }
-  }
+  }, [entityName, handleFacebookCallback]) // Include dependencies
 
   const handleConnectFacebook = async () => {
     if (!user?.email) {

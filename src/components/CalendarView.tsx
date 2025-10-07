@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { Calendar, momentLocalizer, Views, View, ToolbarProps } from 'react-big-calendar'
 import moment from 'moment'
 import 'react-big-calendar/lib/css/react-big-calendar.css'
@@ -9,7 +9,7 @@ import { generateClubColor } from '@/lib/colors'
 import { GlobalFilters } from '@/contexts/FilterContext'
 import ClubSearch from './ClubSearch'
 import EventModal from './EventModal'
-import { Search, Filter, ChevronDown, ChevronUp, Plus } from 'lucide-react'
+import { Search, Filter, ChevronDown, ChevronUp, Plus, Menu, Calendar as CalendarIcon } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 
 // Setup moment localizer
@@ -51,6 +51,10 @@ export default function CalendarView({
   const [date, setDate] = useState(new Date())
   const [selectedEvent, setSelectedEvent] = useState<DbEvent | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [touchStart, setTouchStart] = useState<number | null>(null)
+  const [touchEnd, setTouchEnd] = useState<number | null>(null)
+  const mobileMenuRef = useRef<HTMLDivElement>(null)
 
   // Filter states - local state for UI controls
   const [search, setSearch] = useState(filters?.search || '')
@@ -192,6 +196,57 @@ export default function CalendarView({
     setSelectedEvent(null)
   }
 
+  // Swipe navigation handlers
+  const minSwipeDistance = 50
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null)
+    setTouchStart(e.targetTouches[0].clientX)
+  }
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX)
+  }
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return
+    const distance = touchStart - touchEnd
+    const isLeftSwipe = distance > minSwipeDistance
+    const isRightSwipe = distance < -minSwipeDistance
+
+    if (isLeftSwipe) {
+      // Swipe left - go to next month
+      const newDate = new Date(date)
+      newDate.setMonth(newDate.getMonth() + 1)
+      setDate(newDate)
+      onNavigate?.(newDate)
+    }
+    if (isRightSwipe) {
+      // Swipe right - go to previous month
+      const newDate = new Date(date)
+      newDate.setMonth(newDate.getMonth() - 1)
+      setDate(newDate)
+      onNavigate?.(newDate)
+    }
+  }
+
+  // Close mobile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
+        setMobileMenuOpen(false)
+      }
+    }
+
+    if (mobileMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [mobileMenuOpen])
+
   // Handle navigation (month changes)
   const handleNavigate = (newDate: Date) => {
     setDate(newDate)
@@ -243,75 +298,179 @@ export default function CalendarView({
     }
 
     return (
-      <div className="flex items-center justify-between mb-4 p-4 bg-white border-b">
-        <div className="flex items-center space-x-4">
-          <h2 className="text-xl font-semibold">
-            {toolbar.label}
-          </h2>
+      <div className="!bg-white border-b !border-gray-200">
+        {/* Mobile Layout - Gmail Style */}
+        <div className="block sm:hidden">
+          {/* Top Bar */}
+          <div className="flex items-center justify-between p-2 sm:p-3">
+            <div className="flex items-center space-x-3">
+              {/* Hamburger Menu */}
+              <div className="relative" ref={mobileMenuRef}>
+                <button
+                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                  className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                >
+                  <Menu className="h-5 w-5 !text-gray-700" />
+                </button>
+                
+                {/* Mobile Menu Dropdown */}
+                {mobileMenuOpen && (
+                  <div className="absolute left-0 top-full mt-1 w-48 bg-white border !border-gray-300 rounded-lg shadow-lg z-50">
+                    <div className="py-1">
+                      <button
+                        onClick={() => {
+                          changeView(Views.MONTH)
+                          setMobileMenuOpen(false)
+                        }}
+                        className={`w-full text-left px-4 py-2 text-sm flex items-center space-x-2 ${
+                          toolbar.view === Views.MONTH 
+                            ? '!bg-blue-50 !text-blue-700' 
+                            : '!text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        <CalendarIcon className="h-4 w-4" />
+                        <span>Month View</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          changeView(Views.WEEK)
+                          setMobileMenuOpen(false)
+                        }}
+                        className={`w-full text-left px-4 py-2 text-sm flex items-center space-x-2 ${
+                          toolbar.view === Views.WEEK 
+                            ? '!bg-blue-50 !text-blue-700' 
+                            : '!text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        <CalendarIcon className="h-4 w-4" />
+                        <span>Week View</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          changeView(Views.DAY)
+                          setMobileMenuOpen(false)
+                        }}
+                        className={`w-full text-left px-4 py-2 text-sm flex items-center space-x-2 ${
+                          toolbar.view === Views.DAY 
+                            ? '!bg-blue-50 !text-blue-700' 
+                            : '!text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        <CalendarIcon className="h-4 w-4" />
+                        <span>Day View</span>
+                      </button>
+                      {user && (
+                        <>
+                          <div className="border-t !border-gray-200 my-1"></div>
+                          <button
+                            onClick={() => {
+                              window.location.href = '/events/create'
+                              setMobileMenuOpen(false)
+                            }}
+                            className="w-full text-left px-4 py-2 text-sm !text-gray-700 hover:bg-gray-50 flex items-center space-x-2"
+                          >
+                            <Plus className="h-4 w-4" />
+                            <span>Add Event</span>
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              {/* Today Button */}
+              <button
+                onClick={goToCurrent}
+                className="px-3 py-1.5 !bg-blue-500 !text-white rounded-md text-sm font-medium !hover:bg-blue-600"
+              >
+                Today
+              </button>
+            </div>
+            
+            {/* Month/Year Title */}
+            <div className="flex-1 text-center">
+              <h2 className="text-lg font-semibold !text-gray-900">
+                {toolbar.label}
+              </h2>
+            </div>
+            
+            {/* Empty space for balance */}
+            <div className="w-16"></div>
+          </div>
         </div>
         
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={goToBack}
-            className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50"
-          >
-            ‹
-          </button>
-          <button
-            onClick={goToCurrent}
-            className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            Today
-          </button>
-          <button
-            onClick={goToNext}
-            className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50"
-          >
-            ›
-          </button>
+        {/* Desktop Layout */}
+        <div className="hidden sm:flex items-center justify-between p-4">
+          <div className="flex items-center space-x-4">
+            <h2 className="text-xl font-semibold !text-gray-900">
+              {toolbar.label}
+            </h2>
+          </div>
           
-          {/* Add Event Button - only show if user is authenticated */}
-          {user && (
+          <div className="flex items-center space-x-2">
             <button
-              onClick={() => window.location.href = '/events/create'}
-              className="px-3 py-1 bg-red-600 text-white text-sm font-medium rounded hover:bg-red-700 transition-colors flex items-center space-x-1"
+              onClick={goToBack}
+              className="px-3 py-1 border !border-gray-300 rounded !hover:bg-gray-50 !text-gray-700"
             >
-              <Plus className="h-4 w-4" />
-              <span>Add Event</span>
-            </button>
-          )}
-          
-          <div className="ml-4 flex space-x-1">
-            <button
-              onClick={() => changeView(Views.MONTH)}
-              className={`px-3 py-1 rounded ${
-                toolbar.view === Views.MONTH 
-                  ? 'bg-blue-500 text-white' 
-                  : 'border border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              Month
+              ‹
             </button>
             <button
-              onClick={() => changeView(Views.WEEK)}
-              className={`px-3 py-1 rounded ${
-                toolbar.view === Views.WEEK 
-                  ? 'bg-blue-500 text-white' 
-                  : 'border border-gray-300 hover:bg-gray-50'
-              }`}
+              onClick={goToCurrent}
+              className="px-3 py-1 !bg-blue-500 !text-white rounded hover:bg-blue-600 !hover:bg-blue-600"
             >
-              Week
+              Today
             </button>
             <button
-              onClick={() => changeView(Views.DAY)}
-              className={`px-3 py-1 rounded ${
-                toolbar.view === Views.DAY 
-                  ? 'bg-blue-500 text-white' 
-                  : 'border border-gray-300 hover:bg-gray-50'
-              }`}
+              onClick={goToNext}
+              className="px-3 py-1 border !border-gray-300 rounded !hover:bg-gray-50 !text-gray-700"
             >
-              Day
+              ›
             </button>
+            
+            {/* Add Event Button - only show if user is authenticated */}
+            {user && (
+              <button
+                onClick={() => window.location.href = '/events/create'}
+                className="px-3 py-1 bg-red-600 text-white text-sm font-medium rounded hover:bg-red-700 transition-colors flex items-center space-x-1"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Add Event</span>
+              </button>
+            )}
+            
+            <div className="ml-4 flex space-x-1">
+              <button
+                onClick={() => changeView(Views.MONTH)}
+                className={`px-3 py-1 rounded ${
+                  toolbar.view === Views.MONTH 
+                    ? '!bg-blue-500 !text-white' 
+                    : 'border !border-gray-300 !hover:bg-gray-50 !text-gray-700'
+                }`}
+              >
+                Month
+              </button>
+              <button
+                onClick={() => changeView(Views.WEEK)}
+                className={`px-3 py-1 rounded ${
+                  toolbar.view === Views.WEEK 
+                    ? '!bg-blue-500 !text-white' 
+                    : 'border !border-gray-300 !hover:bg-gray-50 !text-gray-700'
+                }`}
+              >
+                Week
+              </button>
+              <button
+                onClick={() => changeView(Views.DAY)}
+                className={`px-3 py-1 rounded ${
+                  toolbar.view === Views.DAY 
+                    ? '!bg-blue-500 !text-white' 
+                    : 'border !border-gray-300 !hover:bg-gray-50 !text-gray-700'
+                }`}
+              >
+                Day
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -321,15 +480,15 @@ export default function CalendarView({
   return (
     <div className={className}>
       {showFilters && (
-        <div className="mb-6">
+        <div className="mb-0 sm:mb-6">
           {/* Filter Header */}
-          <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-            <div className="flex items-center justify-between p-4 border-b border-gray-100">
+          <div className="!bg-white border !border-gray-200 rounded-lg shadow-sm">
+            <div className="flex items-center justify-between p-4 border-b !border-gray-100">
               <div className="flex items-center space-x-3">
-                <Filter className="h-5 w-5 text-gray-400" />
+                <Filter className="h-5 w-5 !text-gray-400" />
                 <div className="flex-1 min-w-0">
-                  <span className="hidden sm:inline">{getFilterStateText()}</span>
-                  <span className="sm:hidden">
+                  <span className="hidden sm:inline !text-gray-900">{getFilterStateText()}</span>
+                  <span className="sm:hidden !text-gray-900">
                     {getFilterStateText().length > 20 
                       ? getFilterStateText().substring(0, 20) + '...' 
                       : getFilterStateText()
@@ -340,7 +499,7 @@ export default function CalendarView({
               <div className="flex items-center space-x-2">
                 <button
                   onClick={() => setFiltersCollapsed(!filtersCollapsed)}
-                  className="flex items-center space-x-1 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                  className="flex items-center space-x-1 text-sm !text-gray-600 hover:text-gray-800 !hover:text-gray-800 transition-colors"
                 >
                   <span>{filtersCollapsed ? 'Show' : 'Hide'}</span>
                   {filtersCollapsed ? (
@@ -351,7 +510,7 @@ export default function CalendarView({
                 </button>
                 <button
                   onClick={clearFilters}
-                  className="text-xs sm:text-sm text-red-600 hover:text-red-700 font-medium transition-colors"
+                  className="text-xs sm:text-sm !text-red-600 !hover:text-red-700 font-medium transition-colors"
                 >
                   Clear all
                 </button>
@@ -366,11 +525,11 @@ export default function CalendarView({
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {/* Search */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium !text-gray-700 mb-2">
                       Search content
                     </label>
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 !text-gray-400" />
                       <input
                         type="text"
                         value={search}
@@ -379,14 +538,14 @@ export default function CalendarView({
                           handleFilterChange({ search: e.target.value })
                         }}
                         placeholder="Search by title, description..."
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-sm"
+                        className="w-full pl-10 pr-4 py-2 border !border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-sm !bg-white !text-gray-900 !placeholder-gray-500"
                       />
                     </div>
                   </div>
 
                   {/* Entity Search */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium !text-gray-700 mb-2">
                       Club, Zone, or District
                     </label>
                     <ClubSearch
@@ -411,18 +570,18 @@ export default function CalendarView({
                             type="checkbox"
                             checked={filters?.includeZoneEvents !== false}
                             onChange={(e) => handleFilterChange({ includeZoneEvents: e.target.checked })}
-                            className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            className="h-3 w-3 text-blue-600 focus:ring-blue-500 !border-gray-300 rounded !bg-white"
                           />
-                          <span className="ml-1 text-gray-600">+Zones</span>
+                          <span className="ml-1 !text-gray-600">+Zones</span>
                         </label>
                         <label className="flex items-center">
                           <input
                             type="checkbox"
                             checked={filters?.includeClubEvents !== false}
                             onChange={(e) => handleFilterChange({ includeClubEvents: e.target.checked })}
-                            className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            className="h-3 w-3 text-blue-600 focus:ring-blue-500 !border-gray-300 rounded !bg-white"
                           />
-                          <span className="ml-1 text-gray-600">+Clubs</span>
+                          <span className="ml-1 !text-gray-600">+Clubs</span>
                         </label>
                       </div>
                     )}
@@ -434,9 +593,9 @@ export default function CalendarView({
                             type="checkbox"
                             checked={filters?.includeClubEvents !== false}
                             onChange={(e) => handleFilterChange({ includeClubEvents: e.target.checked })}
-                            className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            className="h-3 w-3 text-blue-600 focus:ring-blue-500 !border-gray-300 rounded !bg-white"
                           />
-                          <span className="ml-1 text-gray-600">+Clubs</span>
+                          <span className="ml-1 !text-gray-600">+Clubs</span>
                         </label>
                       </div>
                     )}
@@ -444,7 +603,7 @@ export default function CalendarView({
 
                   {/* Visibility Filter */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium !text-gray-700 mb-2">
                       Visibility
                     </label>
                     <select
@@ -454,7 +613,7 @@ export default function CalendarView({
                         setVisibility(newVisibility)
                         handleFilterChange({ visibility: newVisibility })
                       }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-sm"
+                      className="w-full px-3 py-2 border !border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-sm !bg-white !text-gray-900"
                     >
                       <option value="all">All Events</option>
                       <option value="public">Public Only</option>
@@ -467,7 +626,12 @@ export default function CalendarView({
           </div>
         </div>
       )}
-      <div className="h-[600px]">
+      <div 
+        className="h-[calc(100vh-150px)] sm:h-[500px] md:h-[600px]"
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
         <Calendar
         localizer={localizer}
         events={bigCalendarEvents}

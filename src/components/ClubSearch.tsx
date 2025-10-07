@@ -185,7 +185,7 @@ export default function ClubSearch({ value, onChange, placeholder = "Search for 
   return (
     <div className={`relative ${className}`}>
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 !text-gray-400" />
         <input
           ref={inputRef}
           type="text"
@@ -195,12 +195,12 @@ export default function ClubSearch({ value, onChange, placeholder = "Search for 
           onFocus={handleFocus}
           onBlur={handleBlur}
           placeholder={placeholder}
-          className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-kin-red focus:border-transparent transition-colors text-sm"
+          className="w-full pl-10 pr-10 py-2 border !border-gray-300 rounded-lg focus:ring-2 focus:ring-kin-red focus:border-transparent transition-colors text-sm !bg-white !text-gray-900 !placeholder-gray-500"
         />
         {searchTerm && (
           <button
             onClick={handleClear}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 transition-colors"
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 !text-gray-400 !hover:text-gray-600 transition-colors"
           >
             <X className="h-4 w-4" />
           </button>
@@ -211,7 +211,7 @@ export default function ClubSearch({ value, onChange, placeholder = "Search for 
       {isOpen && filteredEntities.length > 0 && (
         <div
           ref={dropdownRef}
-          className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+          className="absolute z-50 w-full mt-1 !bg-white border !border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
         >
           {filteredEntities.map((entity, index) => {
             const isActive = entity.isActive
@@ -222,33 +222,33 @@ export default function ClubSearch({ value, onChange, placeholder = "Search for 
               <button
                 key={`${entity.entityType}-${entity.id}`}
                 onClick={() => handleEntitySelect(entity)}
-                className={`w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center ${
-                  isSelected ? 'bg-gray-50' : ''
+                className={`w-full px-4 py-3 text-left hover:bg-gray-50 !hover:bg-gray-50 transition-colors flex items-center ${
+                  isSelected ? '!bg-gray-50' : ''
                 } ${!isActive ? 'opacity-60' : ''}`}
               >
                 {entity.entityType === 'club' && (
-                  <Users className={`h-4 w-4 mr-3 flex-shrink-0 ${isActive ? 'text-gray-400' : 'text-gray-300'}`} />
+                  <Users className={`h-4 w-4 mr-3 flex-shrink-0 ${isActive ? '!text-gray-400' : '!text-gray-300'}`} />
                 )}
                 {entity.entityType === 'zone' && (
-                  <MapPin className={`h-4 w-4 mr-3 flex-shrink-0 ${isActive ? 'text-gray-400' : 'text-gray-300'}`} />
+                  <MapPin className={`h-4 w-4 mr-3 flex-shrink-0 ${isActive ? '!text-gray-400' : '!text-gray-300'}`} />
                 )}
                 {entity.entityType === 'district' && (
-                  <Building className={`h-4 w-4 mr-3 flex-shrink-0 ${isActive ? 'text-gray-400' : 'text-gray-300'}`} />
+                  <Building className={`h-4 w-4 mr-3 flex-shrink-0 ${isActive ? '!text-gray-400' : '!text-gray-300'}`} />
                 )}
                 <div className="flex-1">
-                  <div className={`font-medium ${isActive ? 'text-gray-900' : 'text-gray-500'}`}>
+                  <div className={`font-medium ${isActive ? '!text-gray-900' : '!text-gray-500'}`}>
                     {entity.entityType === 'zone' ? entity.displayName : entity.name}
                   </div>
                   {entity.entityType === 'club' && entity.zone && (
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm !text-gray-500">
                       {entity.zone.name} • {entity.zone.district?.name}
                     </div>
                   )}
                   <div className="flex items-center mt-1">
                     <span className={`text-xs px-2 py-1 rounded-full ${
                       isActive 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-gray-100 text-gray-600'
+                        ? '!bg-green-100 !text-green-800' 
+                        : '!bg-gray-100 !text-gray-600'
                     }`}>
                       {isActive ? 'Active on KinCal' : 'Not using KinCal'}
                     </span>
@@ -262,7 +262,7 @@ export default function ClubSearch({ value, onChange, placeholder = "Search for 
 
       {/* No results */}
       {isOpen && searchTerm.length > 0 && filteredEntities.length === 0 && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg p-4 text-center text-gray-500">
+        <div className="absolute z-50 w-full mt-1 !bg-white border !border-gray-300 rounded-lg shadow-lg p-4 text-center !text-gray-500">
           No clubs, zones, or districts found matching &ldquo;{searchTerm}&rdquo;
         </div>
       )}

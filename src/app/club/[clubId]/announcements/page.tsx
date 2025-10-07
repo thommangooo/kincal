@@ -172,7 +172,7 @@ function ClubAnnouncementsContent({ clubId }: ClubAnnouncementsContentProps) {
               const clubColor = announcement.entity_id ? generateClubColor(announcement.entity_id) : { bg: 'bg-gray-100', text: 'text-gray-800', border: 'bg-gray-500', bgStyle: 'background-color: #f3f4f6', textStyle: 'color: #1f2937', borderStyle: 'background-color: #6b7280' }
               
               return (
-                <article key={announcement.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+                <article key={announcement.id} className="announcement-card border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
                   {/* Title */}
                   <h2 className="text-xl font-semibold text-gray-900 mb-3">{announcement.title}</h2>
                   

@@ -146,7 +146,7 @@ export default function AnnouncementsList({ filters, showFilters = false, onFilt
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+    <div className="announcements-list bg-white rounded-lg shadow-sm border border-gray-200">
       {/* Header */}
       <div className="p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-r from-green-50 to-emerald-50 rounded-t-lg">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-4 sm:space-y-0">

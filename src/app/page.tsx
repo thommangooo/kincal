@@ -118,7 +118,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <Header />
-      <main className="container mx-auto px-2 sm:px-4 py-2 sm:py-8">
+      <main className="container mx-auto px-0 sm:px-4 py-0 sm:py-8">
         {loading && (
           <div className="mb-4 p-4 bg-blue-100 border border-blue-300 rounded-lg">
             <div className="flex items-center">

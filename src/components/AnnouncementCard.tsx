@@ -46,8 +46,8 @@ export default function AnnouncementCard({ announcement, showClub = true, onDele
   }
 
   return (
-    <div className={`border rounded-lg p-6 hover:shadow-md transition-shadow ${
-      isHighPriority ? 'border-blue-200 bg-blue-50' : 'border-gray-200'
+    <div className={`announcement-card border rounded-lg p-6 hover:shadow-md transition-shadow ${
+      isHighPriority ? 'high-priority border-blue-200 bg-blue-50' : 'border-gray-200'
     }`}>
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
@@ -60,7 +60,7 @@ export default function AnnouncementCard({ announcement, showClub = true, onDele
               </div>
             )}
             {isExpired && (
-              <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
+              <span className="expired-badge px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
                 Expired
               </span>
             )}

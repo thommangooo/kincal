@@ -86,7 +86,7 @@ export default function SignInForm() {
   }
 
   return (
-    <div className="max-w-md mx-auto bg-white rounded-lg shadow-sm border p-6">
+    <div className="signin-form max-w-md mx-auto bg-white rounded-lg shadow-sm border p-6">
       <div className="text-center mb-6">
         <Mail className="h-12 w-12 text-blue-600 mx-auto mb-4" />
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Sign In</h2>

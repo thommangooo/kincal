@@ -155,7 +155,7 @@ export default function AnnouncementForm({ mode, announcementId }: AnnouncementF
       }
     }
     loadData()
-  }, [user, mode, announcementId, setValue, router])
+  }, [user, mode, announcementId, setValue, router, facebookDataLoaded])
 
   const onSubmit = useCallback(async (data: AnnouncementFormData) => {
     console.log('Form submitted with data:', data)
@@ -294,7 +294,7 @@ export default function AnnouncementForm({ mode, announcementId }: AnnouncementF
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="form-container container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <div className="mb-8">
             <button

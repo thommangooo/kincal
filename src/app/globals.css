@@ -18,15 +18,404 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Disable dark mode completely - force light mode */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #ffffff !important;
+    --foreground: #171717 !important;
   }
+}
+
+/* Force all elements to stay in light mode */
+* {
+  color-scheme: light !important;
+}
+
+/* Override any dark mode styles globally */
+html, body {
+  background: white !important;
+  color: #333 !important;
+}
+
+/* Force all text to be dark */
+p, h1, h2, h3, h4, h5, h6, span, div, a, li, td, th, label, input, textarea, select, button {
+  color: inherit !important;
+}
+
+/* Force all backgrounds to be light */
+div, section, article, aside, header, footer, main, nav, form, fieldset, legend {
+  background: inherit !important;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Force react-big-calendar to stay in light mode */
+.rbc-calendar {
+  background: white !important;
+  color: #333 !important;
+}
+
+.rbc-header {
+  background: white !important;
+  color: #333 !important;
+  border-bottom: 1px solid #ddd !important;
+}
+
+.rbc-day-bg {
+  background: white !important;
+}
+
+.rbc-off-range-bg {
+  background: #f8f9fa !important;
+}
+
+.rbc-today {
+  background: #e3f2fd !important;
+}
+
+.rbc-date-cell {
+  color: #333 !important;
+}
+
+.rbc-date-cell.rbc-off-range {
+  color: #999 !important;
+}
+
+.rbc-date-cell.rbc-today {
+  color: #1976d2 !important;
+  font-weight: bold !important;
+}
+
+.rbc-event {
+  background: #3174ad !important;
+  color: white !important;
+  border: 1px solid #265985 !important;
+}
+
+.rbc-event:hover {
+  background: #265985 !important;
+}
+
+.rbc-event.rbc-selected {
+  background: #265985 !important;
+}
+
+.rbc-event-content {
+  color: white !important;
+}
+
+.rbc-time-view {
+  border: 1px solid #ddd !important;
+}
+
+.rbc-time-header {
+  border-bottom: 1px solid #ddd !important;
+}
+
+.rbc-time-content {
+  border-top: 1px solid #ddd !important;
+}
+
+.rbc-time-slot {
+  border-bottom: 1px solid #f0f0f0 !important;
+}
+
+.rbc-time-gutter {
+  background: #fafafa !important;
+  border-right: 1px solid #ddd !important;
+}
+
+.rbc-timeslot-group {
+  border-bottom: 1px solid #f0f0f0 !important;
+}
+
+.rbc-time-view .rbc-header {
+  background: #fafafa !important;
+  border-bottom: 1px solid #ddd !important;
+}
+
+.rbc-agenda-view table {
+  background: white !important;
+  color: #333 !important;
+}
+
+.rbc-agenda-view table th,
+.rbc-agenda-view table td {
+  background: white !important;
+  color: #333 !important;
+  border-bottom: 1px solid #ddd !important;
+}
+
+.rbc-agenda-view .rbc-agenda-time-cell {
+  color: #666 !important;
+}
+
+.rbc-agenda-view .rbc-agenda-date-cell {
+  color: #333 !important;
+}
+
+.rbc-agenda-view .rbc-agenda-event-cell {
+  color: #333 !important;
+}
+
+/* Force announcements to stay in light mode */
+.announcement-card {
+  background: white !important;
+  color: #333 !important;
+  border-color: #e5e7eb !important;
+}
+
+.announcement-card .prose {
+  color: #333 !important;
+}
+
+.announcement-card .prose h1,
+.announcement-card .prose h2,
+.announcement-card .prose h3,
+.announcement-card .prose h4,
+.announcement-card .prose h5,
+.announcement-card .prose h6 {
+  color: #111827 !important;
+}
+
+.announcement-card .prose p {
+  color: #374151 !important;
+}
+
+.announcement-card .prose a {
+  color: #dc2626 !important;
+}
+
+.announcement-card .prose a:hover {
+  color: #991b1b !important;
+}
+
+.announcement-card .prose ul,
+.announcement-card .prose ol {
+  color: #374151 !important;
+}
+
+.announcement-card .prose li {
+  color: #374151 !important;
+}
+
+.announcement-card .prose blockquote {
+  color: #6b7280 !important;
+  border-left-color: #d1d5db !important;
+}
+
+.announcement-card .prose code {
+  background: #f3f4f6 !important;
+  color: #111827 !important;
+}
+
+.announcement-card .prose pre {
+  background: #f3f4f6 !important;
+  color: #111827 !important;
+}
+
+.announcement-card .prose pre code {
+  background: transparent !important;
+  color: #111827 !important;
+}
+
+.announcement-card .prose strong {
+  color: #111827 !important;
+}
+
+.announcement-card .prose em {
+  color: #374151 !important;
+}
+
+/* Announcement list styling */
+.announcements-list {
+  background: white !important;
+  color: #333 !important;
+}
+
+.announcements-list .announcement-card {
+  background: white !important;
+  color: #333 !important;
+}
+
+.announcements-list .announcement-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* High priority announcement styling */
+.announcement-card.high-priority {
+  background: #eff6ff !important;
+  border-color: #bfdbfe !important;
+}
+
+/* Expired announcement styling */
+.announcement-card .expired-badge {
+  background: #f3f4f6 !important;
+  color: #6b7280 !important;
+}
+
+/* Force sign-in and form inputs to stay in light mode */
+.signin-form {
+  background: white !important;
+  color: #333 !important;
+  border-color: #e5e7eb !important;
+}
+
+.signin-form input[type="email"],
+.signin-form input[type="text"],
+.signin-form input[type="password"],
+.signin-form textarea,
+.signin-form select {
+  background: white !important;
+  color: #333 !important;
+  border-color: #d1d5db !important;
+}
+
+.signin-form input[type="email"]:focus,
+.signin-form input[type="text"]:focus,
+.signin-form input[type="password"]:focus,
+.signin-form textarea:focus,
+.signin-form select:focus {
+  background: white !important;
+  color: #333 !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+.signin-form input[type="email"]::placeholder,
+.signin-form input[type="text"]::placeholder,
+.signin-form input[type="password"]::placeholder,
+.signin-form textarea::placeholder {
+  color: #9ca3af !important;
+}
+
+.signin-form label {
+  color: #374151 !important;
+}
+
+.signin-form h1,
+.signin-form h2,
+.signin-form h3,
+.signin-form h4,
+.signin-form h5,
+.signin-form h6 {
+  color: #111827 !important;
+}
+
+.signin-form p {
+  color: #6b7280 !important;
+}
+
+.signin-form button {
+  background: #2563eb !important;
+  color: white !important;
+}
+
+.signin-form button:hover {
+  background: #1d4ed8 !important;
+}
+
+.signin-form button:disabled {
+  background: #9ca3af !important;
+  color: white !important;
+}
+
+/* General form styling for all forms */
+.form-container {
+  background: white !important;
+  color: #333 !important;
+}
+
+.form-container input[type="email"],
+.form-container input[type="text"],
+.form-container input[type="password"],
+.form-container input[type="number"],
+.form-container input[type="date"],
+.form-container input[type="time"],
+.form-container input[type="url"],
+.form-container textarea,
+.form-container select {
+  background: white !important;
+  color: #333 !important;
+  border-color: #d1d5db !important;
+}
+
+.form-container input[type="email"]:focus,
+.form-container input[type="text"]:focus,
+.form-container input[type="password"]:focus,
+.form-container input[type="number"]:focus,
+.form-container input[type="date"]:focus,
+.form-container input[type="time"]:focus,
+.form-container input[type="url"]:focus,
+.form-container textarea:focus,
+.form-container select:focus {
+  background: white !important;
+  color: #333 !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+.form-container input[type="email"]::placeholder,
+.form-container input[type="text"]::placeholder,
+.form-container input[type="password"]::placeholder,
+.form-container input[type="number"]::placeholder,
+.form-container input[type="url"]::placeholder,
+.form-container textarea::placeholder {
+  color: #9ca3af !important;
+}
+
+.form-container label {
+  color: #374151 !important;
+}
+
+.form-container h1,
+.form-container h2,
+.form-container h3,
+.form-container h4,
+.form-container h5,
+.form-container h6 {
+  color: #111827 !important;
+}
+
+.form-container p {
+  color: #6b7280 !important;
+}
+
+/* Specific styling for rich text editor */
+.form-container .ql-editor {
+  background: white !important;
+  color: #333 !important;
+}
+
+.form-container .ql-toolbar {
+  background: #f9fafb !important;
+  border-color: #d1d5db !important;
+}
+
+.form-container .ql-container {
+  background: white !important;
+  border-color: #d1d5db !important;
+}
+
+/* Force specific button text to stay white */
+.inline-flex.items-center.px-4.py-2.bg-blue-600 {
+  color: white !important;
+}
+
+/* Alternative selector for the View Event Details button */
+a[href].inline-flex.items-center.px-4.py-2.bg-blue-600 {
+  color: white !important;
+}
+
+/* Force all blue buttons to have white text */
+.bg-blue-600 {
+  color: white !important;
+}
+
+.bg-blue-600:hover {
+  color: white !important;
 }

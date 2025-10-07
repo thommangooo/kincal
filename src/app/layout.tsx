@@ -49,6 +49,9 @@ export const metadata: Metadata = {
     maximumScale: 1,
     userScalable: false,
   },
+  other: {
+    'color-scheme': 'light only',
+  },
 };
 
 export default function RootLayout({
@@ -57,7 +60,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" style={{ colorScheme: 'light only' }}>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

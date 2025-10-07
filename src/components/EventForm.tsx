@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -69,7 +69,7 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
     setShowToast(true)
   }
 
-  const loadSocialMediaAccounts = async () => {
+  const loadSocialMediaAccounts = useCallback(async () => {
     if (selectedEntity) {
       try {
         const accounts = await getSocialMediaAccounts(selectedEntity.type, selectedEntity.id)
@@ -78,7 +78,7 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
         console.error('Error loading social media accounts:', error)
       }
     }
-  }
+  }, [selectedEntity])
 
   const postEventToFacebook = async (eventId: string, eventData: EventFormData, accounts: Array<{
     id: string
@@ -120,7 +120,7 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
   // Load social media accounts when entity changes
   useEffect(() => {
     loadSocialMediaAccounts()
-  }, [selectedEntity])
+  }, [loadSocialMediaAccounts])
 
   // Load initial data
   useEffect(() => {
@@ -395,7 +395,7 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
 
   return (
     <>
-      <main className="container mx-auto px-4 py-8">
+      <main className="form-container container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
