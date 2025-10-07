@@ -6,9 +6,9 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Event, deleteEvent } from '@/lib/database'
 import { formatDate, getEventStatus } from '@/lib/utils'
-import { getCalendarExportOptions, buildEntityIcsSubscriptionUrls } from '@/lib/calendarExport'
+import { getCalendarExportOptions, buildEntityIcsSubscriptionUrls, downloadICSFile } from '@/lib/calendarExport'
 import { generateClubColor } from '@/lib/colors'
-import { Calendar, MapPin, Users, Globe, Lock, ExternalLink, X, Clock, Tag, Edit, Trash2, ExternalLink as ExternalLinkIcon } from 'lucide-react'
+import { Calendar, MapPin, Users, Globe, Lock, ExternalLink, X, Clock, Tag, Edit, Trash2, ExternalLink as ExternalLinkIcon, Download } from 'lucide-react'
 import type { ClubColor } from '@/lib/colors'
 import Toast from './Toast'
 import { useAuth } from '@/contexts/AuthContext'
@@ -362,8 +362,18 @@ export default function EventModal({ event, isOpen, onClose, onDelete, entityCol
 
               {/* Calendar Export */}
               <div className="pt-4 border-t border-gray-200 bg-blue-50 rounded-lg p-4 -mx-4 -mb-4">
-                <div className="mb-4">
+                <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-900">Add Event to My Calendar</h3>
+                  <button
+                    onClick={() => {
+                      downloadICSFile(event)
+                      showToastMessage('ICS file downloaded! Double-click to add to Mac Calendar.')
+                    }}
+                    className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center"
+                  >
+                    <Download className="h-4 w-4 mr-1" />
+                    Download ICS
+                  </button>
                 </div>
                 
                 <div className="flex flex-wrap gap-3">

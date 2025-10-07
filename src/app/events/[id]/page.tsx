@@ -6,11 +6,11 @@ import { useEffect, useState } from 'react'
 import { getEventById } from '@/lib/database'
 import { DbEvent } from '@/lib/supabase'
 import Header from '@/components/Header'
-import { ArrowLeft, Calendar, MapPin, Users, Globe, Lock, ExternalLink, Clock, Tag, Edit, Trash2, Share2 } from 'lucide-react'
+import { ArrowLeft, Calendar, MapPin, Users, Globe, Lock, ExternalLink, Clock, Tag, Edit, Trash2, Share2, Download } from 'lucide-react'
 import Image from 'next/image'
 import { formatDate, getEventStatus } from '@/lib/utils'
 import { generateClubColor } from '@/lib/colors'
-import { getCalendarExportOptions, buildEntityIcsSubscriptionUrls } from '@/lib/calendarExport'
+import { getCalendarExportOptions, buildEntityIcsSubscriptionUrls, downloadICSFile } from '@/lib/calendarExport'
 import { deleteEvent } from '@/lib/database'
 import { useAuth } from '@/contexts/AuthContext'
 import Toast from '@/components/Toast'
@@ -412,8 +412,18 @@ export default function EventPage() {
 
               {/* Calendar Export */}
               <div className="bg-blue-50 rounded-lg p-6">
-                <div className="mb-4">
+                <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-semibold text-gray-900">Add Event to My Calendar</h2>
+                  <button
+                    onClick={() => {
+                      downloadICSFile(event)
+                      showToastMessage('ICS file downloaded! Double-click to add to Mac Calendar.')
+                    }}
+                    className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center"
+                  >
+                    <Download className="h-4 w-4 mr-1" />
+                    Download ICS
+                  </button>
                 </div>
                 
                 <div className="flex flex-wrap gap-3">
