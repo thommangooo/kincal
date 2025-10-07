@@ -423,26 +423,31 @@ export default function EventModal({ event, isOpen, onClose, onDelete, entityCol
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {(() => {
-                      const { googleAddByUrl, googleImportUrl, webcalUrl, publicIcsUrl } = buildEntityIcsSubscriptionUrls(event.entity_type, event.entity_id)
+                      const { googleSettingsUrl, webcalUrl, publicIcsUrl } = buildEntityIcsSubscriptionUrls(event.entity_type, event.entity_id)
                       return (
                         <>
-                          <a
-                            href={googleAddByUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <button
+                            onClick={async () => {
+                              try {
+                                await navigator.clipboard.writeText(publicIcsUrl)
+                                showToastMessage('Subscription URL copied to clipboard')
+                              } catch {
+                                showToastMessage('Copy failed')
+                              }
+                            }}
                             className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
                           >
-                            <Calendar className="h-4 w-4 mr-2" />
-                            Add to Google Calendar
-                          </a>
+                            <span className="mr-2">📋</span>
+                            Copy subscription URL
+                          </button>
                           <a
-                            href={googleImportUrl}
+                            href={googleSettingsUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
                           >
                             <Calendar className="h-4 w-4 mr-2" />
-                            Google Import
+                            Open Google Calendar
                           </a>
                           <a
                             href={webcalUrl}
@@ -451,22 +456,8 @@ export default function EventModal({ event, isOpen, onClose, onDelete, entityCol
                             <Calendar className="h-4 w-4 mr-2" />
                             Subscribe in Calendar App
                           </a>
-                          <button
-                            onClick={async () => {
-                              try {
-                                await navigator.clipboard.writeText(publicIcsUrl)
-                                showToastMessage('Subscription URL copied')
-                              } catch {
-                                showToastMessage('Copy failed')
-                              }
-                            }}
-                            className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-800 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors"
-                          >
-                            <span className="mr-2">📋</span>
-                            Copy subscription URL
-                          </button>
                           <div className="w-full text-xs text-gray-500">
-                            Try &quot;Google Import&quot; if the first button doesn&apos;t work. For other apps, use &quot;Subscribe in Calendar App&quot; or copy the URL.
+                            Click &quot;Copy subscription URL&quot; then &quot;Open Google Calendar&quot; and paste the URL into the field.
                           </div>
                         </>
                       )
