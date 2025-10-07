@@ -211,6 +211,91 @@ export async function copyEventDetails(event: Event): Promise<boolean> {
   }
 }
 
+// Generate ICS content for multiple events (calendar feed)
+export function generateEntityICSFeed(events: Event[], entityName: string, entityType: 'club' | 'zone' | 'district'): string {
+  // Format dates for ICS (YYYYMMDDTHHMMSSZ)
+  const formatDate = (date: Date) => {
+    return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
+  }
+  
+  const now = formatDate(new Date())
+  
+  // Escape special characters for ICS format
+  const escapeICS = (text: string) => {
+    return text
+      .replace(/\\/g, '\\\\')
+      .replace(/;/g, '\\;')
+      .replace(/,/g, '\\,')
+      .replace(/\n/g, '\\n')
+      .replace(/\r/g, '')
+  }
+  
+  // Calendar header
+  const calendarHeader = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Kin Canada Calendar//Entity Feed//EN',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    `X-WR-CALNAME:${escapeICS(entityName)}`,
+    `X-WR-TIMEZONE:America/Toronto`,
+    `X-WR-CALDESC:${escapeICS(`Events from ${entityName}`)}`
+  ].join('\r\n')
+  
+  // Generate VEVENT for each event
+  const eventEntries = events.map(event => {
+    const startDate = new Date(event.start_date)
+    const endDate = new Date(event.end_date)
+    const start = formatDate(startDate)
+    const end = formatDate(endDate)
+    const uid = `${event.id}@kincal.com`
+    
+    return [
+      'BEGIN:VEVENT',
+      `UID:${uid}`,
+      `DTSTAMP:${now}`,
+      `DTSTART:${start}`,
+      `DTEND:${end}`,
+      `SUMMARY:${escapeICS(event.title)}`,
+      event.description ? `DESCRIPTION:${escapeICS(event.description)}` : '',
+      event.location ? `LOCATION:${escapeICS(event.location)}` : '',
+      `ORGANIZER:CN=${escapeICS(entityName)}`,
+      event.event_url ? `URL:${event.event_url}` : '',
+      'STATUS:CONFIRMED',
+      'TRANSP:OPAQUE',
+      'END:VEVENT'
+    ].filter(line => line !== '').join('\r\n')
+  }).join('\r\n')
+  
+  // Calendar footer
+  const calendarFooter = 'END:VCALENDAR'
+  
+  return [calendarHeader, eventEntries, calendarFooter].join('\r\n')
+}
+
+// Build absolute URLs for an entity's ICS feed (http(s) and webcal), plus Google add-by-url link
+export function buildEntityIcsSubscriptionUrls(entityType: 'club' | 'zone' | 'district', entityId: string) {
+  // Local origin for same-origin downloads/copying while developing
+  const localOrigin = typeof window !== 'undefined' ? window.location.origin : undefined
+  // Prefer explicitly configured public URL for subscription links (required by Google/webcal)
+  const configuredPublic = process.env.NEXT_PUBLIC_APP_URL
+  const effectiveLocalBase = localOrigin || configuredPublic || 'http://localhost:3000'
+
+  // Public base must be https and non-localhost for best compatibility
+  let publicBase = configuredPublic || effectiveLocalBase
+  if (publicBase.startsWith('http://')) publicBase = publicBase.replace('http://', 'https://')
+
+  const httpIcsUrl = `${effectiveLocalBase}/api/calendar/${entityType}/${entityId}/feed`
+  const publicIcsUrl = `${publicBase}/api/calendar/${entityType}/${entityId}/feed`
+
+  // Many native calendar apps recognize webcal:// for subscription and require public reachability
+  const webcalUrl = publicIcsUrl.replace(/^https?:\/\//, 'webcal://')
+  // Google Calendar subscription URL using cid parameter
+  const googleAddByUrl = `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(publicIcsUrl)}`
+
+  return { httpIcsUrl, publicIcsUrl, webcalUrl, googleAddByUrl }
+}
+
 // Get calendar export options
 export function getCalendarExportOptions(event: Event, showToast?: (message: string) => void) {
   return [

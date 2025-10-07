@@ -6,7 +6,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Event, deleteEvent } from '@/lib/database'
 import { formatDate, getEventStatus } from '@/lib/utils'
-import { getCalendarExportOptions, downloadICSFile, copyEventDetails } from '@/lib/calendarExport'
+import { getCalendarExportOptions, downloadICSFile, copyEventDetails, buildEntityIcsSubscriptionUrls } from '@/lib/calendarExport'
 import { generateClubColor } from '@/lib/colors'
 import { Calendar, MapPin, Users, Globe, Lock, ExternalLink, X, Clock, Tag, Download, Edit, Trash2, ExternalLink as ExternalLinkIcon } from 'lucide-react'
 import type { ClubColor } from '@/lib/colors'
@@ -409,6 +409,62 @@ export default function EventModal({ event, isOpen, onClose, onDelete, entityCol
                   ))}
                 </div>
               </div>
+
+              {/* Entity Calendar Subscription */}
+              {event.entity_id && (event.club || event.zone || event.district) && (
+                <div className="mt-4 bg-purple-50 rounded-lg p-4 border border-purple-100">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Subscribe to All Events</h3>
+                  <p className="text-sm text-gray-600 mb-3">
+                    Stay up-to-date with all events from {
+                      event.club ? event.club.name : 
+                      event.zone ? event.zone.name : 
+                      event.district ? event.district.name : ''
+                    }.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {(() => {
+                      const { googleAddByUrl, webcalUrl, publicIcsUrl } = buildEntityIcsSubscriptionUrls(event.entity_type, event.entity_id)
+                      return (
+                        <>
+                          <a
+                            href={googleAddByUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
+                          >
+                            <Calendar className="h-4 w-4 mr-2" />
+                            Add to Google by URL
+                          </a>
+                          <a
+                            href={webcalUrl}
+                            className="inline-flex items-center px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors"
+                          >
+                            <Calendar className="h-4 w-4 mr-2" />
+                            Subscribe in Calendar App
+                          </a>
+                          <button
+                            onClick={async () => {
+                              try {
+                                await navigator.clipboard.writeText(publicIcsUrl)
+                                showToastMessage('Subscription URL copied')
+                              } catch {
+                                showToastMessage('Copy failed')
+                              }
+                            }}
+                            className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-800 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors"
+                          >
+                            <span className="mr-2">📋</span>
+                            Copy subscription URL
+                          </button>
+                          <div className="w-full text-xs text-gray-500">
+                            If Google doesn’t prompt, go to Settings → Add calendar → From URL and paste the copied link.
+                          </div>
+                        </>
+                      )
+                    })()}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
