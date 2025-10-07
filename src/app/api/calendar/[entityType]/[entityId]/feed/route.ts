@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getEvents, getEntityDetails } from '@/lib/database'
 import { generateEntityICSFeed } from '@/lib/calendarExport'
 
+// This route should be publicly accessible for calendar subscriptions
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { entityType: string; entityId: string } }

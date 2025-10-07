@@ -423,7 +423,7 @@ export default function EventModal({ event, isOpen, onClose, onDelete, entityCol
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {(() => {
-                      const { googleAddByUrl, googleSettingsUrl, webcalUrl, publicIcsUrl } = buildEntityIcsSubscriptionUrls(event.entity_type, event.entity_id)
+                      const { googleAddByUrl, googleImportUrl, webcalUrl, publicIcsUrl } = buildEntityIcsSubscriptionUrls(event.entity_type, event.entity_id)
                       return (
                         <>
                           <a
@@ -436,13 +436,13 @@ export default function EventModal({ event, isOpen, onClose, onDelete, entityCol
                             Add to Google Calendar
                           </a>
                           <a
-                            href={googleSettingsUrl}
+                            href={googleImportUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
                           >
                             <Calendar className="h-4 w-4 mr-2" />
-                            Google Settings
+                            Google Import
                           </a>
                           <a
                             href={webcalUrl}
@@ -466,7 +466,7 @@ export default function EventModal({ event, isOpen, onClose, onDelete, entityCol
                             Copy subscription URL
                           </button>
                           <div className="w-full text-xs text-gray-500">
-                            Try &quot;Google Settings&quot; if the first button doesn&apos;t work. For other apps, use &quot;Subscribe in Calendar App&quot; or copy the URL.
+                            Try &quot;Google Import&quot; if the first button doesn&apos;t work. For other apps, use &quot;Subscribe in Calendar App&quot; or copy the URL.
                           </div>
                         </>
                       )

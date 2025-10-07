@@ -290,13 +290,13 @@ export function buildEntityIcsSubscriptionUrls(entityType: 'club' | 'zone' | 'di
 
   // Many native calendar apps recognize webcal:// for subscription and require public reachability
   const webcalUrl = publicIcsUrl.replace(/^https?:\/\//, 'webcal://')
-  // Google Calendar subscription URL using cid parameter
-  const googleAddByUrl = `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(publicIcsUrl)}`
+  // Google Calendar subscription - use the proper add-by-url format
+  const googleAddByUrl = `https://calendar.google.com/calendar/r/settings/addbyurl?url=${encodeURIComponent(publicIcsUrl)}`
   
-  // Alternative: Direct Google Calendar add-by-url settings page
-  const googleSettingsUrl = `https://calendar.google.com/calendar/r/settings/addbyurl?url=${encodeURIComponent(publicIcsUrl)}`
+  // Alternative: Direct Google Calendar import page
+  const googleImportUrl = `https://calendar.google.com/calendar/import?url=${encodeURIComponent(publicIcsUrl)}`
 
-  return { httpIcsUrl, publicIcsUrl, webcalUrl, googleAddByUrl, googleSettingsUrl }
+  return { httpIcsUrl, publicIcsUrl, webcalUrl, googleAddByUrl, googleImportUrl }
 }
 
 // Get calendar export options
