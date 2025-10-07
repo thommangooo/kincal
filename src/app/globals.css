@@ -419,3 +419,21 @@ a[href].inline-flex.items-center.px-4.py-2.bg-blue-600 {
 .bg-blue-600:hover {
   color: white !important;
 }
+
+/* Force all red buttons to have white text */
+.bg-red-600 {
+  color: white !important;
+}
+
+.bg-red-600:hover {
+  color: white !important;
+}
+
+/* Force all kin-red buttons to have white text */
+.bg-kin-red {
+  color: white !important;
+}
+
+.bg-kin-red:hover {
+  color: white !important;
+}
