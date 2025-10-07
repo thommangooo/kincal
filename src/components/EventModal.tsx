@@ -9,6 +9,7 @@ import { formatDate, getEventStatus } from '@/lib/utils'
 import { getCalendarExportOptions, downloadICSFile, copyEventDetails } from '@/lib/calendarExport'
 import { generateClubColor } from '@/lib/colors'
 import { Calendar, MapPin, Users, Globe, Lock, ExternalLink, X, Clock, Tag, Download, Edit, Trash2, ExternalLink as ExternalLinkIcon } from 'lucide-react'
+import type { ClubColor } from '@/lib/colors'
 import Toast from './Toast'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -17,9 +18,10 @@ interface EventModalProps {
   isOpen: boolean
   onClose: () => void
   onDelete?: () => void
+  entityColor?: ClubColor
 }
 
-export default function EventModal({ event, isOpen, onClose, onDelete }: EventModalProps) {
+export default function EventModal({ event, isOpen, onClose, onDelete, entityColor }: EventModalProps) {
   const [toastMessage, setToastMessage] = useState('')
   const [showToast, setShowToast] = useState(false)
   const router = useRouter()
@@ -63,7 +65,9 @@ export default function EventModal({ event, isOpen, onClose, onDelete }: EventMo
     past: 'bg-gray-100 text-gray-800'
   }
   
-  const clubColor = event.entity_id ? generateClubColor(event.entity_id) : { bg: 'bg-gray-100', text: 'text-gray-800', border: 'bg-gray-500', bgStyle: 'background-color: #f3f4f6', textStyle: 'color: #1f2937', borderStyle: 'background-color: #6b7280' }
+  const clubColor = entityColor || (event.entity_id ? generateClubColor(event.entity_id) : { bg: 'bg-gray-100', text: 'text-gray-800', border: 'bg-gray-500', bgStyle: 'background-color: #f3f4f6', textStyle: 'color: #1f2937', borderStyle: 'background-color: #6b7280' })
+  const bgHex = clubColor.bgStyle?.split(': ')[1]
+  const borderHex = clubColor.borderStyle?.split(': ')[1]
 
   // Check if it's an all-day event by examining the datetime fields
   const startTime = new Date(event.start_date)
@@ -107,7 +111,10 @@ export default function EventModal({ event, isOpen, onClose, onDelete }: EventMo
               {/* Entity indicator */}
               {(event.club || event.zone || event.district) && (
                 <div className="flex items-center space-x-2">
-                  <div className={`w-3 h-3 rounded-full ${clubColor.border}`}></div>
+                  <div
+                    className={`w-3 h-3 rounded-full border ${clubColor.bg} ${clubColor.border}`}
+                    style={{ backgroundColor: bgHex, borderColor: borderHex }}
+                  ></div>
                   {event.club && (
                     <>
                       <span className="text-sm text-gray-600">{event.club.name}</span>

@@ -81,6 +81,29 @@ export default function CalendarView({
     }
   }, [filters])
 
+  // Ensure distinct colors for visible entities: if a generated color collides,
+  // re-hash with a salt until we get an unused color (bounded by palette size)
+  const entityIdToColor = useMemo(() => {
+    const map = new Map<string, ReturnType<typeof generateClubColor>>()
+    const usedBackgrounds = new Set<string>()
+
+    const distinctIds = Array.from(new Set(events.map(e => e.entity_id).filter(Boolean))) as string[]
+
+    distinctIds.forEach((id) => {
+      let attempt = 0
+      let color = generateClubColor(id)
+      // If this background is already used, try salted ids to move to another palette slot
+      while (usedBackgrounds.has(color.bg) && attempt < 16) {
+        attempt += 1
+        color = generateClubColor(`${id}-${attempt}`)
+      }
+      usedBackgrounds.add(color.bg)
+      map.set(id, color)
+    })
+
+    return map
+  }, [events])
+
   // Get current filter state text
   const getFilterStateText = () => {
     const activeFilters = []
@@ -265,13 +288,18 @@ export default function CalendarView({
 
   // Custom event component with club colors
   const EventComponent = ({ event }: { event: BigCalendarEvent }) => {
-    const clubColor = event.resource.entity_id 
-      ? generateClubColor(event.resource.entity_id)
-      : { bg: 'bg-gray-100', text: 'text-gray-800' }
+    const fallback = { bg: 'bg-gray-100', text: 'text-gray-800', border: 'bg-gray-500', bgStyle: 'background-color: #f3f4f6', textStyle: 'color: #1f2937', borderStyle: 'background-color: #6b7280' }
+    const color = event.resource.entity_id ? (entityIdToColor.get(event.resource.entity_id) || generateClubColor(event.resource.entity_id)) : fallback
+
+    // Extract hex values from inline style fallbacks (e.g., "background-color: #fecaca")
+    const bgHex = color.bgStyle?.split(': ')[1]
+    const textHex = color.textStyle?.split(': ')[1]
+    const borderHex = color.borderStyle?.split(': ')[1]
 
     return (
-      <div 
-        className={`${clubColor.bg} ${clubColor.text} px-1 py-0.5 rounded text-xs font-medium truncate`}
+      <div
+        className={`px-1.5 py-0.5 rounded-md text-[11px] font-semibold truncate shadow-sm ring-1 ring-black/10 border-l-2`}
+        style={{ backgroundColor: bgHex, color: textHex, borderLeftColor: borderHex }}
         title={`${event.title} - ${event.resource.club?.name || 'Unknown Club'}`}
       >
         {event.title}
@@ -663,6 +691,7 @@ export default function CalendarView({
           handleCloseModal()
           onEventDeleted?.()
         }}
+        entityColor={selectedEvent?.entity_id ? (entityIdToColor.get(selectedEvent.entity_id) || generateClubColor(selectedEvent.entity_id)) : undefined}
       />
     </div>
   )

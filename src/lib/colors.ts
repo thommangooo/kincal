@@ -11,73 +11,21 @@ export interface ClubColor {
   borderStyle?: string
 }
 
-// Enhanced color palette with more visually distinct colors
-// Using both Tailwind classes and inline styles for maximum compatibility
+// Distinct, high-contrast palette (no gray) for up to 12+ entities
+// Using stronger 200 backgrounds for better month-view contrast
 const CLUB_COLORS: ClubColor[] = [
-  { 
-    bg: 'bg-red-100', text: 'text-red-800', border: 'bg-red-500',
-    bgStyle: 'background-color: #fee2e2', textStyle: 'color: #991b1b', borderStyle: 'background-color: #ef4444'
-  },
-  { 
-    bg: 'bg-blue-100', text: 'text-blue-800', border: 'bg-blue-500',
-    bgStyle: 'background-color: #dbeafe', textStyle: 'color: #1e40af', borderStyle: 'background-color: #3b82f6'
-  },
-  { 
-    bg: 'bg-green-100', text: 'text-green-800', border: 'bg-green-500',
-    bgStyle: 'background-color: #dcfce7', textStyle: 'color: #166534', borderStyle: 'background-color: #22c55e'
-  },
-  { 
-    bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'bg-yellow-500',
-    bgStyle: 'background-color: #fef3c7', textStyle: 'color: #92400e', borderStyle: 'background-color: #eab308'
-  },
-  { 
-    bg: 'bg-purple-100', text: 'text-purple-800', border: 'bg-purple-500',
-    bgStyle: 'background-color: #f3e8ff', textStyle: 'color: #6b21a8', borderStyle: 'background-color: #a855f7'
-  },
-  { 
-    bg: 'bg-pink-100', text: 'text-pink-800', border: 'bg-pink-500',
-    bgStyle: 'background-color: #fce7f3', textStyle: 'color: #be185d', borderStyle: 'background-color: #ec4899'
-  },
-  { 
-    bg: 'bg-indigo-100', text: 'text-indigo-800', border: 'bg-indigo-500',
-    bgStyle: 'background-color: #e0e7ff', textStyle: 'color: #3730a3', borderStyle: 'background-color: #6366f1'
-  },
-  { 
-    bg: 'bg-gray-100', text: 'text-gray-800', border: 'bg-gray-500',
-    bgStyle: 'background-color: #f3f4f6', textStyle: 'color: #1f2937', borderStyle: 'background-color: #6b7280'
-  },
-  { 
-    bg: 'bg-red-200', text: 'text-red-900', border: 'bg-red-600',
-    bgStyle: 'background-color: #fecaca', textStyle: 'color: #7f1d1d', borderStyle: 'background-color: #dc2626'
-  },
-  { 
-    bg: 'bg-blue-200', text: 'text-blue-900', border: 'bg-blue-600',
-    bgStyle: 'background-color: #bfdbfe', textStyle: 'color: #1e3a8a', borderStyle: 'background-color: #2563eb'
-  },
-  { 
-    bg: 'bg-green-200', text: 'text-green-900', border: 'bg-green-600',
-    bgStyle: 'background-color: #bbf7d0', textStyle: 'color: #14532d', borderStyle: 'background-color: #16a34a'
-  },
-  { 
-    bg: 'bg-yellow-200', text: 'text-yellow-900', border: 'bg-yellow-600',
-    bgStyle: 'background-color: #fde68a', textStyle: 'color: #78350f', borderStyle: 'background-color: #ca8a04'
-  },
-  { 
-    bg: 'bg-purple-200', text: 'text-purple-900', border: 'bg-purple-600',
-    bgStyle: 'background-color: #e9d5ff', textStyle: 'color: #581c87', borderStyle: 'background-color: #9333ea'
-  },
-  { 
-    bg: 'bg-pink-200', text: 'text-pink-900', border: 'bg-pink-600',
-    bgStyle: 'background-color: #fbcfe8', textStyle: 'color: #831843', borderStyle: 'background-color: #db2777'
-  },
-  { 
-    bg: 'bg-indigo-200', text: 'text-indigo-900', border: 'bg-indigo-600',
-    bgStyle: 'background-color: #c7d2fe', textStyle: 'color: #312e81', borderStyle: 'background-color: #4f46e5'
-  },
-  { 
-    bg: 'bg-gray-200', text: 'text-gray-900', border: 'bg-gray-600',
-    bgStyle: 'background-color: #e5e7eb', textStyle: 'color: #111827', borderStyle: 'background-color: #4b5563'
-  }
+  { bg: 'bg-red-200', text: 'text-red-900', border: 'bg-red-600', bgStyle: 'background-color: #fecaca', textStyle: 'color: #7f1d1d', borderStyle: 'background-color: #dc2626' },
+  { bg: 'bg-blue-200', text: 'text-blue-900', border: 'bg-blue-600', bgStyle: 'background-color: #bfdbfe', textStyle: 'color: #1e3a8a', borderStyle: 'background-color: #2563eb' },
+  { bg: 'bg-green-200', text: 'text-green-900', border: 'bg-green-600', bgStyle: 'background-color: #bbf7d0', textStyle: 'color: #14532d', borderStyle: 'background-color: #16a34a' },
+  { bg: 'bg-yellow-200', text: 'text-yellow-900', border: 'bg-yellow-600', bgStyle: 'background-color: #fde68a', textStyle: 'color: #78350f', borderStyle: 'background-color: #ca8a04' },
+  { bg: 'bg-purple-200', text: 'text-purple-900', border: 'bg-purple-600', bgStyle: 'background-color: #e9d5ff', textStyle: 'color: #581c87', borderStyle: 'background-color: #9333ea' },
+  { bg: 'bg-pink-200', text: 'text-pink-900', border: 'bg-pink-600', bgStyle: 'background-color: #fbcfe8', textStyle: 'color: #831843', borderStyle: 'background-color: #db2777' },
+  { bg: 'bg-indigo-200', text: 'text-indigo-900', border: 'bg-indigo-600', bgStyle: 'background-color: #c7d2fe', textStyle: 'color: #312e81', borderStyle: 'background-color: #4f46e5' },
+  { bg: 'bg-orange-200', text: 'text-orange-900', border: 'bg-orange-600', bgStyle: 'background-color: #fed7aa', textStyle: 'color: #7c2d12', borderStyle: 'background-color: #ea580c' },
+  { bg: 'bg-teal-200', text: 'text-teal-900', border: 'bg-teal-600', bgStyle: 'background-color: #99f6e4', textStyle: 'color: #134e4a', borderStyle: 'background-color: #0d9488' },
+  { bg: 'bg-cyan-200', text: 'text-cyan-900', border: 'bg-cyan-600', bgStyle: 'background-color: #a5f3fc', textStyle: 'color: #164e63', borderStyle: 'background-color: #0891b2' },
+  { bg: 'bg-lime-200', text: 'text-lime-900', border: 'bg-lime-600', bgStyle: 'background-color: #d9f99d', textStyle: 'color: #3f6212', borderStyle: 'background-color: #65a30d' },
+  { bg: 'bg-rose-200', text: 'text-rose-900', border: 'bg-rose-600', bgStyle: 'background-color: #fecdd3', textStyle: 'color: #7f1d1d', borderStyle: 'background-color: #e11d48' }
 ]
 
 /**

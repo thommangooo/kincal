@@ -42,10 +42,7 @@ p, h1, h2, h3, h4, h5, h6, span, div, a, li, td, th, label, input, textarea, sel
   color: inherit !important;
 }
 
-/* Force all backgrounds to be light */
-div, section, article, aside, header, footer, main, nav, form, fieldset, legend {
-  background: inherit !important;
-}
+/* Remove overly-aggressive background forcing so component colors (e.g., event pills) can render */
 
 body {
   background: var(--background);
@@ -90,22 +87,20 @@ body {
   font-weight: bold !important;
 }
 
+/* Allow event components to display their own backgrounds and text colors */
 .rbc-event {
-  background: #3174ad !important;
-  color: white !important;
-  border: 1px solid #265985 !important;
+  background: unset !important;
+  color: unset !important;
+  border: unset !important;
 }
 
-.rbc-event:hover {
-  background: #265985 !important;
-}
-
+.rbc-event:hover,
 .rbc-event.rbc-selected {
-  background: #265985 !important;
+  background: unset !important;
 }
 
 .rbc-event-content {
-  color: white !important;
+  color: unset !important;
 }
 
 .rbc-time-view {
