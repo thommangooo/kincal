@@ -239,7 +239,24 @@ export function generateEntityICSFeed(events: Event[], entityName: string, _enti
     'METHOD:PUBLISH',
     `X-WR-CALNAME:${escapeICS(entityName)}`,
     `X-WR-TIMEZONE:America/Toronto`,
-    `X-WR-CALDESC:${escapeICS(`Events from ${entityName}`)}`
+    `X-WR-CALDESC:${escapeICS(`Events from ${entityName}`)}`,
+    'BEGIN:VTIMEZONE',
+    'TZID:America/Toronto',
+    'BEGIN:STANDARD',
+    'DTSTART:20231105T020000',
+    'RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU',
+    'TZNAME:EST',
+    'TZOFFSETFROM:-0400',
+    'TZOFFSETTO:-0500',
+    'END:STANDARD',
+    'BEGIN:DAYLIGHT',
+    'DTSTART:20240310T020000',
+    'RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU',
+    'TZNAME:EDT',
+    'TZOFFSETFROM:-0500',
+    'TZOFFSETTO:-0400',
+    'END:DAYLIGHT',
+    'END:VTIMEZONE'
   ].join('\r\n')
   
   // Generate VEVENT for each event
@@ -254,8 +271,8 @@ export function generateEntityICSFeed(events: Event[], entityName: string, _enti
       'BEGIN:VEVENT',
       `UID:${uid}`,
       `DTSTAMP:${now}`,
-      `DTSTART:${start}`,
-      `DTEND:${end}`,
+      `DTSTART;TZID=America/Toronto:${start}`,
+      `DTEND;TZID=America/Toronto:${end}`,
       `SUMMARY:${escapeICS(event.title)}`,
       event.description ? `DESCRIPTION:${escapeICS(event.description)}` : '',
       event.location ? `LOCATION:${escapeICS(event.location)}` : '',
