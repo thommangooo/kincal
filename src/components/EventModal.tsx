@@ -466,7 +466,7 @@ export default function EventModal({ event, isOpen, onClose, onDelete, entityCol
                             Copy subscription URL
                           </button>
                           <div className="w-full text-xs text-gray-500">
-                            Try "Google Settings" if the first button doesn't work. For other apps, use "Subscribe in Calendar App" or copy the URL.
+                            Try &quot;Google Settings&quot; if the first button doesn&apos;t work. For other apps, use &quot;Subscribe in Calendar App&quot; or copy the URL.
                           </div>
                         </>
                       )
