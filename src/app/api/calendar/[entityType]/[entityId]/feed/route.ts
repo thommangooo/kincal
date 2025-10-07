@@ -66,7 +66,11 @@ export async function GET(
         'Content-Disposition': `inline; filename="${entity.name.replace(/[^a-z0-9]/gi, '_')}_calendar.ics"`,
         // Short-lived caching so Google can fetch periodically without stale issues
         'Cache-Control': 'public, max-age=60',
-        'Pragma': 'public'
+        'Pragma': 'public',
+        // Allow CORS for calendar apps
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET',
+        'Access-Control-Allow-Headers': 'Content-Type'
       }
     })
   } catch (error) {

@@ -423,7 +423,7 @@ export default function EventModal({ event, isOpen, onClose, onDelete, entityCol
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {(() => {
-                      const { googleAddByUrl, webcalUrl, publicIcsUrl } = buildEntityIcsSubscriptionUrls(event.entity_type, event.entity_id)
+                      const { googleAddByUrl, googleSettingsUrl, webcalUrl, publicIcsUrl } = buildEntityIcsSubscriptionUrls(event.entity_type, event.entity_id)
                       return (
                         <>
                           <a
@@ -433,7 +433,16 @@ export default function EventModal({ event, isOpen, onClose, onDelete, entityCol
                             className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
                           >
                             <Calendar className="h-4 w-4 mr-2" />
-                            Add to Google by URL
+                            Add to Google Calendar
+                          </a>
+                          <a
+                            href={googleSettingsUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                          >
+                            <Calendar className="h-4 w-4 mr-2" />
+                            Google Settings
                           </a>
                           <a
                             href={webcalUrl}
@@ -457,7 +466,7 @@ export default function EventModal({ event, isOpen, onClose, onDelete, entityCol
                             Copy subscription URL
                           </button>
                           <div className="w-full text-xs text-gray-500">
-                            If Google doesn’t prompt, go to Settings → Add calendar → From URL and paste the copied link.
+                            Try "Google Settings" if the first button doesn't work. For other apps, use "Subscribe in Calendar App" or copy the URL.
                           </div>
                         </>
                       )

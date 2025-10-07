@@ -292,8 +292,11 @@ export function buildEntityIcsSubscriptionUrls(entityType: 'club' | 'zone' | 'di
   const webcalUrl = publicIcsUrl.replace(/^https?:\/\//, 'webcal://')
   // Google Calendar subscription URL using cid parameter
   const googleAddByUrl = `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(publicIcsUrl)}`
+  
+  // Alternative: Direct Google Calendar add-by-url settings page
+  const googleSettingsUrl = `https://calendar.google.com/calendar/r/settings/addbyurl?url=${encodeURIComponent(publicIcsUrl)}`
 
-  return { httpIcsUrl, publicIcsUrl, webcalUrl, googleAddByUrl }
+  return { httpIcsUrl, publicIcsUrl, webcalUrl, googleAddByUrl, googleSettingsUrl }
 }
 
 // Get calendar export options
