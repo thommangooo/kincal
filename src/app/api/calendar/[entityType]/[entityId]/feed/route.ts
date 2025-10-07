@@ -58,8 +58,7 @@ export async function GET(
     // Generate ICS feed
     const icsContent = generateEntityICSFeed(
       events,
-      entity.name,
-      entityType as 'club' | 'zone' | 'district'
+      entity.name
     )
     
     // Return ICS with subscription-friendly headers (don't force attachment)
