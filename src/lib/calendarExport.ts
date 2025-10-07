@@ -212,7 +212,7 @@ export async function copyEventDetails(event: Event): Promise<boolean> {
 }
 
 // Generate ICS content for multiple events (calendar feed)
-export function generateEntityICSFeed(events: Event[], entityName: string, _entityType: 'club' | 'zone' | 'district'): string {
+export function generateEntityICSFeed(events: Event[], entityName: string): string {
   // Format dates for ICS (YYYYMMDDTHHMMSSZ)
   const formatDate = (date: Date) => {
     return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'

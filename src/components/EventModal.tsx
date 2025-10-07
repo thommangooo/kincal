@@ -6,9 +6,9 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Event, deleteEvent } from '@/lib/database'
 import { formatDate, getEventStatus } from '@/lib/utils'
-import { getCalendarExportOptions, downloadICSFile, copyEventDetails, buildEntityIcsSubscriptionUrls } from '@/lib/calendarExport'
+import { getCalendarExportOptions, buildEntityIcsSubscriptionUrls } from '@/lib/calendarExport'
 import { generateClubColor } from '@/lib/colors'
-import { Calendar, MapPin, Users, Globe, Lock, ExternalLink, X, Clock, Tag, Download, Edit, Trash2, ExternalLink as ExternalLinkIcon } from 'lucide-react'
+import { Calendar, MapPin, Users, Globe, Lock, ExternalLink, X, Clock, Tag, Edit, Trash2, ExternalLink as ExternalLinkIcon } from 'lucide-react'
 import type { ClubColor } from '@/lib/colors'
 import Toast from './Toast'
 import { useAuth } from '@/contexts/AuthContext'
@@ -362,46 +362,20 @@ export default function EventModal({ event, isOpen, onClose, onDelete, entityCol
 
               {/* Calendar Export */}
               <div className="pt-4 border-t border-gray-200 bg-blue-50 rounded-lg p-4 -mx-4 -mb-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Add to My Calendar</h3>
-                  <div className="flex items-center space-x-4">
-                    <button
-                      onClick={() => {
-                        downloadICSFile(event)
-                        showToastMessage('ICS file downloaded successfully!')
-                      }}
-                      className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center"
-                    >
-                      <Download className="h-4 w-4 mr-1" />
-                      Download ICS
-                    </button>
-                    <button
-                      onClick={async () => {
-                        const success = await copyEventDetails(event)
-                        if (success) {
-                          showToastMessage('Event details copied to clipboard!')
-                        } else {
-                          showToastMessage('Failed to copy to clipboard')
-                        }
-                      }}
-                      className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center"
-                    >
-                      <span className="mr-1">📋</span>
-                      Copy Details
-                    </button>
-                  </div>
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Add Event to My Calendar</h3>
                 </div>
                 
                 <div className="flex flex-wrap gap-3">
                   {getCalendarExportOptions(event, showToastMessage)
-                    .filter(option => option.url) // Only show URL-based options
+                    .filter(option => option.url && (option.name === 'Google Calendar' || option.name === 'Outlook'))
                     .map((option, index) => (
                     <a
                       key={index}
                       href={option.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                      className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-800 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors"
                     >
                       <span className="mr-2">{option.icon}</span>
                       {option.name}
@@ -412,56 +386,49 @@ export default function EventModal({ event, isOpen, onClose, onDelete, entityCol
 
               {/* Entity Calendar Subscription */}
               {event.entity_id && (event.club || event.zone || event.district) && (
-                <div className="mt-4 bg-purple-50 rounded-lg p-4 border border-purple-100">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Subscribe to All Events</h3>
-                  <p className="text-sm text-gray-600 mb-3">
-                    Stay up-to-date with all events from {
-                      event.club ? event.club.name : 
-                      event.zone ? event.zone.name : 
-                      event.district ? event.district.name : ''
-                    }.
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {(() => {
-                      const { googleSettingsUrl, webcalUrl, publicIcsUrl } = buildEntityIcsSubscriptionUrls(event.entity_type, event.entity_id)
-                      return (
-                        <>
-                          <button
-                            onClick={async () => {
-                              try {
-                                await navigator.clipboard.writeText(publicIcsUrl)
-                                showToastMessage('Subscription URL copied to clipboard')
-                              } catch {
-                                showToastMessage('Copy failed')
-                              }
-                            }}
-                            className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
-                          >
-                            <span className="mr-2">📋</span>
-                            Copy subscription URL
-                          </button>
-                          <a
-                            href={googleSettingsUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
-                          >
-                            <Calendar className="h-4 w-4 mr-2" />
-                            Open Google Calendar
-                          </a>
-                          <a
-                            href={webcalUrl}
-                            className="inline-flex items-center px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors"
-                          >
-                            <Calendar className="h-4 w-4 mr-2" />
-                            Subscribe in Calendar App
-                          </a>
-                          <div className="w-full text-xs text-gray-500">
-                            Click &quot;Copy subscription URL&quot; then &quot;Open Google Calendar&quot; and paste the URL into the field.
-                          </div>
-                        </>
-                      )
-                    })()}
+                <div className="mt-4 bg-purple-50 rounded-lg p-4 border border-purple-100 -mx-4 -mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                    Subscribe to {event.club ? event.club.name : event.zone ? event.zone.name : event.district ? event.district.name : 'Entity'} Calendar
+                  </h3>
+                  
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm font-medium text-gray-700">1. Copy this URL:</span>
+                      <div className="w-48 bg-white border border-gray-300 rounded px-3 py-2 text-sm text-gray-600 truncate">
+                        {(() => {
+                          const { publicIcsUrl } = buildEntityIcsSubscriptionUrls(event.entity_type, event.entity_id)
+                          return publicIcsUrl.length > 30 ? `${publicIcsUrl.substring(0, 30)}...` : publicIcsUrl
+                        })()}
+                      </div>
+                      <button
+                        onClick={async () => {
+                          try {
+                            const { publicIcsUrl } = buildEntityIcsSubscriptionUrls(event.entity_type, event.entity_id)
+                            await navigator.clipboard.writeText(publicIcsUrl)
+                            showToastMessage('URL copied to clipboard')
+                          } catch {
+                            showToastMessage('Copy failed')
+                          }
+                        }}
+                        className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
+                        title="Copy URL"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                      </button>
+                    </div>
+                    
+                    <div className="text-sm text-gray-700">
+                      2. Go to <a
+                        href="https://calendar.google.com/calendar/r/settings/addbyurl"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 underline"
+                      >
+                        Google Add Calendar
+                      </a>, paste the copied URL and save.
+                    </div>
                   </div>
                 </div>
               )}
