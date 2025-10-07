@@ -5,6 +5,7 @@ import { generateEntityICSFeed } from '@/lib/calendarExport'
 // This route should be publicly accessible for calendar subscriptions
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
+export const revalidate = 0
 
 export async function GET(
   request: NextRequest,
