@@ -155,7 +155,8 @@ export default function WidgetsPage() {
     urlParams.set('showFilters', widgetConfig.showFilters.toString())
     
     // Add return URL parameter (clubs can customize this)
-    urlParams.set('returnUrl', encodeURIComponent(window.location.origin))
+    // Note: URLSearchParams.set() automatically encodes values, so don't use encodeURIComponent
+    urlParams.set('returnUrl', window.location.origin)
     
     // Handle calendar scope for calendar widget
     if (widgetType === 'calendar') {
