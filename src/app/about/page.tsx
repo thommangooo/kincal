@@ -11,7 +11,34 @@ export default function AboutPage() {
           <div className="bg-white rounded-lg shadow-sm border p-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-6">About KinCal</h1>
             
+            
             <div className="prose prose-lg max-w-none space-y-8">
+              {/* Beta Version */}
+              <section>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">Overview</h2>
+                <div className="text-gray-700 leading-relaxed space-y-4">
+                  <p>
+                    Watch this introductory video to learn more about KinCal:
+                  </p>
+                  
+                  {/* Embedded Video */}
+                  <div className="max-w-4xl">
+                    <iframe 
+                      src="https://www.loom.com/embed/bfc3aa35255f4123be29103c9cab2010?sid=5a1a0b9f-0175-4b4f-826c-ab007f6cca14"
+                      frameBorder="0" 
+                      allowFullScreen
+                      className="w-full aspect-video rounded-lg shadow-md"
+                      title="KinCal Introduction Video"
+                    />
+                  </div>
+                  
+                  <p className="text-sm text-gray-600">
+                    Or <a href="https://www.loom.com/share/bfc3aa35255f4123be29103c9cab2010?sid=5a1a0b9f-0175-4b4f-826c-ab007f6cca14" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline">open in new tab</a>
+                  </p>
+                </div>
+              </section>
+
+
               {/* Beta Version */}
               <section>
                 <h2 className="text-2xl font-semibold text-gray-900 mb-4">Beta Version</h2>
