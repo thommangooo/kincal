@@ -254,7 +254,9 @@ export function generateEntityICSFeed(events: Event[], entityName: string, timez
   const formatDateInTimezone = (date: Date, tz: string | null): string => {
     if (!tz) {
       // Use UTC format when no timezone specified
-      return formatDateUTC(date)
+      const result = formatDateUTC(date)
+      console.log(`[ICS] formatDateInTimezone: No timezone, using UTC format: ${result}`)
+      return result
     }
     
     // Convert UTC date to the specified timezone
@@ -278,7 +280,9 @@ export function generateEntityICSFeed(events: Event[], entityName: string, timez
     const minute = parts.find(p => p.type === 'minute')?.value || ''
     const second = parts.find(p => p.type === 'second')?.value || ''
     
-    return `${year}${month}${day}T${hour}${minute}${second}`
+    const result = `${year}${month}${day}T${hour}${minute}${second}`
+    console.log(`[ICS] formatDateInTimezone: timezone=${tz}, input=${date.toISOString()}, output=${result}, hasZ=${result.includes('Z')}`)
+    return result
   }
   
   // Generate VTIMEZONE block for a given timezone
@@ -514,13 +518,37 @@ export function generateEntityICSFeed(events: Event[], entityName: string, timez
         convertedLocal: start,
         timezone: timezone || 'UTC',
         startDateObject: startDate.toISOString(),
-        localTimeString: startDate.toLocaleString('en-US', { timeZone: timezone || 'UTC' })
+        localTimeString: startDate.toLocaleString('en-US', { timeZone: timezone || 'UTC' }),
+        startHasZ: start.includes('Z'),
+        endHasZ: end.includes('Z')
       })
     }
     
     // Use TZID parameter if timezone is specified, otherwise use UTC format
-    const dtstart = timezone ? `DTSTART;TZID=${timezone}:${start}` : `DTSTART:${start}`
-    const dtend = timezone ? `DTEND;TZID=${timezone}:${end}` : `DTEND:${end}`
+    // CRITICAL: start and end should NOT have Z suffix when using TZID
+    let dtstart = timezone ? `DTSTART;TZID=${timezone}:${start}` : `DTSTART:${start}`
+    let dtend = timezone ? `DTEND;TZID=${timezone}:${end}` : `DTEND:${end}`
+    
+    // Final safety check - remove Z if it somehow got added when using TZID
+    if (timezone) {
+      // If using TZID, remove any trailing Z (shouldn't be there, but safety check)
+      if (dtstart.endsWith('Z')) {
+        console.error('[ICS Feed] ERROR: Z suffix detected in DTSTART with TZID! Removing it.', {
+          original: dtstart,
+          timezone,
+          startValue: start
+        })
+        dtstart = dtstart.replace(/Z$/, '')
+      }
+      if (dtend.endsWith('Z')) {
+        console.error('[ICS Feed] ERROR: Z suffix detected in DTEND with TZID! Removing it.', {
+          original: dtend,
+          timezone,
+          endValue: end
+        })
+        dtend = dtend.replace(/Z$/, '')
+      }
+    }
     
     return [
       'BEGIN:VEVENT',

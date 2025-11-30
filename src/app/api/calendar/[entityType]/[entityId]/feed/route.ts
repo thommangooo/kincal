@@ -118,15 +118,29 @@ export async function GET(
       console.log('Using default timezone America/Toronto as fallback for', entityType)
     }
     
-    // Debug logging
-    console.log('Calendar feed generation:', {
+    // Debug logging - detailed timezone detection info
+    console.log('[Calendar Feed] Generation started:', {
       entityType,
       entityName: entity.name,
       province,
       detectedTimezone: timezone,
       eventCount: events.length,
-      entityStructure: Object.keys(entity || {})
+      entityStructure: Object.keys(entity || {}),
+      entityData: JSON.stringify(entity, null, 2).substring(0, 500) // First 500 chars
     })
+    
+    // Test timezone conversion on first event if available
+    if (events.length > 0) {
+      const testEvent = events[0]
+      const testDate = new Date(testEvent.start_date)
+      console.log('[Calendar Feed] Sample event time conversion test:', {
+        eventTitle: testEvent.title,
+        originalUTC: testEvent.start_date,
+        timezone,
+        testDateISO: testDate.toISOString(),
+        testDateLocal: testDate.toLocaleString('en-US', { timeZone: timezone || 'UTC' })
+      })
+    }
     
     // Generate ICS feed with determined timezone
     const icsContent = generateEntityICSFeed(
@@ -148,7 +162,9 @@ export async function GET(
         // Allow CORS for calendar apps
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET',
-        'Access-Control-Allow-Headers': 'Content-Type'
+        'Access-Control-Allow-Headers': 'Content-Type',
+        // Version header to track deployments
+        'X-ICS-Version': '2.0-tz-fix'
       }
     })
   } catch (error) {
