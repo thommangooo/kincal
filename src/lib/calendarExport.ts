@@ -1,5 +1,34 @@
 import { Event } from './database'
 
+/**
+ * Maps Canadian provinces/territories to IANA timezone identifiers
+ * Returns null if province is unknown or spans multiple timezones
+ */
+export function getTimezoneFromProvince(province: string | null | undefined): string | null {
+  if (!province) return null
+  
+  const provinceUpper = province.toUpperCase()
+  
+  // Most provinces have a single primary timezone
+  const provinceTimezoneMap: Record<string, string> = {
+    'ONTARIO': 'America/Toronto',
+    'QUEBEC': 'America/Toronto',
+    'NEW BRUNSWICK': 'America/Moncton',
+    'NOVA SCOTIA': 'America/Halifax',
+    'PRINCE EDWARD ISLAND': 'America/Halifax',
+    'NEWFOUNDLAND AND LABRADOR': 'America/St_Johns',
+    'YUKON': 'America/Whitehorse',
+    'NORTHWEST TERRITORIES': 'America/Yellowknife',
+    'NUNAVUT': 'America/Iqaluit', // Most of Nunavut uses Eastern, but it spans multiple zones
+    'BRITISH COLUMBIA': 'America/Vancouver',
+    'ALBERTA': 'America/Edmonton',
+    'SASKATCHEWAN': 'America/Regina', // Most of SK doesn't observe DST, but Regina does
+    'MANITOBA': 'America/Winnipeg'
+  }
+  
+  return provinceTimezoneMap[provinceUpper] || null
+}
+
 // Generate Google Calendar URL
 export function generateGoogleCalendarUrl(event: Event): string {
   const startDate = new Date(event.start_date)
@@ -212,13 +241,235 @@ export async function copyEventDetails(event: Event): Promise<boolean> {
 }
 
 // Generate ICS content for multiple events (calendar feed)
-export function generateEntityICSFeed(events: Event[], entityName: string): string {
-  // Format dates for ICS (YYYYMMDDTHHMMSSZ)
-  const formatDate = (date: Date) => {
+// timezone: IANA timezone identifier (e.g., 'America/Toronto') or null for UTC
+export function generateEntityICSFeed(events: Event[], entityName: string, timezone: string | null = null): string {
+  // Format UTC dates for ICS DTSTAMP (YYYYMMDDTHHMMSSZ)
+  const formatDateUTC = (date: Date) => {
     return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
   }
   
-  const now = formatDate(new Date())
+  // Format dates in specified timezone for DTSTART/DTEND (YYYYMMDDTHHMMSS, no Z)
+  // When using TZID, the time must be in that timezone without the Z suffix
+  // If timezone is null, format as UTC with Z suffix
+  const formatDateInTimezone = (date: Date, tz: string | null): string => {
+    if (!tz) {
+      // Use UTC format when no timezone specified
+      return formatDateUTC(date)
+    }
+    
+    // Convert UTC date to the specified timezone
+    const formatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone: tz,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    })
+    
+    // Format as YYYYMMDDTHHMMSS
+    const parts = formatter.formatToParts(date)
+    const year = parts.find(p => p.type === 'year')?.value || ''
+    const month = parts.find(p => p.type === 'month')?.value || ''
+    const day = parts.find(p => p.type === 'day')?.value || ''
+    const hour = parts.find(p => p.type === 'hour')?.value || ''
+    const minute = parts.find(p => p.type === 'minute')?.value || ''
+    const second = parts.find(p => p.type === 'second')?.value || ''
+    
+    return `${year}${month}${day}T${hour}${minute}${second}`
+  }
+  
+  // Generate VTIMEZONE block for a given timezone
+  // Returns empty string if timezone is null (UTC)
+  const generateVTIMEZONE = (tz: string | null): string => {
+    if (!tz) return ''
+    
+    // For now, we'll generate a basic VTIMEZONE for common Canadian timezones
+    // A full implementation would need proper DST rules for each timezone
+    // For simplicity, we'll use America/Toronto rules for Eastern timezones
+    // and provide basic support for others
+    
+    if (tz === 'America/Toronto') {
+      return [
+        'BEGIN:VTIMEZONE',
+        `TZID:${tz}`,
+        'BEGIN:STANDARD',
+        'DTSTART:20231105T020000',
+        'RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU',
+        'TZNAME:EST',
+        'TZOFFSETFROM:-0400',
+        'TZOFFSETTO:-0500',
+        'END:STANDARD',
+        'BEGIN:DAYLIGHT',
+        'DTSTART:20240310T020000',
+        'RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU',
+        'TZNAME:EDT',
+        'TZOFFSETFROM:-0500',
+        'TZOFFSETTO:-0400',
+        'END:DAYLIGHT',
+        'END:VTIMEZONE'
+      ].join('\r\n')
+    }
+    
+    if (tz === 'America/Moncton' || tz === 'America/Halifax') {
+      return [
+        'BEGIN:VTIMEZONE',
+        `TZID:${tz}`,
+        'BEGIN:STANDARD',
+        'DTSTART:20231105T020000',
+        'RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU',
+        'TZNAME:AST',
+        'TZOFFSETFROM:-0300',
+        'TZOFFSETTO:-0400',
+        'END:STANDARD',
+        'BEGIN:DAYLIGHT',
+        'DTSTART:20240310T020000',
+        'RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU',
+        'TZNAME:ADT',
+        'TZOFFSETFROM:-0400',
+        'TZOFFSETTO:-0300',
+        'END:DAYLIGHT',
+        'END:VTIMEZONE'
+      ].join('\r\n')
+    }
+    
+    if (tz === 'America/Vancouver') {
+      return [
+        'BEGIN:VTIMEZONE',
+        `TZID:${tz}`,
+        'BEGIN:STANDARD',
+        'DTSTART:20231105T020000',
+        'RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU',
+        'TZNAME:PST',
+        'TZOFFSETFROM:-0700',
+        'TZOFFSETTO:-0800',
+        'END:STANDARD',
+        'BEGIN:DAYLIGHT',
+        'DTSTART:20240310T020000',
+        'RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU',
+        'TZNAME:PDT',
+        'TZOFFSETFROM:-0800',
+        'TZOFFSETTO:-0700',
+        'END:DAYLIGHT',
+        'END:VTIMEZONE'
+      ].join('\r\n')
+    }
+    
+    if (tz === 'America/Edmonton' || tz === 'America/Winnipeg') {
+      return [
+        'BEGIN:VTIMEZONE',
+        `TZID:${tz}`,
+        'BEGIN:STANDARD',
+        'DTSTART:20231105T020000',
+        'RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU',
+        'TZNAME:CST',
+        'TZOFFSETFROM:-0500',
+        'TZOFFSETTO:-0600',
+        'END:STANDARD',
+        'BEGIN:DAYLIGHT',
+        'DTSTART:20240310T020000',
+        'RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU',
+        'TZNAME:CDT',
+        'TZOFFSETFROM:-0600',
+        'TZOFFSETTO:-0500',
+        'END:DAYLIGHT',
+        'END:VTIMEZONE'
+      ].join('\r\n')
+    }
+    
+    if (tz === 'America/Regina') {
+      // Saskatchewan doesn't observe DST
+      return [
+        'BEGIN:VTIMEZONE',
+        `TZID:${tz}`,
+        'BEGIN:STANDARD',
+        'DTSTART:20230101T000000',
+        'RRULE:FREQ=YEARLY;BYMONTH=1;BYDAY=1SU',
+        'TZNAME:CST',
+        'TZOFFSETFROM:-0600',
+        'TZOFFSETTO:-0600',
+        'END:STANDARD',
+        'END:VTIMEZONE'
+      ].join('\r\n')
+    }
+    
+    if (tz === 'America/St_Johns') {
+      return [
+        'BEGIN:VTIMEZONE',
+        `TZID:${tz}`,
+        'BEGIN:STANDARD',
+        'DTSTART:20231105T020000',
+        'RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU',
+        'TZNAME:NST',
+        'TZOFFSETFROM:-0230',
+        'TZOFFSETTO:-0330',
+        'END:STANDARD',
+        'BEGIN:DAYLIGHT',
+        'DTSTART:20240310T020000',
+        'RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU',
+        'TZNAME:NDT',
+        'TZOFFSETFROM:-0330',
+        'TZOFFSETTO:-0230',
+        'END:DAYLIGHT',
+        'END:VTIMEZONE'
+      ].join('\r\n')
+    }
+    
+    if (tz === 'America/Whitehorse' || tz === 'America/Yellowknife' || tz === 'America/Iqaluit') {
+      // Note: These timezones have complex DST rules and some areas may not observe DST
+      // Using simplified rules - may need adjustment for specific locations
+      if (tz === 'America/Iqaluit') {
+        // Iqaluit uses Eastern Time
+        return [
+          'BEGIN:VTIMEZONE',
+          `TZID:${tz}`,
+          'BEGIN:STANDARD',
+          'DTSTART:20231105T020000',
+          'RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU',
+          'TZNAME:EST',
+          'TZOFFSETFROM:-0400',
+          'TZOFFSETTO:-0500',
+          'END:STANDARD',
+          'BEGIN:DAYLIGHT',
+          'DTSTART:20240310T020000',
+          'RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU',
+          'TZNAME:EDT',
+          'TZOFFSETFROM:-0500',
+          'TZOFFSETTO:-0400',
+          'END:DAYLIGHT',
+          'END:VTIMEZONE'
+        ].join('\r\n')
+      } else {
+        // Whitehorse and Yellowknife use Mountain Time (though some areas don't observe DST)
+        return [
+          'BEGIN:VTIMEZONE',
+          `TZID:${tz}`,
+          'BEGIN:STANDARD',
+          'DTSTART:20231105T020000',
+          'RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU',
+          'TZNAME:MST',
+          'TZOFFSETFROM:-0600',
+          'TZOFFSETTO:-0700',
+          'END:STANDARD',
+          'BEGIN:DAYLIGHT',
+          'DTSTART:20240310T020000',
+          'RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU',
+          'TZNAME:MDT',
+          'TZOFFSETFROM:-0700',
+          'TZOFFSETTO:-0600',
+          'END:DAYLIGHT',
+          'END:VTIMEZONE'
+        ].join('\r\n')
+      }
+    }
+    
+    // For other timezones, use UTC as fallback
+    return ''
+  }
+  
+  const now = formatDateUTC(new Date())
   
   // Escape special characters for ICS format
   const escapeICS = (text: string) => {
@@ -230,6 +481,10 @@ export function generateEntityICSFeed(events: Event[], entityName: string): stri
       .replace(/\r/g, '')
   }
   
+  // Determine calendar timezone for header (use provided timezone or UTC)
+  const calendarTimezone = timezone || 'UTC'
+  const vtimezoneBlock = generateVTIMEZONE(timezone)
+  
   // Calendar header
   const calendarHeader = [
     'BEGIN:VCALENDAR',
@@ -238,41 +493,41 @@ export function generateEntityICSFeed(events: Event[], entityName: string): stri
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
     `X-WR-CALNAME:${escapeICS(entityName)}`,
-    `X-WR-TIMEZONE:America/Toronto`,
+    `X-WR-TIMEZONE:${calendarTimezone}`,
     `X-WR-CALDESC:${escapeICS(`Events from ${entityName}`)}`,
-    'BEGIN:VTIMEZONE',
-    'TZID:America/Toronto',
-    'BEGIN:STANDARD',
-    'DTSTART:20231105T020000',
-    'RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU',
-    'TZNAME:EST',
-    'TZOFFSETFROM:-0400',
-    'TZOFFSETTO:-0500',
-    'END:STANDARD',
-    'BEGIN:DAYLIGHT',
-    'DTSTART:20240310T020000',
-    'RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU',
-    'TZNAME:EDT',
-    'TZOFFSETFROM:-0500',
-    'TZOFFSETTO:-0400',
-    'END:DAYLIGHT',
-    'END:VTIMEZONE'
+    ...(vtimezoneBlock ? [vtimezoneBlock] : [])
   ].join('\r\n')
   
   // Generate VEVENT for each event
   const eventEntries = events.map(event => {
     const startDate = new Date(event.start_date)
     const endDate = new Date(event.end_date)
-    const start = formatDate(startDate)
-    const end = formatDate(endDate)
+    const start = formatDateInTimezone(startDate, timezone)
+    const end = formatDateInTimezone(endDate, timezone)
     const uid = `${event.id}@kincal.com`
+    
+    // Debug: Log first event's conversion for troubleshooting
+    if (events.indexOf(event) === 0) {
+      console.log('[ICS Feed] Event time conversion:', {
+        eventTitle: event.title,
+        originalUTC: event.start_date,
+        convertedLocal: start,
+        timezone: timezone || 'UTC',
+        startDateObject: startDate.toISOString(),
+        localTimeString: startDate.toLocaleString('en-US', { timeZone: timezone || 'UTC' })
+      })
+    }
+    
+    // Use TZID parameter if timezone is specified, otherwise use UTC format
+    const dtstart = timezone ? `DTSTART;TZID=${timezone}:${start}` : `DTSTART:${start}`
+    const dtend = timezone ? `DTEND;TZID=${timezone}:${end}` : `DTEND:${end}`
     
     return [
       'BEGIN:VEVENT',
       `UID:${uid}`,
       `DTSTAMP:${now}`,
-      `DTSTART;TZID=America/Toronto:${start}`,
-      `DTEND;TZID=America/Toronto:${end}`,
+      dtstart,
+      dtend,
       `SUMMARY:${escapeICS(event.title)}`,
       event.description ? `DESCRIPTION:${escapeICS(event.description)}` : '',
       event.location ? `LOCATION:${escapeICS(event.location)}` : '',

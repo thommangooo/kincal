@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getEvents, getEntityDetails } from '@/lib/database'
-import { generateEntityICSFeed } from '@/lib/calendarExport'
+import { generateEntityICSFeed, getTimezoneFromProvince } from '@/lib/calendarExport'
 
 // This route should be publicly accessible for calendar subscriptions
 export const dynamic = 'force-dynamic'
@@ -9,10 +9,13 @@ export const revalidate = 0
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { entityType: string; entityId: string } }
+  { params }: { params: Promise<{ entityType: string; entityId: string }> }
 ) {
+  console.log('[Calendar Feed] Route handler called')
   try {
-    const { entityType, entityId } = params
+    const { entityType, entityId } = await params
+    console.log(`[Calendar Feed] Request received: ${entityType}/${entityId}`)
+    console.log(`[Calendar Feed] Full URL: ${request.url}`)
     
     // Validate entity type
     if (!['club', 'zone', 'district'].includes(entityType)) {
@@ -55,10 +58,78 @@ export async function GET(
     
     const events = await getEvents(filters)
     
-    // Generate ICS feed
+    // Determine timezone from entity location
+    // For clubs: use club's district province
+    // For zones: use zone's district province
+    // For districts: use UTC (may span multiple provinces/timezones)
+    let timezone: string | null = null
+    let province: string | null = null
+    
+    if (entityType === 'club') {
+      const club = entity as any
+      // Try multiple ways to access the province
+      province = club.district?.province || 
+                 (club.district_id && club.district?.province) ||
+                 null
+      if (province) {
+        timezone = getTimezoneFromProvince(province)
+      }
+    } else if (entityType === 'zone') {
+      const zone = entity as any
+      province = zone.district?.province || null
+      if (province) {
+        timezone = getTimezoneFromProvince(province)
+      }
+    } else if (entityType === 'district') {
+      const district = entity as any
+      province = district.province || null
+      // For districts, we could use the province, but since districts might span
+      // multiple timezones (e.g., if they cross province boundaries), UTC is safer
+      // Uncomment the next lines if you want to use district province timezone:
+      // if (province) {
+      //   timezone = getTimezoneFromProvince(province)
+      // }
+      timezone = null // Use UTC for districts
+    }
+    
+    // If timezone detection failed, try to get it from the first event's club
+    if (!timezone && events.length > 0) {
+      const firstEvent = events[0] as any
+      if (firstEvent.club?.district?.province) {
+        province = firstEvent.club.district.province
+        timezone = getTimezoneFromProvince(province)
+      } else if (firstEvent.zone?.district?.province) {
+        province = firstEvent.zone.district.province
+        timezone = getTimezoneFromProvince(province)
+      } else if (firstEvent.district?.province) {
+        province = firstEvent.district.province
+        timezone = getTimezoneFromProvince(province)
+      }
+    }
+    
+    // Final fallback: if still no timezone, default to America/Toronto for clubs/zones
+    // (This is a reasonable default since most Kin Canada clubs are in Eastern Time)
+    // Districts should use UTC since they may span multiple timezones
+    if (!timezone && entityType !== 'district') {
+      timezone = 'America/Toronto'
+      console.log('Using default timezone America/Toronto as fallback for', entityType)
+    }
+    
+    // Debug logging
+    console.log('Calendar feed generation:', {
+      entityType,
+      entityName: entity.name,
+      province,
+      detectedTimezone: timezone,
+      eventCount: events.length,
+      entityStructure: Object.keys(entity || {})
+    })
+    
+    // Generate ICS feed with determined timezone
     const icsContent = generateEntityICSFeed(
       events,
-      entity.name
+      entity.name,
+      timezone
     )
     
     // Return ICS with subscription-friendly headers (don't force attachment)
