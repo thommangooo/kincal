@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getEvents, getEntityDetails } from '@/lib/database'
 import { generateEntityICSFeed, getTimezoneFromProvince } from '@/lib/calendarExport'
+import { Club, Zone, District, DbEvent } from '@/lib/supabase'
 
 // This route should be publicly accessible for calendar subscriptions
 export const dynamic = 'force-dynamic'
@@ -66,22 +67,20 @@ export async function GET(
     let province: string | null = null
     
     if (entityType === 'club') {
-      const club = entity as any
+      const club = entity as Club & { district?: District }
       // Try multiple ways to access the province
-      province = club.district?.province || 
-                 (club.district_id && club.district?.province) ||
-                 null
+      province = club.district?.province || null
       if (province) {
         timezone = getTimezoneFromProvince(province)
       }
     } else if (entityType === 'zone') {
-      const zone = entity as any
+      const zone = entity as Zone & { district?: District }
       province = zone.district?.province || null
       if (province) {
         timezone = getTimezoneFromProvince(province)
       }
     } else if (entityType === 'district') {
-      const district = entity as any
+      const district = entity as District
       province = district.province || null
       // For districts, we could use the province, but since districts might span
       // multiple timezones (e.g., if they cross province boundaries), UTC is safer
@@ -94,7 +93,11 @@ export async function GET(
     
     // If timezone detection failed, try to get it from the first event's club
     if (!timezone && events.length > 0) {
-      const firstEvent = events[0] as any
+      const firstEvent = events[0] as DbEvent & { 
+        club?: Club & { district?: District }
+        zone?: Zone & { district?: District }
+        district?: District
+      }
       if (firstEvent.club?.district?.province) {
         province = firstEvent.club.district.province
         timezone = getTimezoneFromProvince(province)
