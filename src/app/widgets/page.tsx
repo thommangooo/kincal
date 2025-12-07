@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { getZones, getClubs, getUserRole } from '@/lib/database'
+import { getZones, getClubs, getDistricts, getUserRole } from '@/lib/database'
 import Header from '@/components/Header'
 import { Monitor, Calendar, Megaphone, Code, Copy, Check, Users, Building } from 'lucide-react'
 
@@ -34,45 +34,80 @@ export default function WidgetsPage() {
       }
 
       try {
-        const [zones, clubs, userRole] = await Promise.all([
+        const [zones, clubs, districts, userRole] = await Promise.all([
           getZones(),
           getClubs(),
+          getDistricts(),
           getUserRole(user.email)
         ])
 
         const entities: UserEntity[] = []
 
-        // Add user's club if they have one
-        if (userRole?.club_id) {
-          const club = clubs.find(c => c.id === userRole.club_id)
-          if (club) {
+        // If user is superuser, show all entities
+        if (userRole?.role === 'superuser') {
+          // Add all clubs
+          clubs.forEach(club => {
             entities.push({
               type: 'club',
               id: club.id,
               name: club.name
             })
-          }
-        }
-
-        // Add user's zone if they have one
-        if (userRole?.zone_id) {
-          const zone = zones.find(z => z.id === userRole.zone_id)
-          if (zone) {
+          })
+          
+          // Add all zones
+          zones.forEach(zone => {
             entities.push({
               type: 'zone',
               id: zone.id,
               name: zone.name
             })
-          }
-        }
-
-        // Add user's district if they have one
-        if (userRole?.district_id) {
-          entities.push({
-            type: 'district',
-            id: userRole.district_id,
-            name: `District ${userRole.district_id}`
           })
+          
+          // Add all districts
+          districts.forEach(district => {
+            entities.push({
+              type: 'district',
+              id: district.id,
+              name: district.name
+            })
+          })
+        } else {
+          // Regular users: only show their assigned entities
+          // Add user's club if they have one
+          if (userRole?.club_id) {
+            const club = clubs.find(c => c.id === userRole.club_id)
+            if (club) {
+              entities.push({
+                type: 'club',
+                id: club.id,
+                name: club.name
+              })
+            }
+          }
+
+          // Add user's zone if they have one
+          if (userRole?.zone_id) {
+            const zone = zones.find(z => z.id === userRole.zone_id)
+            if (zone) {
+              entities.push({
+                type: 'zone',
+                id: zone.id,
+                name: zone.name
+              })
+            }
+          }
+
+          // Add user's district if they have one
+          if (userRole?.district_id) {
+            const district = districts.find(d => d.id === userRole.district_id)
+            if (district) {
+              entities.push({
+                type: 'district',
+                id: district.id,
+                name: district.name
+              })
+            }
+          }
         }
 
         setUserEntities(entities)
@@ -108,24 +143,36 @@ export default function WidgetsPage() {
     if (widgetType === 'calendar') {
       switch (widgetConfig.calendarScope) {
         case 'club-only':
-          // Find the user's club and set club parameter
-          const userClub = userEntities.find(e => e.type === 'club')
-          if (userClub) {
-            urlParams.set('club', userClub.id)
+          // Use selected entity if it's a club, otherwise find the first club
+          if (selectedEntity.type === 'club') {
+            urlParams.set('club', selectedEntity.id)
+          } else {
+            const userClub = userEntities.find(e => e.type === 'club')
+            if (userClub) {
+              urlParams.set('club', userClub.id)
+            }
           }
           break
         case 'club-and-zone':
-          // Set both club and zone parameters
-          const club = userEntities.find(e => e.type === 'club')
-          const zone = userEntities.find(e => e.type === 'zone')
+          // Use selected entity if it matches, otherwise find from userEntities
+          const club = selectedEntity.type === 'club' 
+            ? selectedEntity 
+            : userEntities.find(e => e.type === 'club')
+          const zone = selectedEntity.type === 'zone'
+            ? selectedEntity
+            : userEntities.find(e => e.type === 'zone')
           if (club) urlParams.set('club', club.id)
           if (zone) urlParams.set('zone', zone.id)
           break
         case 'all-clubs-in-zone':
-          // Set zone parameter to show all clubs in the zone
-          const userZone = userEntities.find(e => e.type === 'zone')
-          if (userZone) {
-            urlParams.set('zone', userZone.id)
+          // Use selected entity if it's a zone, otherwise find the first zone
+          if (selectedEntity.type === 'zone') {
+            urlParams.set('zone', selectedEntity.id)
+          } else {
+            const userZone = userEntities.find(e => e.type === 'zone')
+            if (userZone) {
+              urlParams.set('zone', userZone.id)
+            }
           }
           break
       }
@@ -142,7 +189,10 @@ export default function WidgetsPage() {
     if (!selectedEntity) return ''
 
     // For direct links, we only support club-level pages
-    const userClub = userEntities.find(e => e.type === 'club')
+    // Use selected entity if it's a club, otherwise find the first club
+    const userClub = selectedEntity.type === 'club'
+      ? selectedEntity
+      : userEntities.find(e => e.type === 'club')
     if (!userClub) return ''
 
     const baseUrl = `${window.location.origin}/club/${userClub.id}/${widgetType}`
@@ -165,13 +215,18 @@ export default function WidgetsPage() {
           // For club-only, no additional parameters needed (defaults to club)
           break
         case 'club-and-zone':
-          // Set zone parameter
-          const zone = userEntities.find(e => e.type === 'zone')
+          // Set zone parameter - use selected if it's a zone, otherwise find from userEntities
+          const zone = selectedEntity.type === 'zone'
+            ? selectedEntity
+            : userEntities.find(e => e.type === 'zone')
           if (zone) urlParams.set('zone', zone.id)
           break
         case 'all-clubs-in-zone':
           // Set zone parameter to show all clubs in the zone
-          const userZone = userEntities.find(e => e.type === 'zone')
+          // Use selected entity if it's a zone, otherwise find the first zone
+          const userZone = selectedEntity.type === 'zone'
+            ? selectedEntity
+            : userEntities.find(e => e.type === 'zone')
           if (userZone) {
             urlParams.set('zone', userZone.id)
           }
@@ -368,27 +423,64 @@ export default function WidgetsPage() {
           </div>
 
           {/* Entity Selector */}
-          {userEntities.length > 1 && (
+          {userEntities.length > 0 && (
             <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
               <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <Building className="h-5 w-5 mr-2" />
-                Select Entity
+                {userEntities.length === 1 ? 'Selected Entity' : 'Select Entity'}
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {userEntities.map((entity) => (
-                  <button
-                    key={`${entity.type}-${entity.id}`}
-                    onClick={() => setSelectedEntity(entity)}
-                    className={`p-4 rounded-lg border-2 text-left transition-colors ${
-                      selectedEntity?.type === entity.type && selectedEntity?.id === entity.id
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <div className="font-medium text-gray-900">{entity.name}</div>
-                    <div className="text-sm text-gray-500 capitalize">{entity.type}</div>
-                  </button>
-                ))}
+              {userEntities.length === 1 ? (
+                <div className="p-4 rounded-lg border-2 border-blue-500 bg-blue-50">
+                  <div className="font-medium text-gray-900">{userEntities[0].name}</div>
+                  <div className="text-sm text-gray-500 capitalize">{userEntities[0].type}</div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
+                  {userEntities.map((entity) => (
+                    <button
+                      key={`${entity.type}-${entity.id}`}
+                      onClick={() => setSelectedEntity(entity)}
+                      className={`p-4 rounded-lg border-2 text-left transition-colors ${
+                        selectedEntity?.type === entity.type && selectedEntity?.id === entity.id
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="font-medium text-gray-900">{entity.name}</div>
+                      <div className="text-sm text-gray-500 capitalize">{entity.type}</div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Message if no entities available */}
+          {userEntities.length === 0 && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-8">
+              <div className="flex items-start space-x-3">
+                <Users className="h-6 w-6 text-yellow-600 mt-1" />
+                <div>
+                  <h3 className="text-lg font-medium text-yellow-900 mb-2">No Entities Available</h3>
+                  <p className="text-yellow-800">
+                    You don&apos;t have access to any clubs, zones, or districts. Please contact an administrator to assign you to an entity.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Message if entity not selected but entities are available */}
+          {userEntities.length > 1 && !selectedEntity && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
+              <div className="flex items-start space-x-3">
+                <Building className="h-6 w-6 text-blue-600 mt-1" />
+                <div>
+                  <h3 className="text-lg font-medium text-blue-900 mb-2">Select an Entity</h3>
+                  <p className="text-blue-800">
+                    Please select a club, zone, or district above to generate embed codes for that entity.
+                  </p>
+                </div>
               </div>
             </div>
           )}

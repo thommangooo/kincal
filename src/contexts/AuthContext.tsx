@@ -48,10 +48,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const signIn = async (email: string) => {
+    // Use window.location.origin to automatically detect the current environment
+    // This ensures localhost redirects work in development
+    const redirectUrl = `${window.location.origin}/auth/callback`
+    
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/auth/callback`
+        emailRedirectTo: redirectUrl
       }
     })
     
