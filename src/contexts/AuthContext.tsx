@@ -52,16 +52,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // This ensures localhost redirects work in development
     const redirectUrl = `${window.location.origin}/auth/callback`
     
-    const { error } = await supabase.auth.signInWithOtp({
+    // Ensure no trailing slash and exact format
+    const cleanRedirectUrl = redirectUrl.replace(/\/$/, '')
+    
+    // Log for debugging
+    console.log('Requesting magic link with redirect URL:', cleanRedirectUrl)
+    console.log('Current origin:', window.location.origin)
+    
+    const { error, data } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: redirectUrl
+        emailRedirectTo: cleanRedirectUrl
       }
     })
     
     if (error) {
       console.error('Sign in error:', error)
+      console.error('Redirect URL used:', cleanRedirectUrl)
       throw error
+    }
+    
+    // Log success
+    console.log('Magic link sent successfully')
+    if (data) {
+      console.log('Response data:', data)
     }
   }
 
