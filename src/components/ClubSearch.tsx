@@ -32,17 +32,17 @@ export default function ClubSearch({ value, onChange, placeholder = "Search for 
     const loadEntities = async () => {
       try {
         // Safari-compatible Promise.all with individual error handling
-        const [clubsData, zonesData, districtsData, kinCanadaData] = await Promise.allSettled([
+        const results = await Promise.allSettled([
           getClubsWithUsageStatus(),
           getZonesWithUsageStatus(),
           getDistrictsWithUsageStatus(),
           getKinCanada().catch(() => null) // Gracefully handle if table doesn't exist yet
-        ]).then(results => [
-          results[0].status === 'fulfilled' ? results[0].value : [],
-          results[1].status === 'fulfilled' ? results[1].value : [],
-          results[2].status === 'fulfilled' ? results[2].value : [],
-          results[3].status === 'fulfilled' ? results[3].value : null
         ])
+        
+        const clubsData = results[0].status === 'fulfilled' ? results[0].value : []
+        const zonesData = results[1].status === 'fulfilled' ? results[1].value : []
+        const districtsData = results[2].status === 'fulfilled' ? results[2].value : []
+        const kinCanadaData = results[3].status === 'fulfilled' ? results[3].value : null
 
         // Combine all entities with their types
         // Deduplicate zones by ID (in case database has duplicates)

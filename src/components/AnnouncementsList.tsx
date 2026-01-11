@@ -36,7 +36,7 @@ export default function AnnouncementsList({ filters, showFilters = false, onFilt
   // Filter states
   const [search, setSearch] = useState(filters?.search || '')
   const [entityId, setEntityId] = useState(filters?.clubId || '')
-  const [entityType, setEntityType] = useState<'club' | 'zone' | 'district'>('club')
+  const [entityType, setEntityType] = useState<'club' | 'zone' | 'district' | 'kin_canada'>('club')
   const [visibility, setVisibility] = useState<'all' | 'public' | 'private' | 'internal-use'>(filters?.visibility || 'all')
   const [filtersCollapsed, setFiltersCollapsed] = useState(true)
 
@@ -71,6 +71,9 @@ export default function AnnouncementsList({ filters, showFilters = false, onFilt
           announcementFilters.zoneId = entityId
         } else if (entityType === 'district') {
           announcementFilters.districtId = entityId
+        } else if (entityType === 'kin_canada') {
+          // Note: getAnnouncements doesn't support kinCanadaId filtering yet
+          // For now, Kin Canada selection won't filter announcements
         }
       }
       
@@ -95,6 +98,7 @@ export default function AnnouncementsList({ filters, showFilters = false, onFilt
       zoneId: entityType === 'zone' ? entityId : '',
       clubId: entityType === 'club' ? entityId : '',
       visibility
+      // Note: Kin Canada filtering not yet supported in parent filter structure
     })
   }, [search, entityId, entityType, visibility, onFiltersChange])
 

@@ -19,7 +19,8 @@ import {
   Users,
   MessageSquare,
   Calendar,
-  AlertCircle
+  AlertCircle,
+  Flag
 } from 'lucide-react'
 
 interface EditorRequestManagementProps {
@@ -125,7 +126,7 @@ export default function EditorRequestManagement({ currentUserEmail, onRequestPro
     }
   }
 
-  const getEntityIcon = (type: 'club' | 'zone' | 'district') => {
+  const getEntityIcon = (type: 'club' | 'zone' | 'district' | 'kin_canada') => {
     switch (type) {
       case 'club':
         return <Users className="h-4 w-4" />
@@ -133,6 +134,8 @@ export default function EditorRequestManagement({ currentUserEmail, onRequestPro
         return <MapPin className="h-4 w-4" />
       case 'district':
         return <Building className="h-4 w-4" />
+      case 'kin_canada':
+        return <Flag className="h-4 w-4" />
     }
   }
 

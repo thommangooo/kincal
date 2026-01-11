@@ -49,7 +49,7 @@ export default function CalendarView({ filters, showFilters = false, onFiltersCh
   // Filter states
   const [search, setSearch] = useState(filters?.search || '')
   const [entityId, setEntityId] = useState(filters?.clubId || '')
-  const [entityType, setEntityType] = useState<'club' | 'zone' | 'district'>('club')
+  const [entityType, setEntityType] = useState<'club' | 'zone' | 'district' | 'kin_canada'>('club')
   const [visibility, setVisibility] = useState<'all' | 'public' | 'private' | 'internal-use'>(filters?.visibility || 'all')
   const [filtersCollapsed, setFiltersCollapsed] = useState(true)
   
@@ -104,6 +104,9 @@ export default function CalendarView({ filters, showFilters = false, onFiltersCh
           eventFilters.districtId = entityId
           eventFilters.includeZoneEvents = filters?.includeZoneEvents
           eventFilters.includeClubEvents = filters?.includeClubEvents
+        } else if (entityType === 'kin_canada') {
+          // Note: CalendarViewOld doesn't support Kin Canada filtering
+          // For now, Kin Canada selection won't filter events
         }
       }
       

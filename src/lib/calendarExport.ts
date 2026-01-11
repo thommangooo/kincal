@@ -574,7 +574,7 @@ export function generateEntityICSFeed(events: Event[], entityName: string, timez
 }
 
 // Build absolute URLs for an entity's ICS feed (http(s) and webcal), plus Google add-by-url link
-export function buildEntityIcsSubscriptionUrls(entityType: 'club' | 'zone' | 'district', entityId: string) {
+export function buildEntityIcsSubscriptionUrls(entityType: 'club' | 'zone' | 'district' | 'kin_canada', entityId: string) {
   // Local origin for same-origin downloads/copying while developing
   const localOrigin = typeof window !== 'undefined' ? window.location.origin : undefined
   // Prefer explicitly configured public URL for subscription links (required by Google/webcal)

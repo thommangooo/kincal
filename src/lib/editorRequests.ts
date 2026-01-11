@@ -12,7 +12,7 @@ export interface EditorRequest {
   email: string
   name: string
   phone?: string
-  entity_type: 'club' | 'zone' | 'district'
+  entity_type: 'club' | 'zone' | 'district' | 'kin_canada'
   entity_id: string
   message_to_approver?: string
   status: 'pending' | 'approved' | 'rejected'
@@ -28,7 +28,7 @@ export interface CreateEditorRequestData {
   email: string
   name: string
   phone?: string
-  entity_type: 'club' | 'zone' | 'district'
+  entity_type: 'club' | 'zone' | 'district' | 'kin_canada'
   entity_id: string
   message_to_approver?: string
   ip_address?: string
@@ -240,7 +240,7 @@ export async function rejectEditorRequest(
 // Check if user already has permissions for an entity
 export async function checkUserEntityPermission(
   email: string, 
-  entityType: 'club' | 'zone' | 'district', 
+  entityType: 'club' | 'zone' | 'district' | 'kin_canada', 
   entityId: string
 ): Promise<boolean> {
   const { data: hasPermission, error } = await supabase
@@ -259,7 +259,7 @@ export async function checkUserEntityPermission(
 }
 
 // Validate that an entity exists in the correct table
-export async function validateEntityExists(entityType: 'club' | 'zone' | 'district', entityId: string): Promise<boolean> {
+export async function validateEntityExists(entityType: 'club' | 'zone' | 'district' | 'kin_canada', entityId: string): Promise<boolean> {
   try {
     let tableName: string
     switch (entityType) {
@@ -271,6 +271,9 @@ export async function validateEntityExists(entityType: 'club' | 'zone' | 'distri
         break
       case 'district':
         tableName = 'districts'
+        break
+      case 'kin_canada':
+        tableName = 'kin_canada'
         break
       default:
         return false
@@ -294,7 +297,7 @@ export async function validateEntityExists(entityType: 'club' | 'zone' | 'distri
 }
 
 // Get entity name by type and id
-export async function getEntityName(entityType: 'club' | 'zone' | 'district', entityId: string): Promise<string> {
+export async function getEntityName(entityType: 'club' | 'zone' | 'district' | 'kin_canada', entityId: string): Promise<string> {
   try {
     let tableName: string
     switch (entityType) {
@@ -306,6 +309,9 @@ export async function getEntityName(entityType: 'club' | 'zone' | 'district', en
         break
       case 'district':
         tableName = 'districts'
+        break
+      case 'kin_canada':
+        tableName = 'kin_canada'
         break
       default:
         return 'Unknown Entity'

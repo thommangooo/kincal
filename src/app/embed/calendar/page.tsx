@@ -90,7 +90,10 @@ function CalendarEmbedContent() {
     visibility: 'all' | 'public' | 'private' | 'internal-use'
     includeKinCanadaEvents?: boolean
   }) => {
-    setFilters(newFilters)
+    setFilters({
+      ...newFilters,
+      includeKinCanadaEvents: newFilters.includeKinCanadaEvents ?? true
+    })
     
     // Load events with new filters
     setLoading(true)

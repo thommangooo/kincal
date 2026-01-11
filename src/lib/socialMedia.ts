@@ -5,7 +5,7 @@ import { FacebookPage } from './facebook'
 // Types for social media accounts
 export interface SocialMediaAccount {
   id: string
-  entity_type: 'club' | 'zone' | 'district'
+  entity_type: 'club' | 'zone' | 'district' | 'kin_canada'
   entity_id: string
   platform: 'facebook' | 'instagram'
   account_id: string
@@ -35,7 +35,7 @@ export interface SocialMediaPost {
 
 // Create a new social media account
 export async function createSocialMediaAccount(account: {
-  entity_type: 'club' | 'zone' | 'district'
+  entity_type: 'club' | 'zone' | 'district' | 'kin_canada'
   entity_id: string
   platform: 'facebook' | 'instagram'
   account_id: string
@@ -69,7 +69,7 @@ export async function createSocialMediaAccount(account: {
 
 // Get social media accounts for an entity
 export async function getSocialMediaAccounts(
-  entityType: 'club' | 'zone' | 'district',
+  entityType: 'club' | 'zone' | 'district' | 'kin_canada',
   entityId: string
 ): Promise<SocialMediaAccount[]> {
   const { data, error } = await supabase
@@ -255,7 +255,7 @@ export async function getSocialMediaPosts(
 // Check if user has permission to manage social media for an entity
 export async function canManageSocialMedia(
   userEmail: string,
-  entityType: 'club' | 'zone' | 'district',
+  entityType: 'club' | 'zone' | 'district' | 'kin_canada',
   entityId: string
 ): Promise<boolean> {
   // Check if user is superuser
