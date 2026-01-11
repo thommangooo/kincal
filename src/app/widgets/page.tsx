@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { getZones, getClubs, getDistricts, getUserRole } from '@/lib/database'
+import { getZones, getClubs, getDistricts, getUserRole, getKinCanada } from '@/lib/database'
+import { Club } from '@/lib/supabase'
 import Header from '@/components/Header'
-import { Monitor, Calendar, Megaphone, Code, Copy, Check, Users, Building } from 'lucide-react'
+import { Monitor, Calendar, Megaphone, Code, Copy, Check, Users, Building, Flag } from 'lucide-react'
 
 interface UserEntity {
-  type: 'club' | 'zone' | 'district'
+  type: 'club' | 'zone' | 'district' | 'kin_canada'
   id: string
   name: string
 }
@@ -16,13 +17,14 @@ export default function WidgetsPage() {
   const { user, loading: authLoading } = useAuth()
   const [userEntities, setUserEntities] = useState<UserEntity[]>([])
   const [selectedEntity, setSelectedEntity] = useState<UserEntity | null>(null)
+  const [allClubs, setAllClubs] = useState<Club[]>([]) // Store all clubs to look up zone_id
   const [loading, setLoading] = useState(true)
   
   // Widget configuration state
   const [widgetConfig, setWidgetConfig] = useState({
     calendarScope: 'club-only' as 'club-only' | 'club-and-zone' | 'all-clubs-in-zone', // Calendar scope options
     showFilters: true,
-    visibility: 'all' as 'all' | 'public' | 'internal-use'
+    includeKinCanadaEvents: true // Default to true, like calendar filters
   })
 
   // Load user's entities
@@ -34,12 +36,16 @@ export default function WidgetsPage() {
       }
 
       try {
-        const [zones, clubs, districts, userRole] = await Promise.all([
+        const [zones, clubs, districts, userRole, kinCanada] = await Promise.all([
           getZones(),
           getClubs(),
           getDistricts(),
-          getUserRole(user.email)
+          getUserRole(user.email),
+          getKinCanada().catch(() => null) // Gracefully handle if Kin Canada doesn't exist
         ])
+
+        // Store clubs for zone_id lookup
+        setAllClubs(clubs)
 
         const entities: UserEntity[] = []
 
@@ -71,6 +77,15 @@ export default function WidgetsPage() {
               name: district.name
             })
           })
+          
+          // Add Kin Canada if it exists
+          if (kinCanada) {
+            entities.push({
+              type: 'kin_canada',
+              id: kinCanada.id,
+              name: kinCanada.name
+            })
+          }
         } else {
           // Regular users: only show their assigned entities
           // Add user's club if they have one
@@ -108,6 +123,15 @@ export default function WidgetsPage() {
               })
             }
           }
+          
+          // Add Kin Canada if user has permission
+          if (userRole?.kin_canada_id && kinCanada) {
+            entities.push({
+              type: 'kin_canada',
+              id: kinCanada.id,
+              name: kinCanada.name
+            })
+          }
         }
 
         setUserEntities(entities)
@@ -134,51 +158,58 @@ export default function WidgetsPage() {
     const urlParams = new URLSearchParams()
     
     // Add widget configuration parameters
-    if (widgetConfig.visibility !== 'all') {
-      urlParams.set('visibility', widgetConfig.visibility)
-    }
     urlParams.set('showFilters', widgetConfig.showFilters.toString())
+    
+    // Add Kin Canada events filter
+    if (widgetConfig.includeKinCanadaEvents !== undefined) {
+      urlParams.set('includeKinCanadaEvents', widgetConfig.includeKinCanadaEvents.toString())
+    }
     
     // Handle calendar scope for calendar widget
     if (widgetType === 'calendar') {
-      switch (widgetConfig.calendarScope) {
-        case 'club-only':
-          // Use selected entity if it's a club, otherwise find the first club
-          if (selectedEntity.type === 'club') {
-            urlParams.set('club', selectedEntity.id)
-          } else {
-            const userClub = userEntities.find(e => e.type === 'club')
-            if (userClub) {
-              urlParams.set('club', userClub.id)
+      // If Kin Canada is selected, set kin_canada parameter
+      if (selectedEntity.type === 'kin_canada') {
+        urlParams.set('kin_canada', selectedEntity.id)
+      } else {
+        // For calendar scope options, we need to work with clubs
+        // Find the club entity (either selected or from userEntities)
+        const clubEntity = selectedEntity.type === 'club' 
+          ? selectedEntity 
+          : userEntities.find(e => e.type === 'club')
+        
+        if (clubEntity) {
+          // Find the full club object to get zone_id
+          const club = allClubs.find(c => c.id === clubEntity.id)
+          
+          if (club) {
+            switch (widgetConfig.calendarScope) {
+              case 'club-only':
+                // Just the club
+                urlParams.set('club', club.id)
+                break
+              case 'club-and-zone':
+                // Club and its zone
+                urlParams.set('club', club.id)
+                urlParams.set('zone', club.zone_id)
+                break
+              case 'all-clubs-in-zone':
+                // All clubs in the zone (just set zone, which includes all clubs)
+                urlParams.set('zone', club.zone_id)
+                break
             }
           }
-          break
-        case 'club-and-zone':
-          // Use selected entity if it matches, otherwise find from userEntities
-          const club = selectedEntity.type === 'club' 
-            ? selectedEntity 
-            : userEntities.find(e => e.type === 'club')
-          const zone = selectedEntity.type === 'zone'
-            ? selectedEntity
-            : userEntities.find(e => e.type === 'zone')
-          if (club) urlParams.set('club', club.id)
-          if (zone) urlParams.set('zone', zone.id)
-          break
-        case 'all-clubs-in-zone':
-          // Use selected entity if it's a zone, otherwise find the first zone
-          if (selectedEntity.type === 'zone') {
-            urlParams.set('zone', selectedEntity.id)
-          } else {
-            const userZone = userEntities.find(e => e.type === 'zone')
-            if (userZone) {
-              urlParams.set('zone', userZone.id)
-            }
-          }
-          break
+        } else if (selectedEntity.type === 'zone') {
+          // If zone is selected, use it directly
+          urlParams.set('zone', selectedEntity.id)
+        }
       }
     } else {
       // For announcements, use the selected entity
-      urlParams.set(selectedEntity.type, selectedEntity.id)
+      if (selectedEntity.type === 'kin_canada') {
+        urlParams.set('kin_canada', selectedEntity.id)
+      } else {
+        urlParams.set(selectedEntity.type, selectedEntity.id)
+      }
     }
     
     return `${baseUrl}?${urlParams.toString()}`
@@ -199,10 +230,12 @@ export default function WidgetsPage() {
     const urlParams = new URLSearchParams()
     
     // Add widget configuration parameters
-    if (widgetConfig.visibility !== 'all') {
-      urlParams.set('visibility', widgetConfig.visibility)
-    }
     urlParams.set('showFilters', widgetConfig.showFilters.toString())
+    
+    // Add Kin Canada events filter
+    if (widgetConfig.includeKinCanadaEvents !== undefined) {
+      urlParams.set('includeKinCanadaEvents', widgetConfig.includeKinCanadaEvents.toString())
+    }
     
     // Add return URL parameter (clubs can customize this)
     // Note: URLSearchParams.set() automatically encodes values, so don't use encodeURIComponent
@@ -210,27 +243,23 @@ export default function WidgetsPage() {
     
     // Handle calendar scope for calendar widget
     if (widgetType === 'calendar') {
-      switch (widgetConfig.calendarScope) {
-        case 'club-only':
-          // For club-only, no additional parameters needed (defaults to club)
-          break
-        case 'club-and-zone':
-          // Set zone parameter - use selected if it's a zone, otherwise find from userEntities
-          const zone = selectedEntity.type === 'zone'
-            ? selectedEntity
-            : userEntities.find(e => e.type === 'zone')
-          if (zone) urlParams.set('zone', zone.id)
-          break
-        case 'all-clubs-in-zone':
-          // Set zone parameter to show all clubs in the zone
-          // Use selected entity if it's a zone, otherwise find the first zone
-          const userZone = selectedEntity.type === 'zone'
-            ? selectedEntity
-            : userEntities.find(e => e.type === 'zone')
-          if (userZone) {
-            urlParams.set('zone', userZone.id)
-          }
-          break
+      // Find the full club object to get zone_id
+      const club = allClubs.find(c => c.id === userClub.id)
+      
+      if (club) {
+        switch (widgetConfig.calendarScope) {
+          case 'club-only':
+            // For club-only, no additional parameters needed (defaults to club)
+            break
+          case 'club-and-zone':
+            // Set zone parameter from club's zone_id
+            urlParams.set('zone', club.zone_id)
+            break
+          case 'all-clubs-in-zone':
+            // Set zone parameter to show all clubs in the zone
+            urlParams.set('zone', club.zone_id)
+            break
+        }
       }
     }
     
@@ -358,48 +387,73 @@ export default function WidgetsPage() {
               Widget Configuration
             </h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Calendar Scope */}
+            <div className="space-y-6">
+              {/* Calendar Scope - Radio Buttons */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Which calendar(s)?
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Calendar Scope
                 </label>
-                <select
-                  value={widgetConfig.calendarScope}
-                  onChange={(e) => setWidgetConfig(prev => ({ ...prev, calendarScope: e.target.value as 'club-only' | 'club-and-zone' | 'all-clubs-in-zone' }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="club-only">Club Only</option>
-                  <option value="club-and-zone">Club and Zone</option>
-                  <option value="all-clubs-in-zone">All Clubs in the Zone + Zone</option>
-                </select>
-                <p className="text-xs text-gray-500 mt-1">
-                  {widgetConfig.calendarScope === 'club-only' 
-                    ? 'Show events only from your club'
-                    : widgetConfig.calendarScope === 'club-and-zone'
-                    ? 'Show events from your club and zone'
-                    : 'Show events from all clubs in your zone plus zone events'
-                  }
-                </p>
+                <div className="space-y-3">
+                  <label className="flex items-start space-x-3 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="calendarScope"
+                      value="club-only"
+                      checked={widgetConfig.calendarScope === 'club-only'}
+                      onChange={(e) => setWidgetConfig(prev => ({ ...prev, calendarScope: e.target.value as 'club-only' | 'club-and-zone' | 'all-clubs-in-zone' }))}
+                      className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    />
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">My Club</div>
+                      <div className="text-xs text-gray-500">Show events only from your club</div>
+                    </div>
+                  </label>
+                  <label className="flex items-start space-x-3 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="calendarScope"
+                      value="club-and-zone"
+                      checked={widgetConfig.calendarScope === 'club-and-zone'}
+                      onChange={(e) => setWidgetConfig(prev => ({ ...prev, calendarScope: e.target.value as 'club-only' | 'club-and-zone' | 'all-clubs-in-zone' }))}
+                      className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    />
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">My Club + Zone</div>
+                      <div className="text-xs text-gray-500">Show events from your club and your zone</div>
+                    </div>
+                  </label>
+                  <label className="flex items-start space-x-3 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="calendarScope"
+                      value="all-clubs-in-zone"
+                      checked={widgetConfig.calendarScope === 'all-clubs-in-zone'}
+                      onChange={(e) => setWidgetConfig(prev => ({ ...prev, calendarScope: e.target.value as 'club-only' | 'club-and-zone' | 'all-clubs-in-zone' }))}
+                      className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    />
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">All Clubs in Zone + Zone</div>
+                      <div className="text-xs text-gray-500">Show events from all clubs in your zone plus zone events</div>
+                    </div>
+                  </label>
+                </div>
               </div>
 
-              {/* Visibility Filter */}
+              {/* Include Kin Canada Events - Checkbox */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Content Visibility
+                <label className="flex items-start space-x-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    id="includeKinCanadaEvents"
+                    checked={widgetConfig.includeKinCanadaEvents}
+                    onChange={(e) => setWidgetConfig(prev => ({ ...prev, includeKinCanadaEvents: e.target.checked }))}
+                    className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <div>
+                    <div className="text-sm font-medium text-gray-900">Include Kin Canada events</div>
+                    <div className="text-xs text-gray-500">Show Kin Canada events in addition to other filters</div>
+                  </div>
                 </label>
-                <select
-                  value={widgetConfig.visibility}
-                  onChange={(e) => setWidgetConfig(prev => ({ ...prev, visibility: e.target.value as 'all' | 'public' | 'internal-use' }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="all">All Content</option>
-                  <option value="public">Public Only</option>
-                  <option value="internal-use">Internal Use Only</option>
-                </select>
-                <p className="text-xs text-gray-500 mt-1">
-                  Filter content by visibility level
-                </p>
               </div>
 
               {/* Show Filters */}
@@ -431,8 +485,13 @@ export default function WidgetsPage() {
               </h2>
               {userEntities.length === 1 ? (
                 <div className="p-4 rounded-lg border-2 border-blue-500 bg-blue-50">
-                  <div className="font-medium text-gray-900">{userEntities[0].name}</div>
-                  <div className="text-sm text-gray-500 capitalize">{userEntities[0].type}</div>
+                  <div className="flex items-center space-x-2">
+                    {userEntities[0].type === 'kin_canada' && <Flag className="h-4 w-4 text-blue-600" />}
+                    <div className="font-medium text-gray-900">{userEntities[0].name}</div>
+                  </div>
+                  <div className="text-sm text-gray-500 capitalize">
+                    {userEntities[0].type === 'kin_canada' ? 'Kin Canada' : userEntities[0].type}
+                  </div>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
@@ -446,8 +505,13 @@ export default function WidgetsPage() {
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
-                      <div className="font-medium text-gray-900">{entity.name}</div>
-                      <div className="text-sm text-gray-500 capitalize">{entity.type}</div>
+                      <div className="flex items-center space-x-2">
+                        {entity.type === 'kin_canada' && <Flag className="h-4 w-4 text-blue-600" />}
+                        <div className="font-medium text-gray-900">{entity.name}</div>
+                      </div>
+                      <div className="text-sm text-gray-500 capitalize">
+                        {entity.type === 'kin_canada' ? 'Kin Canada' : entity.type}
+                      </div>
                     </button>
                   ))}
                 </div>

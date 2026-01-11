@@ -25,6 +25,7 @@ export default function Home() {
         endDate?: Date
         includeZoneEvents?: boolean
         includeClubEvents?: boolean
+        includeKinCanadaEvents?: boolean
       } = {}
       
       if (filters) {
@@ -46,6 +47,10 @@ export default function Home() {
         if (filters.includeZoneEvents !== undefined) {
           eventFilters.includeZoneEvents = filters.includeZoneEvents
         }
+        // Always pass includeKinCanadaEvents (defaults to true if undefined)
+        eventFilters.includeKinCanadaEvents = filters.includeKinCanadaEvents !== undefined 
+          ? filters.includeKinCanadaEvents 
+          : true
       }
 
       const eventData = await getEvents(eventFilters)
@@ -78,6 +83,7 @@ export default function Home() {
         endDate?: Date
         includeZoneEvents?: boolean
         includeClubEvents?: boolean
+        includeKinCanadaEvents?: boolean
       } = {}
       
       if (newFilters) {
@@ -99,6 +105,10 @@ export default function Home() {
         if (newFilters.includeZoneEvents !== undefined) {
           eventFilters.includeZoneEvents = newFilters.includeZoneEvents
         }
+        // Always pass includeKinCanadaEvents (defaults to true if undefined)
+        eventFilters.includeKinCanadaEvents = newFilters.includeKinCanadaEvents !== undefined 
+          ? newFilters.includeKinCanadaEvents 
+          : true
       }
 
       const eventData = await getEvents(eventFilters)

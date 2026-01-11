@@ -15,7 +15,8 @@ import {
   UserEntityPermission,
   Club,
   Zone,
-  District
+  District,
+  KinCanada
 } from '@/lib/database'
 import { 
   Users, 
@@ -26,7 +27,8 @@ import {
   User as UserIcon,
   Mail,
   CheckCircle,
-  Clock
+  Clock,
+  Flag
 } from 'lucide-react'
 import Toast from '@/components/Toast'
 import EditorRequestManagement from '@/components/EditorRequestManagement'
@@ -56,10 +58,11 @@ export default function UsersPage() {
   const [toastMessage, setToastMessage] = useState('')
   const [showToast, setShowToast] = useState(false)
   const [userPermissions, setUserPermissions] = useState<{ [userId: string]: UserEntityPermission[] }>({})
-  const [entities, setEntities] = useState<{ clubs: Club[], zones: Zone[], districts: District[] }>({
+  const [entities, setEntities] = useState<{ clubs: Club[], zones: Zone[], districts: District[], kinCanada: KinCanada | null }>({
     clubs: [],
     zones: [],
-    districts: []
+    districts: [],
+    kinCanada: null
   })
   const [activeTab, setActiveTab] = useState<'users' | 'requests'>('users')
 
@@ -135,7 +138,7 @@ export default function UsersPage() {
 
     // For editors, require at least one entity assignment
     if (formData.role === 'editor' && formData.entityIds.length === 0) {
-      showToastMessage('Editor users must be assigned to at least one entity (club, zone, or district)')
+      showToastMessage('Editor users must be assigned to at least one entity (club, zone, district, or Kin Canada)')
       return
     }
 
@@ -405,9 +408,36 @@ export default function UsersPage() {
                             </div>
                           </div>
                         )}
+
+                        {/* Kin Canada */}
+                        {entities.kinCanada && (
+                          <div>
+                            <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                              <Flag className="h-4 w-4 mr-2 text-red-600" />
+                              Kin Canada
+                            </h4>
+                            <div className="space-y-1">
+                              <label className="flex items-center">
+                                <input
+                                  type="checkbox"
+                                  checked={formData.entityIds.includes(entities.kinCanada.id)}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      setFormData({ ...formData, entityIds: [...formData.entityIds, entities.kinCanada!.id] })
+                                    } else {
+                                      setFormData({ ...formData, entityIds: formData.entityIds.filter(id => id !== entities.kinCanada!.id) })
+                                    }
+                                  }}
+                                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                />
+                                <span className="ml-2 text-sm text-gray-700">{entities.kinCanada.name}</span>
+                              </label>
+                            </div>
+                          </div>
+                        )}
                       </div>
                       <p className="mt-1 text-xs text-gray-500">
-                        Select the clubs, zones, or districts this editor can manage content for.
+                        Select the clubs, zones, districts, or Kin Canada this editor can manage content for.
                       </p>
                     </div>
                   )}

@@ -27,7 +27,7 @@ export default function AnnouncementForm({ mode, announcementId }: AnnouncementF
   const [clubs, setClubs] = useState<Club[]>([])
   const [content, setContent] = useState('')
   const [imageUrl, setImageUrl] = useState<string | null>(null)
-  const [selectedEntity, setSelectedEntity] = useState<{type: 'club' | 'zone' | 'district', id: string} | null>(null)
+  const [selectedEntity, setSelectedEntity] = useState<{type: 'club' | 'zone' | 'district' | 'kin_canada', id: string} | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [userRole, setUserRole] = useState<{
     role: 'superuser' | 'editor'
@@ -178,9 +178,10 @@ export default function AnnouncementForm({ mode, announcementId }: AnnouncementF
     setSubmitting(true)
     try {
       // Derive entity IDs from selected entity
-      let club_id = null
-      let zone_id = null
-      let district_id = null
+      let club_id: string | null = null
+      let zone_id: string | null = null
+      let district_id: string | null = null
+      let kin_canada_id: string | null = null
       const entity_type = selectedEntity.type
       const entity_id = selectedEntity.id
 
@@ -229,15 +230,33 @@ export default function AnnouncementForm({ mode, announcementId }: AnnouncementF
             throw new Error(`No clubs found in the selected district. Please contact an administrator.`)
           }
           break
+        case 'kin_canada':
+          kin_canada_id = selectedEntity.id
+          // For Kin Canada announcements, don't assign to club, zone, or district
+          club_id = null
+          zone_id = null
+          district_id = null
+          break
       }
 
-      // Validate that we have all required IDs
-      if (!club_id || !zone_id || !district_id) {
+      // Validate that we have the required ID for the selected entity type
+      if (selectedEntity.type === 'club' && (!club_id || !zone_id || !district_id)) {
         console.error('Missing required IDs:', { club_id, zone_id, district_id, selectedEntity })
         throw new Error('Unable to determine required organization IDs. Please try selecting a different organization.')
       }
+      if (selectedEntity.type === 'zone' && (!zone_id || !district_id)) {
+        console.error('Missing required IDs:', { zone_id, district_id, selectedEntity })
+        throw new Error('Unable to determine required organization IDs. Please try selecting a different organization.')
+      }
+      if (selectedEntity.type === 'district' && !district_id) {
+        console.error('Missing required IDs:', { district_id, selectedEntity })
+        throw new Error('Unable to determine required organization IDs. Please try selecting a different organization.')
+      }
+      if (selectedEntity.type === 'kin_canada' && !kin_canada_id) {
+        throw new Error('Unable to determine Kin Canada ID. Please try again or contact an administrator.')
+      }
 
-      console.log('Derived entity IDs:', { club_id, zone_id, district_id, entity_type, entity_id })
+      console.log('Derived entity IDs:', { club_id, zone_id, district_id, kin_canada_id, entity_type, entity_id })
 
       const announcementData = {
         title: data.title,
@@ -247,6 +266,7 @@ export default function AnnouncementForm({ mode, announcementId }: AnnouncementF
         club_id,
         zone_id,
         district_id,
+        kin_canada_id,
         entity_type,
         entity_id,
         visibility: data.visibility || 'public' as const,

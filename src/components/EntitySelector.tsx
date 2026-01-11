@@ -1,33 +1,34 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getUserEntityPermissions, getDistricts, getZones, getClubs, UserEntityPermission, District, Zone, Club } from '@/lib/database'
-import { Building, Users, MapPin } from 'lucide-react'
+import { getUserEntityPermissions, getDistricts, getZones, getClubs, getKinCanada, UserEntityPermission, District, Zone, Club, KinCanada } from '@/lib/database'
+import { Building, Users, MapPin, Flag } from 'lucide-react'
 
 interface EntitySelectorProps {
   userEmail: string
   userRole: 'superuser' | 'editor'
-  selectedEntity: { type: 'club' | 'zone' | 'district'; id: string } | null
-  onEntitySelect: (entity: { type: 'club' | 'zone' | 'district'; id: string } | null) => void
+  selectedEntity: { type: 'club' | 'zone' | 'district' | 'kin_canada'; id: string } | null
+  onEntitySelect: (entity: { type: 'club' | 'zone' | 'district' | 'kin_canada'; id: string } | null) => void
   className?: string
 }
 
 export default function EntitySelector({ userEmail, userRole, selectedEntity, onEntitySelect, className = '' }: EntitySelectorProps) {
   const [permissions, setPermissions] = useState<UserEntityPermission[]>([])
-  const [allEntities, setAllEntities] = useState<{clubs: Club[], zones: Zone[], districts: District[]}>({clubs: [], zones: [], districts: []})
+  const [allEntities, setAllEntities] = useState<{clubs: Club[], zones: Zone[], districts: District[], kinCanada: KinCanada | null}>({clubs: [], zones: [], districts: [], kinCanada: null})
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const loadData = async () => {
       try {
         if (userRole === 'superuser') {
-          // Superusers can see all entities
-          const [clubs, zones, districts] = await Promise.all([
+          // Superusers can see all entities including Kin Canada
+          const [clubs, zones, districts, kinCanada] = await Promise.all([
             getClubs(),
             getZones(), 
-            getDistricts()
+            getDistricts(),
+            getKinCanada().catch(() => null) // Gracefully handle if table doesn't exist yet
           ])
-          setAllEntities({ clubs, zones, districts })
+          setAllEntities({ clubs, zones, districts, kinCanada })
         } else {
           // Editors can only see entities they have permissions for
           const userPermissions = await getUserEntityPermissions(userEmail)
@@ -42,7 +43,7 @@ export default function EntitySelector({ userEmail, userRole, selectedEntity, on
     loadData()
   }, [userEmail, userRole])
 
-  const getEntityIcon = (type: 'club' | 'zone' | 'district') => {
+  const getEntityIcon = (type: 'club' | 'zone' | 'district' | 'kin_canada') => {
     switch (type) {
       case 'club':
         return <Users className="h-4 w-4" />
@@ -50,6 +51,8 @@ export default function EntitySelector({ userEmail, userRole, selectedEntity, on
         return <MapPin className="h-4 w-4" />
       case 'district':
         return <Building className="h-4 w-4" />
+      case 'kin_canada':
+        return <Flag className="h-4 w-4" />
     }
   }
 
@@ -61,6 +64,8 @@ export default function EntitySelector({ userEmail, userRole, selectedEntity, on
         return (permission.entity as Zone)?.name || 'Unknown Zone'
       case 'district':
         return (permission.entity as District)?.name || 'Unknown District'
+      case 'kin_canada':
+        return (permission.entity as KinCanada)?.name || 'Kin Canada'
     }
   }
 
@@ -75,6 +80,8 @@ export default function EntitySelector({ userEmail, userRole, selectedEntity, on
       case 'district':
         const district = permission.entity as District
         return `${district?.province || 'Unknown Province'}`
+      case 'kin_canada':
+        return 'National organization'
     }
   }
 
@@ -114,6 +121,44 @@ export default function EntitySelector({ userEmail, userRole, selectedEntity, on
         {userRole === 'superuser' ? (
           // Superusers see all entities
           <>
+            {/* Kin Canada - Show first as it's the national level */}
+            {allEntities.kinCanada && (
+              <button
+                key={`kin-canada-${allEntities.kinCanada.id}`}
+                type="button"
+                onClick={() => onEntitySelect({ type: 'kin_canada', id: allEntities.kinCanada!.id })}
+                className={`w-full p-4 text-left border rounded-lg transition-colors ${
+                  selectedEntity?.type === 'kin_canada' && selectedEntity?.id === allEntities.kinCanada!.id
+                    ? 'border-blue-500 bg-blue-50' 
+                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                <div className="flex items-center space-x-3">
+                  <div className={`p-2 rounded-lg ${
+                    selectedEntity?.type === 'kin_canada' && selectedEntity?.id === allEntities.kinCanada!.id
+                      ? 'bg-blue-100 text-blue-600' 
+                      : 'bg-gray-100 text-gray-600'
+                  }`}>
+                    {getEntityIcon('kin_canada')}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2">
+                      <h3 className="font-medium text-gray-900">{allEntities.kinCanada.name}</h3>
+                      <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
+                        Kin Canada
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600 mt-1">National organization</p>
+                  </div>
+                  {selectedEntity?.type === 'kin_canada' && selectedEntity?.id === allEntities.kinCanada.id && (
+                    <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
+                      <div className="w-2 h-2 bg-white rounded-full"></div>
+                    </div>
+                  )}
+                </div>
+              </button>
+            )}
+            
             {/* Districts */}
             {allEntities.districts.map((district) => {
               const isSelected = selectedEntity?.type === 'district' && selectedEntity?.id === district.id
@@ -252,9 +297,10 @@ export default function EntitySelector({ userEmail, userRole, selectedEntity, on
                       <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                         permission.entity_type === 'club' ? 'bg-green-100 text-green-800' :
                         permission.entity_type === 'zone' ? 'bg-blue-100 text-blue-800' :
-                        'bg-purple-100 text-purple-800'
+                        permission.entity_type === 'district' ? 'bg-purple-100 text-purple-800' :
+                        'bg-red-100 text-red-800'
                       }`}>
-                        {permission.entity_type}
+                        {permission.entity_type === 'kin_canada' ? 'Kin Canada' : permission.entity_type}
                       </span>
                     </div>
                     <p className="text-sm text-gray-600 mt-1">
@@ -279,6 +325,8 @@ export default function EntitySelector({ userEmail, userRole, selectedEntity, on
             <strong>Selected:</strong> You will be posting on behalf of{' '}
             {userRole === 'superuser' ? (
               // For superusers, find the entity from allEntities
+              selectedEntity.type === 'kin_canada' ?
+                allEntities.kinCanada?.name :
               selectedEntity.type === 'club' ? 
                 allEntities.clubs.find(c => c.id === selectedEntity.id)?.name :
               selectedEntity.type === 'zone' ?

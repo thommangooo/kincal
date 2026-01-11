@@ -29,7 +29,7 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
   const [districts, setDistricts] = useState<District[]>([])
   const [zones, setZones] = useState<Zone[]>([])
   const [clubs, setClubs] = useState<Club[]>([])
-  const [selectedEntity, setSelectedEntity] = useState<{ type: 'club' | 'zone' | 'district'; id: string } | null>(null)
+  const [selectedEntity, setSelectedEntity] = useState<{ type: 'club' | 'zone' | 'district' | 'kin_canada'; id: string } | null>(null)
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [userRole, setUserRole] = useState<{
     role: 'superuser' | 'editor'
@@ -265,7 +265,8 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
       // Get the related IDs based on the selected entity
       let clubId: string | null = ''
       let zoneId: string | null = ''
-      let districtId: string = ''
+      let districtId: string | null = ''
+      let kinCanadaId: string | null = null
       
       console.log('Selected entity:', selectedEntity)
       console.log('Available clubs:', clubs)
@@ -302,9 +303,16 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
           clubId = null
           zoneId = null
           break
+        case 'kin_canada':
+          kinCanadaId = selectedEntity.id
+          // For Kin Canada events, don't assign to club, zone, or district
+          clubId = null
+          zoneId = null
+          districtId = null
+          break
       }
       
-      console.log('Derived IDs:', { clubId, zoneId, districtId })
+      console.log('Derived IDs:', { clubId, zoneId, districtId, kinCanadaId })
 
       // Validate that we have the required ID for the selected entity type
       if (selectedEntity.type === 'club' && !clubId) {
@@ -316,6 +324,9 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
       if (selectedEntity.type === 'district' && !districtId) {
         throw new Error('Unable to determine district ID. Please try selecting a different district or contact an administrator.')
       }
+      if (selectedEntity.type === 'kin_canada' && !kinCanadaId) {
+        throw new Error('Unable to determine Kin Canada ID. Please try again or contact an administrator.')
+      }
 
       const eventData = {
         title: data.title,
@@ -326,6 +337,7 @@ export default function EventForm({ mode, eventId }: EventFormProps) {
         club_id: clubId,
         zone_id: zoneId,
         district_id: districtId,
+        kin_canada_id: kinCanadaId,
         entity_type: selectedEntity.type,
         entity_id: selectedEntity.id,
         visibility: 'public' as const,

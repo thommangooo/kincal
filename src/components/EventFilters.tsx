@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Search, Filter, MapPin, Users, Building, ChevronDown, ChevronUp } from 'lucide-react'
-import { getDistricts, getZones, getClubs, District, Zone, Club } from '@/lib/database'
+import { Search, Filter, MapPin, Users, Building, Flag, ChevronDown, ChevronUp } from 'lucide-react'
+import { getDistricts, getZones, getClubs, getKinCanada, District, Zone, Club, KinCanada } from '@/lib/database'
 
 interface EventFiltersProps {
   onFiltersChange?: (filters: {
@@ -13,6 +13,7 @@ interface EventFiltersProps {
     visibility: 'all' | 'public' | 'private'
     includeZoneEvents?: boolean
     includeClubEvents?: boolean
+    includeKinCanadaEvents?: boolean
   }) => void
   collapsible?: boolean
   defaultCollapsed?: boolean
@@ -26,6 +27,7 @@ export default function EventFilters({ onFiltersChange, collapsible = false, def
   const [visibility, setVisibility] = useState<'all' | 'public' | 'private'>('all')
   const [includeZoneEvents, setIncludeZoneEvents] = useState(true)
   const [includeClubEvents, setIncludeClubEvents] = useState(true)
+  const [includeKinCanadaEvents, setIncludeKinCanadaEvents] = useState(true)
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed)
   
   // Track previous values to prevent unnecessary calls
@@ -34,6 +36,7 @@ export default function EventFilters({ onFiltersChange, collapsible = false, def
   const [districts, setDistricts] = useState<District[]>([])
   const [zones, setZones] = useState<Zone[]>([])
   const [clubs, setClubs] = useState<Club[]>([])
+  const [kinCanada, setKinCanada] = useState<KinCanada | null>(null)
   const [filteredZones, setFilteredZones] = useState<Zone[]>([])
   const [filteredClubs, setFilteredClubs] = useState<Club[]>([])
 
@@ -41,14 +44,16 @@ export default function EventFilters({ onFiltersChange, collapsible = false, def
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [districtsData, zonesData, clubsData] = await Promise.all([
+        const [districtsData, zonesData, clubsData, kinCanadaData] = await Promise.all([
           getDistricts(),
           getZones(),
-          getClubs()
+          getClubs(),
+          getKinCanada().catch(() => null) // Gracefully handle if table doesn't exist yet
         ])
         setDistricts(districtsData)
         setZones(zonesData)
         setClubs(clubsData)
+        setKinCanada(kinCanadaData)
       } catch (error) {
         console.error('Error loading filter data:', error)
       }
@@ -87,7 +92,8 @@ export default function EventFilters({ onFiltersChange, collapsible = false, def
       clubId,
       visibility,
       includeZoneEvents,
-      includeClubEvents
+      includeClubEvents,
+      includeKinCanadaEvents
     }
     
     // Create a string representation to compare with previous
@@ -99,7 +105,7 @@ export default function EventFilters({ onFiltersChange, collapsible = false, def
       onFiltersChange?.(currentFilters)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, districtId, zoneId, clubId, visibility, includeZoneEvents, includeClubEvents])
+  }, [search, districtId, zoneId, clubId, visibility, includeZoneEvents, includeClubEvents, includeKinCanadaEvents])
 
   const clearFilters = () => {
     setSearch('')
@@ -109,6 +115,7 @@ export default function EventFilters({ onFiltersChange, collapsible = false, def
     setVisibility('all')
     setIncludeZoneEvents(true)
     setIncludeClubEvents(true)
+    setIncludeKinCanadaEvents(true)
   }
 
   return (
@@ -264,6 +271,32 @@ export default function EventFilters({ onFiltersChange, collapsible = false, def
                 />
                 <span className="ml-2 text-sm text-gray-600">Club events in this zone</span>
               </label>
+            </div>
+          </div>
+        )}
+
+        {/* Kin Canada Events Filter - Independent checkbox */}
+        {kinCanada && (
+          <div className="space-y-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <h4 className="text-sm font-medium text-gray-700 flex items-center">
+              <Flag className="h-4 w-4 mr-2 text-blue-600" />
+              Kin Canada Calendar
+            </h4>
+            <div className="space-y-2">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={includeKinCanadaEvents}
+                  onChange={(e) => setIncludeKinCanadaEvents(e.target.checked)}
+                  className="h-4 w-4 text-kin-red focus:ring-kin-red border-gray-300 rounded"
+                />
+                <span className="ml-2 text-sm text-gray-700">
+                  Include Kin Canada calendar events
+                </span>
+              </label>
+              <p className="text-xs text-gray-500 ml-6">
+                Kin Canada events are independent of district/zone/club filters above
+              </p>
             </div>
           </div>
         )}

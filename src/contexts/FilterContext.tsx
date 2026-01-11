@@ -10,6 +10,7 @@ export interface GlobalFilters {
   visibility: 'all' | 'public' | 'private' | 'internal-use'
   includeZoneEvents?: boolean
   includeClubEvents?: boolean
+  includeKinCanadaEvents?: boolean
 }
 
 interface FilterContextType {
@@ -28,7 +29,8 @@ const defaultFilters: GlobalFilters = {
   clubId: '',
   visibility: 'all',
   includeZoneEvents: true,
-  includeClubEvents: true
+  includeClubEvents: true,
+  includeKinCanadaEvents: true
 }
 
 export function FilterProvider({ children }: { children: ReactNode }) {

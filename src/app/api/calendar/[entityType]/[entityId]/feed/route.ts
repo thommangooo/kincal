@@ -19,7 +19,7 @@ export async function GET(
     console.log(`[Calendar Feed] Full URL: ${request.url}`)
     
     // Validate entity type
-    if (!['club', 'zone', 'district'].includes(entityType)) {
+    if (!['club', 'zone', 'district', 'kin_canada'].includes(entityType)) {
       return NextResponse.json(
         { error: 'Invalid entity type' },
         { status: 400 }
@@ -28,7 +28,7 @@ export async function GET(
     
     // Get entity details to get the name
     const entity = await getEntityDetails(
-      entityType as 'club' | 'zone' | 'district',
+      entityType as 'club' | 'zone' | 'district' | 'kin_canada',
       entityId
     )
     
@@ -44,6 +44,7 @@ export async function GET(
       clubId?: string
       zoneId?: string
       districtId?: string
+      kinCanadaId?: string
       visibility: 'public' | 'private' | 'internal-use'
     } = {
       visibility: 'public'
@@ -55,6 +56,8 @@ export async function GET(
       filters.zoneId = entityId
     } else if (entityType === 'district') {
       filters.districtId = entityId
+    } else if (entityType === 'kin_canada') {
+      filters.kinCanadaId = entityId
     }
     
     const events = await getEvents(filters)
@@ -63,6 +66,7 @@ export async function GET(
     // For clubs: use club's district province
     // For zones: use zone's district province
     // For districts: use UTC (may span multiple provinces/timezones)
+    // For kin_canada: use UTC (national entity spans all timezones)
     let timezone: string | null = null
     let province: string | null = null
     
@@ -89,6 +93,9 @@ export async function GET(
       //   timezone = getTimezoneFromProvince(province)
       // }
       timezone = null // Use UTC for districts
+    } else if (entityType === 'kin_canada') {
+      // Kin Canada spans all provinces/timezones, use UTC
+      timezone = null
     }
     
     // If timezone detection failed, try to get it from the first event's club
@@ -112,8 +119,8 @@ export async function GET(
     
     // Final fallback: if still no timezone, default to America/Toronto for clubs/zones
     // (This is a reasonable default since most Kin Canada clubs are in Eastern Time)
-    // Districts should use UTC since they may span multiple timezones
-    if (!timezone && entityType !== 'district') {
+    // Districts and kin_canada should use UTC since they may span multiple timezones
+    if (!timezone && entityType !== 'district' && entityType !== 'kin_canada') {
       timezone = 'America/Toronto'
       console.log('Using default timezone America/Toronto as fallback for', entityType)
     }

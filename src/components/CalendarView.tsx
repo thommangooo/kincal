@@ -62,22 +62,46 @@ export default function CalendarView({
   const [entityType, setEntityType] = useState<'club' | 'zone' | 'district'>('club')
   const [visibility, setVisibility] = useState<'all' | 'public' | 'private' | 'internal-use'>(filters?.visibility || 'all')
   const [filtersCollapsed, setFiltersCollapsed] = useState(true)
+  
+  // Track the last filters we sent to parent to prevent infinite loops
+  const lastSentFilters = useRef<GlobalFilters | null>(null)
+  
+  // Track if we're syncing from props to prevent infinite loop
+  const isSyncingFromProps = useRef(false)
 
   // Determine entity type based on current filters
   useEffect(() => {
     if (filters) {
-      if (filters.districtId) {
-        setEntityType('district')
-        setEntityId(filters.districtId)
-      } else if (filters.zoneId) {
-        setEntityType('zone')
-        setEntityId(filters.zoneId)
-      } else if (filters.clubId) {
-        setEntityType('club')
-        setEntityId(filters.clubId)
+      // Check if filters actually changed to avoid unnecessary updates
+      const filtersChanged = 
+        lastSentFilters.current?.search !== filters.search ||
+        lastSentFilters.current?.clubId !== filters.clubId ||
+        lastSentFilters.current?.zoneId !== filters.zoneId ||
+        lastSentFilters.current?.districtId !== filters.districtId ||
+        lastSentFilters.current?.visibility !== filters.visibility ||
+        lastSentFilters.current?.includeKinCanadaEvents !== filters.includeKinCanadaEvents
+      
+      if (filtersChanged) {
+        isSyncingFromProps.current = true
+        
+        if (filters.districtId) {
+          setEntityType('district')
+          setEntityId(filters.districtId)
+        } else if (filters.zoneId) {
+          setEntityType('zone')
+          setEntityId(filters.zoneId)
+        } else if (filters.clubId) {
+          setEntityType('club')
+          setEntityId(filters.clubId)
+        }
+        setSearch(filters.search || '')
+        setVisibility(filters.visibility || 'all')
+        
+        // Reset the flag after state updates complete
+        requestAnimationFrame(() => {
+          isSyncingFromProps.current = false
+        })
       }
-      setSearch(filters.search || '')
-      setVisibility(filters.visibility || 'all')
     }
   }, [filters])
 
@@ -140,7 +164,8 @@ export default function CalendarView({
       clubId: '',
       visibility: 'all',
       includeZoneEvents: true,
-      includeClubEvents: true
+      includeClubEvents: true,
+      includeKinCanadaEvents: true
     })
   }
 
@@ -154,23 +179,46 @@ export default function CalendarView({
       visibility,
       includeZoneEvents: filters?.includeZoneEvents,
       includeClubEvents: filters?.includeClubEvents,
+      includeKinCanadaEvents: filters?.includeKinCanadaEvents,
       ...newFilters
     }
     onFiltersChange?.(currentFilters)
   }
 
   // Notify parent of filter changes when entity selection changes
+  // But only if we're not syncing from props (to prevent infinite loop)
   useEffect(() => {
-    onFiltersChange?.({
+    // Skip if we're in the middle of syncing from props
+    if (isSyncingFromProps.current) {
+      return
+    }
+    
+    const newFilters: GlobalFilters = {
       search,
       districtId: entityType === 'district' ? entityId : '',
       zoneId: entityType === 'zone' ? entityId : '',
       clubId: entityType === 'club' ? entityId : '',
       visibility,
       includeZoneEvents: filters?.includeZoneEvents,
-      includeClubEvents: filters?.includeClubEvents
-    })
-  }, [search, entityId, entityType, visibility, onFiltersChange, filters?.includeZoneEvents, filters?.includeClubEvents])
+      includeClubEvents: filters?.includeClubEvents,
+      includeKinCanadaEvents: filters?.includeKinCanadaEvents
+    }
+    
+    // Only call onFiltersChange if the values actually changed
+    const hasChanged = 
+      lastSentFilters.current?.search !== newFilters.search ||
+      lastSentFilters.current?.clubId !== newFilters.clubId ||
+      lastSentFilters.current?.zoneId !== newFilters.zoneId ||
+      lastSentFilters.current?.districtId !== newFilters.districtId ||
+      lastSentFilters.current?.visibility !== newFilters.visibility ||
+      lastSentFilters.current?.includeKinCanadaEvents !== newFilters.includeKinCanadaEvents
+    
+    if (hasChanged) {
+      lastSentFilters.current = newFilters
+      onFiltersChange?.(newFilters)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, entityId, entityType, visibility, onFiltersChange])
 
   // NO AUTOMATIC LOADING - Events will be passed in via props
 
@@ -580,7 +628,7 @@ export default function CalendarView({
                       value={entityId}
                       onChange={(id, type) => {
                         setEntityId(id)
-                        setEntityType(type)
+                        setEntityType(type as 'club' | 'zone' | 'district')
                         handleFilterChange({
                           districtId: type === 'district' ? id : '',
                           zoneId: type === 'zone' ? id : '',
@@ -627,6 +675,19 @@ export default function CalendarView({
                         </label>
                       </div>
                     )}
+
+                    {/* Kin Canada Events - Always visible, independent checkbox */}
+                    <div className="mt-2 flex items-center space-x-4 text-xs">
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={filters?.includeKinCanadaEvents !== false}
+                          onChange={(e) => handleFilterChange({ includeKinCanadaEvents: e.target.checked })}
+                          className="h-3 w-3 text-blue-600 focus:ring-blue-500 !border-gray-300 rounded !bg-white"
+                        />
+                        <span className="ml-1 !text-gray-600">Kin Canada events</span>
+                      </label>
+                    </div>
                   </div>
 
                   {/* Visibility Filter */}

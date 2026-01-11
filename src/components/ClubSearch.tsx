@@ -1,12 +1,12 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Search, X, Users, MapPin, Building } from 'lucide-react'
-import { getClubsWithUsageStatus, getZonesWithUsageStatus, getDistrictsWithUsageStatus, Club, Zone, District } from '@/lib/database'
+import { Search, X, Users, MapPin, Building, Flag } from 'lucide-react'
+import { getClubsWithUsageStatus, getZonesWithUsageStatus, getDistrictsWithUsageStatus, getKinCanada, Club, Zone, District, KinCanada } from '@/lib/database'
 
 interface ClubSearchProps {
   value: string
-  onChange: (entityId: string, entityType: 'club' | 'zone' | 'district') => void
+  onChange: (entityId: string, entityType: 'club' | 'zone' | 'district' | 'kin_canada') => void
   placeholder?: string
   className?: string
 }
@@ -15,6 +15,7 @@ type SearchableEntity =
   | (Club & { isActive: boolean, entityType: 'club' })
   | (Zone & { isActive: boolean, displayName: string, entityType: 'zone' })
   | (District & { isActive: boolean, entityType: 'district' })
+  | (KinCanada & { isActive: boolean, entityType: 'kin_canada', displayName: string })
 
 export default function ClubSearch({ value, onChange, placeholder = "Search for a club, zone, or district...", className = "" }: ClubSearchProps) {
   const [searchTerm, setSearchTerm] = useState('')
@@ -31,21 +32,29 @@ export default function ClubSearch({ value, onChange, placeholder = "Search for 
     const loadEntities = async () => {
       try {
         // Safari-compatible Promise.all with individual error handling
-        const [clubsData, zonesData, districtsData] = await Promise.allSettled([
+        const [clubsData, zonesData, districtsData, kinCanadaData] = await Promise.allSettled([
           getClubsWithUsageStatus(),
           getZonesWithUsageStatus(),
-          getDistrictsWithUsageStatus()
+          getDistrictsWithUsageStatus(),
+          getKinCanada().catch(() => null) // Gracefully handle if table doesn't exist yet
         ]).then(results => [
           results[0].status === 'fulfilled' ? results[0].value : [],
           results[1].status === 'fulfilled' ? results[1].value : [],
-          results[2].status === 'fulfilled' ? results[2].value : []
+          results[2].status === 'fulfilled' ? results[2].value : [],
+          results[3].status === 'fulfilled' ? results[3].value : null
         ])
 
         // Combine all entities with their types
         const allEntities: SearchableEntity[] = [
           ...clubsData.map(club => ({ ...club, entityType: 'club' as const })),
           ...zonesData.map(zone => ({ ...zone, entityType: 'zone' as const })),
-          ...districtsData.map(district => ({ ...district, entityType: 'district' as const }))
+          ...districtsData.map(district => ({ ...district, entityType: 'district' as const })),
+          ...(kinCanadaData ? [{
+            ...kinCanadaData,
+            entityType: 'kin_canada' as const,
+            isActive: true,
+            displayName: kinCanadaData.name
+          }] : [])
         ] as SearchableEntity[]
 
 
@@ -74,6 +83,10 @@ export default function ClubSearch({ value, onChange, placeholder = "Search for 
                entity.name.toLowerCase().includes(searchLower)
       } else if (entity.entityType === 'district') {
         return entity.name.toLowerCase().includes(searchLower)
+      } else if (entity.entityType === 'kin_canada') {
+        return entity.name.toLowerCase().includes(searchLower) || 
+               'kin canada'.includes(searchLower) ||
+               'national'.includes(searchLower)
       }
       return false
     }).slice(0, 10) // Limit to 10 results for performance
@@ -94,6 +107,8 @@ export default function ClubSearch({ value, onChange, placeholder = "Search for 
           setSearchTerm(entity.displayName)
         } else if (entity.entityType === 'district') {
           setSearchTerm(entity.name)
+        } else if (entity.entityType === 'kin_canada') {
+          setSearchTerm(entity.displayName || entity.name)
         }
       }
     } else {
@@ -109,8 +124,8 @@ export default function ClubSearch({ value, onChange, placeholder = "Search for 
     
     // Clear selection if user is typing
     if (value && selectedEntity) {
-      const currentDisplayName = selectedEntity.entityType === 'zone' 
-        ? selectedEntity.displayName 
+      const currentDisplayName = selectedEntity.entityType === 'zone' || selectedEntity.entityType === 'kin_canada'
+        ? (selectedEntity as Zone & { displayName?: string } | KinCanada & { displayName?: string }).displayName || selectedEntity.name
         : selectedEntity.name
       if (term !== currentDisplayName) {
         onChange('', 'club') // Reset to club type for backward compatibility
@@ -119,7 +134,9 @@ export default function ClubSearch({ value, onChange, placeholder = "Search for 
   }
 
   const handleEntitySelect = (entity: SearchableEntity) => {
-    const displayName = entity.entityType === 'zone' ? entity.displayName : entity.name
+    const displayName = entity.entityType === 'zone' || entity.entityType === 'kin_canada'
+      ? (entity as Zone & { displayName?: string } | KinCanada & { displayName?: string }).displayName || entity.name
+      : entity.name
     setSearchTerm(displayName)
     setSelectedEntity(entity)
     onChange(entity.id, entity.entityType)
@@ -235,13 +252,23 @@ export default function ClubSearch({ value, onChange, placeholder = "Search for 
                 {entity.entityType === 'district' && (
                   <Building className={`h-4 w-4 mr-3 flex-shrink-0 ${isActive ? '!text-gray-400' : '!text-gray-300'}`} />
                 )}
+                {entity.entityType === 'kin_canada' && (
+                  <Flag className={`h-4 w-4 mr-3 flex-shrink-0 ${isActive ? '!text-gray-400' : '!text-gray-300'}`} />
+                )}
                 <div className="flex-1">
                   <div className={`font-medium ${isActive ? '!text-gray-900' : '!text-gray-500'}`}>
-                    {entity.entityType === 'zone' ? entity.displayName : entity.name}
+                    {entity.entityType === 'zone' || entity.entityType === 'kin_canada'
+                      ? (entity as Zone & { displayName?: string } | KinCanada & { displayName?: string }).displayName || entity.name
+                      : entity.name}
                   </div>
                   {entity.entityType === 'club' && entity.zone && (
                     <div className="text-sm !text-gray-500">
                       {entity.zone.name} • {entity.zone.district?.name}
+                    </div>
+                  )}
+                  {entity.entityType === 'kin_canada' && (
+                    <div className="text-sm !text-gray-500">
+                      National organization
                     </div>
                   )}
                   <div className="flex items-center mt-1">

@@ -1,7 +1,7 @@
-import { supabase, DbEvent, Announcement, Club, Zone, District, UserEntityPermission } from './supabase'
+import { supabase, DbEvent, Announcement, Club, Zone, District, KinCanada, UserEntityPermission } from './supabase'
 
 // Re-export types for use in other files
-export type { DbEvent as Event, Announcement, Club, Zone, District, UserEntityPermission }
+export type { DbEvent as Event, Announcement, Club, Zone, District, KinCanada, UserEntityPermission }
 
 // User management types
 export interface ApprovedUser {
@@ -18,11 +18,13 @@ export async function getEvents(filters?: {
   clubId?: string
   zoneId?: string
   districtId?: string
+  kinCanadaId?: string
   visibility?: 'public' | 'private' | 'internal-use'
   startDate?: Date
   endDate?: Date
   includeZoneEvents?: boolean
   includeClubEvents?: boolean
+  includeKinCanadaEvents?: boolean
 }) {
   console.log('getEvents called with filters:', filters)
   let query = supabase
@@ -31,19 +33,36 @@ export async function getEvents(filters?: {
       *,
       club:clubs!club_id(*),
       zone:zones!zone_id(*),
-      district:districts!district_id(*)
+      district:districts!district_id(*),
+      kin_canada:kin_canada!kin_canada_id(*)
     `)
     .order('start_date', { ascending: true })
 
-  // Handle entity filtering with include options
+  // Track if we've applied any entity filters
+  let hasEntityFilter = false
+
+  // Get Kin Canada ID if needed
+  let kinCanadaId: string | undefined
+  try {
+    const kinCanada = await getKinCanada()
+    kinCanadaId = kinCanada.id
+  } catch {
+    // Kin Canada table doesn't exist yet, ignore
+    kinCanadaId = undefined
+  }
+
+  // Build all filter conditions
+  const allConditions: string[] = []
+  
+  // Handle hierarchical entity filtering with include options
   if (filters?.clubId) {
     // Club selected - show only that club's events
-    query = query.eq('club_id', filters.clubId)
+    allConditions.push(`club_id.eq.${filters.clubId}`)
   } else if (filters?.zoneId) {
     // Zone selected - show zone events and optionally club events in that zone
     if (filters.includeClubEvents === false) {
       // Only show zone-posted events (exclude club events)
-      query = query.eq('zone_id', filters.zoneId).is('club_id', null)
+      allConditions.push(`and(zone_id.eq.${filters.zoneId},club_id.is.null)`)
     } else {
       // Show zone events OR club events in this zone
       // First get all clubs in this zone
@@ -55,17 +74,17 @@ export async function getEvents(filters?: {
       const clubIds = zoneClubs?.map(club => club.id) || []
       if (clubIds.length > 0) {
         // zone events (club_id is null) OR club events in this zone
-        query = query.or(`and(zone_id.eq.${filters.zoneId},club_id.is.null),club_id.in.(${clubIds.join(',')})`)
+        allConditions.push(`and(zone_id.eq.${filters.zoneId},club_id.is.null),club_id.in.(${clubIds.join(',')})`)
       } else {
         // No clubs in zone, just zone-posted events
-        query = query.eq('zone_id', filters.zoneId).is('club_id', null)
+        allConditions.push(`and(zone_id.eq.${filters.zoneId},club_id.is.null)`)
       }
     }
   } else if (filters?.districtId) {
     // District selected - show district events and optionally zone/club events in that district
-    const conditions: string[] = []
-    // Always include district-posted events unless explicitly filtered out (by unchecking both is still include district)
-    conditions.push(`and(district_id.eq.${filters.districtId},zone_id.is.null,club_id.is.null)`)
+    const hierarchicalConditions: string[] = []
+    // Always include district-posted events unless explicitly filtered out
+    hierarchicalConditions.push(`and(district_id.eq.${filters.districtId},zone_id.is.null,club_id.is.null)`)
     
     if (filters.includeZoneEvents !== false) {
       // Include zone-posted events in this district (exclude club events)
@@ -76,7 +95,7 @@ export async function getEvents(filters?: {
       
       const zoneIds = districtZones?.map(zone => zone.id) || []
       if (zoneIds.length > 0) {
-        conditions.push(`and(zone_id.in.(${zoneIds.join(',')}),club_id.is.null)`)
+        hierarchicalConditions.push(`and(zone_id.in.(${zoneIds.join(',')}),club_id.is.null)`)
       }
     }
     
@@ -96,13 +115,88 @@ export async function getEvents(filters?: {
         
         const clubIds = districtClubs?.map(club => club.id) || []
         if (clubIds.length > 0) {
-          conditions.push(`club_id.in.(${clubIds.join(',')})`)
+          hierarchicalConditions.push(`club_id.in.(${clubIds.join(',')})`)
         }
       }
     }
     
-    query = query.or(conditions.join(','))
+    if (hierarchicalConditions.length === 1) {
+      allConditions.push(hierarchicalConditions[0])
+    } else {
+      allConditions.push(`or(${hierarchicalConditions.join(',')})`)
+    }
   }
+  
+  // Handle Kin Canada events - independent checkbox (always in addition to hierarchical filters)
+  const targetKinCanadaId = filters?.kinCanadaId || kinCanadaId
+  
+  // Default to true if not explicitly set (includeKinCanadaEvents should default to true)
+  // When undefined or true, include Kin Canada events
+  const shouldIncludeKinCanada = filters?.includeKinCanadaEvents !== false
+  
+  // Apply filters
+  if (allConditions.length > 0) {
+    // We have hierarchical filters
+    hasEntityFilter = true
+    if (filters?.includeKinCanadaEvents === false) {
+      // Explicitly exclude Kin Canada - only use hierarchical conditions
+      if (allConditions.length === 1) {
+        query = query.or(allConditions[0])
+      } else {
+        query = query.or(allConditions.join(','))
+      }
+      // Also exclude Kin Canada events
+      query = query.is('kin_canada_id', null)
+    } else if (targetKinCanadaId && shouldIncludeKinCanada) {
+      // Include Kin Canada in addition to hierarchical filters
+      // Need to combine hierarchical conditions with Kin Canada
+      // If hierarchical conditions are already wrapped in or(), we need to flatten
+      const hierarchicalConditions = allConditions.map(cond => {
+        // If condition is already wrapped in or(), extract the inner conditions
+        if (cond.startsWith('or(') && cond.endsWith(')')) {
+          return cond.slice(3, -1) // Remove 'or(' and ')'
+        }
+        return cond
+      })
+      
+      // Add Kin Canada condition
+      hierarchicalConditions.push(`kin_canada_id.eq.${targetKinCanadaId}`)
+      
+      // Combine all with OR
+      if (hierarchicalConditions.length === 1) {
+        query = query.or(hierarchicalConditions[0])
+      } else {
+        query = query.or(hierarchicalConditions.join(','))
+      }
+    } else {
+      // No Kin Canada to include, just hierarchical
+      if (allConditions.length === 1) {
+        query = query.or(allConditions[0])
+      } else {
+        query = query.or(allConditions.join(','))
+      }
+    }
+  } else {
+    // No hierarchical filters selected
+    if (filters?.includeKinCanadaEvents === false && targetKinCanadaId) {
+      // Explicitly exclude Kin Canada - show all non-Kin Canada events
+      hasEntityFilter = true
+      query = query.is('kin_canada_id', null)
+    }
+    // If Kin Canada is checked (default) and no hierarchical filter, show ALL events
+    // Don't apply any entity filter - this means all events will be shown
+    // (both hierarchical events and Kin Canada events)
+    // hasEntityFilter remains false, so no entity filtering is applied
+  }
+  
+  console.log('getEvents filter state:', {
+    hasHierarchicalFilter: allConditions.length > 0,
+    includeKinCanadaEvents: filters?.includeKinCanadaEvents,
+    shouldIncludeKinCanada,
+    hasEntityFilter,
+    allConditions
+  })
+  
   if (filters?.visibility) {
     query = query.eq('visibility', filters.visibility)
   }
@@ -125,7 +219,8 @@ export async function getEventById(id: string) {
       *,
       club:clubs!club_id(*),
       zone:zones!zone_id(*),
-      district:districts!district_id(*)
+      district:districts!district_id(*),
+      kin_canada:kin_canada!kin_canada_id(*)
     `)
     .eq('id', id)
     .single()
@@ -160,6 +255,9 @@ export async function createEvent(event: Omit<DbEvent, 'id' | 'created_at' | 'up
   if (event.entity_type === 'district' && !event.district_id) {
     throw new Error('Event district_id is required for district events')
   }
+  if (event.entity_type === 'kin_canada' && !event.kin_canada_id) {
+    throw new Error('Event kin_canada_id is required for Kin Canada events')
+  }
   
   const { data, error } = await supabase
     .from('events')
@@ -168,7 +266,8 @@ export async function createEvent(event: Omit<DbEvent, 'id' | 'created_at' | 'up
       *,
       club:clubs!club_id(*),
       zone:zones!zone_id(*),
-      district:districts!district_id(*)
+      district:districts!district_id(*),
+      kin_canada:kin_canada!kin_canada_id(*)
     `)
     .single()
 
@@ -195,7 +294,8 @@ export async function updateEvent(id: string, updates: Partial<DbEvent>) {
       *,
       club:clubs!club_id(*),
       zone:zones!zone_id(*),
-      district:districts!district_id(*)
+      district:districts!district_id(*),
+      kin_canada:kin_canada!kin_canada_id(*)
     `)
     .single()
 
@@ -310,6 +410,17 @@ export async function getDistricts() {
 
   if (error) throw error
   return data as District[]
+}
+
+// Kin Canada operations
+export async function getKinCanada() {
+  const { data, error } = await supabase
+    .from('kin_canada')
+    .select('*')
+    .single()
+
+  if (error) throw error
+  return data as KinCanada
 }
 
 // Announcement operations
@@ -471,7 +582,7 @@ export async function deleteUserEntityPermission(id: string) {
 }
 
 // Helper function to get entity details
-export async function getEntityDetails(entityType: 'club' | 'zone' | 'district', entityId: string) {
+export async function getEntityDetails(entityType: 'club' | 'zone' | 'district' | 'kin_canada', entityId: string) {
   let query
   
   switch (entityType) {
@@ -503,6 +614,13 @@ export async function getEntityDetails(entityType: 'club' | 'zone' | 'district',
         .eq('id', entityId)
         .single()
       break
+    case 'kin_canada':
+      query = supabase
+        .from('kin_canada')
+        .select('*')
+        .eq('id', entityId)
+        .single()
+      break
   }
 
   const { data, error } = await query
@@ -516,6 +634,7 @@ export async function getUserRole(userEmail: string): Promise<{
   club_id?: string
   zone_id?: string
   district_id?: string
+  kin_canada_id?: string
 } | null> {
   
   // Return null if no email provided
@@ -557,12 +676,14 @@ export async function getUserRole(userEmail: string): Promise<{
   const club_id = permissionsData?.find(p => p.entity_type === 'club')?.entity_id
   const zone_id = permissionsData?.find(p => p.entity_type === 'zone')?.entity_id
   const district_id = permissionsData?.find(p => p.entity_type === 'district')?.entity_id
+  const kin_canada_id = permissionsData?.find(p => p.entity_type === 'kin_canada')?.entity_id
 
   return {
     role: userData.role as 'superuser' | 'editor',
     club_id,
     zone_id,
-    district_id
+    district_id,
+    kin_canada_id
   }
 }
 
@@ -823,7 +944,7 @@ export async function createUserWithPermissions(user: {
 
   // For editors, require at least one entity assignment
   if (!user.entityIds || user.entityIds.length === 0) {
-    throw new Error('Editor users must be assigned to at least one entity (club, zone, or district)')
+    throw new Error('Editor users must be assigned to at least one entity (club, zone, district, or Kin Canada)')
   }
 
   // Create the user first
@@ -922,25 +1043,28 @@ export async function updateUserWithPermissions(
   return updatedUser
 }
 
-// Get all available entities (clubs, zones, districts) for user assignment
+// Get all available entities (clubs, zones, districts, kin_canada) for user assignment
 export async function getAllEntitiesForAssignment(): Promise<{
   clubs: Club[]
   zones: Zone[]
   districts: District[]
+  kinCanada: KinCanada | null
 }> {
-  const [clubs, zones, districts] = await Promise.all([
+  const [clubs, zones, districts, kinCanada] = await Promise.all([
     getClubs(),
     getZones(),
-    getDistricts()
+    getDistricts(),
+    getKinCanada().catch(() => null) // Gracefully handle if table doesn't exist yet
   ])
 
-  return { clubs, zones, districts }
+  return { clubs, zones, districts, kinCanada }
 }
 
 // Helper function to determine entity type from entity ID
-export function getEntityType(entityId: string, entities: { clubs: Club[], zones: Zone[], districts: District[] }): 'club' | 'zone' | 'district' {
+export function getEntityType(entityId: string, entities: { clubs: Club[], zones: Zone[], districts: District[], kinCanada: KinCanada | null }): 'club' | 'zone' | 'district' | 'kin_canada' {
   if (entities.clubs.some(club => club.id === entityId)) return 'club'
   if (entities.zones.some(zone => zone.id === entityId)) return 'zone'
   if (entities.districts.some(district => district.id === entityId)) return 'district'
+  if (entities.kinCanada && entities.kinCanada.id === entityId) return 'kin_canada'
   throw new Error(`Unknown entity ID: ${entityId}`)
 }

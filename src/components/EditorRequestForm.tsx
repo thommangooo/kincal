@@ -7,7 +7,7 @@ import {
   checkRateLimit,
   CreateEditorRequestData 
 } from '@/lib/editorRequests'
-import { getAllEntitiesForAssignment, Club, Zone, District } from '@/lib/database'
+import { getAllEntitiesForAssignment, Club, Zone, District, KinCanada } from '@/lib/database'
 import { 
   User, 
   Mail, 
@@ -19,14 +19,15 @@ import {
   Loader2, 
   CheckCircle, 
   AlertCircle,
-  Send
+  Send,
+  Flag
 } from 'lucide-react'
 
 interface EditorRequestFormData {
   name: string
   email: string
   phone: string
-  entityType: 'club' | 'zone' | 'district'
+  entityType: 'club' | 'zone' | 'district' | 'kin_canada'
   entityId: string
   messageToApprover: string
 }
@@ -47,10 +48,11 @@ export default function EditorRequestForm({ onSuccess, onCancel, className = '' 
     messageToApprover: ''
   })
   
-  const [entities, setEntities] = useState<{ clubs: Club[], zones: Zone[], districts: District[] }>({
+  const [entities, setEntities] = useState<{ clubs: Club[], zones: Zone[], districts: District[], kinCanada: KinCanada | null }>({
     clubs: [],
     zones: [],
-    districts: []
+    districts: [],
+    kinCanada: null
   })
   
   const [loading, setLoading] = useState(false)
@@ -157,7 +159,7 @@ export default function EditorRequestForm({ onSuccess, onCancel, className = '' 
     }
   }
 
-  const getEntityIcon = (type: 'club' | 'zone' | 'district') => {
+  const getEntityIcon = (type: 'club' | 'zone' | 'district' | 'kin_canada') => {
     switch (type) {
       case 'club':
         return <Users className="h-4 w-4" />
@@ -165,6 +167,8 @@ export default function EditorRequestForm({ onSuccess, onCancel, className = '' 
         return <MapPin className="h-4 w-4" />
       case 'district':
         return <Building className="h-4 w-4" />
+      case 'kin_canada':
+        return <Flag className="h-4 w-4" />
     }
   }
 
@@ -188,6 +192,12 @@ export default function EditorRequestForm({ onSuccess, onCancel, className = '' 
             {district.name}
           </option>
         ))
+      case 'kin_canada':
+        return entities.kinCanada ? (
+          <option key={entities.kinCanada.id} value={entities.kinCanada.id}>
+            {entities.kinCanada.name}
+          </option>
+        ) : null
     }
   }
 
@@ -305,7 +315,7 @@ export default function EditorRequestForm({ onSuccess, onCancel, className = '' 
             onChange={(e) => {
               setFormData({ 
                 ...formData, 
-                entityType: e.target.value as 'club' | 'zone' | 'district',
+                entityType: e.target.value as 'club' | 'zone' | 'district' | 'kin_canada',
                 entityId: '' // Reset entity selection when type changes
               })
             }}
@@ -316,13 +326,14 @@ export default function EditorRequestForm({ onSuccess, onCancel, className = '' 
             <option value="club">Club</option>
             <option value="zone">Zone</option>
             <option value="district">District</option>
+            <option value="kin_canada">Kin Canada</option>
           </select>
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             {getEntityIcon(formData.entityType)}
-            <span className="ml-2 capitalize">{formData.entityType} *</span>
+            <span className="ml-2 capitalize">{formData.entityType === 'kin_canada' ? 'Kin Canada' : formData.entityType} *</span>
           </label>
           <select
             value={formData.entityId}

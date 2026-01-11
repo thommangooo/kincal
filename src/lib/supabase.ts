@@ -39,6 +39,13 @@ export interface Club {
   district?: District
 }
 
+export interface KinCanada {
+  id: string
+  name: string
+  created_at: string
+  updated_at: string
+}
+
 export interface DbEvent {
   id: string
   title: string
@@ -49,7 +56,8 @@ export interface DbEvent {
   club_id: string | null
   zone_id: string | null
   district_id: string | null
-  entity_type: 'club' | 'zone' | 'district'
+  kin_canada_id: string | null
+  entity_type: 'club' | 'zone' | 'district' | 'kin_canada'
   entity_id: string
   visibility: 'public' | 'private'
   tags: string[] | null
@@ -61,6 +69,7 @@ export interface DbEvent {
   club?: Club
   zone?: Zone
   district?: District
+  kin_canada?: KinCanada
 }
 
 export interface Announcement {
@@ -72,7 +81,8 @@ export interface Announcement {
   club_id: string | null
   zone_id: string | null
   district_id: string | null
-  entity_type: 'club' | 'zone' | 'district'
+  kin_canada_id: string | null
+  entity_type: 'club' | 'zone' | 'district' | 'kin_canada'
   entity_id: string
   visibility: 'public' | 'private'
   tags: string[] | null
@@ -84,16 +94,17 @@ export interface Announcement {
   club?: Club
   zone?: Zone
   district?: District
+  kin_canada?: KinCanada
 }
 
 export interface UserEntityPermission {
   id: string
   user_email: string
-  entity_type: 'club' | 'zone' | 'district'
+  entity_type: 'club' | 'zone' | 'district' | 'kin_canada'
   entity_id: string
   created_at: string
   updated_at: string
-  entity?: Club | Zone | District
+  entity?: Club | Zone | District | KinCanada
 }
 
 export interface MagicLinkToken {
