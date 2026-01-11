@@ -48,17 +48,11 @@ export default function ClubSearch({ value, onChange, placeholder = "Search for 
         // Deduplicate zones by ID (in case database has duplicates)
         const uniqueZonesData = Array.from(new Map(zonesData.map(zone => [zone.id, zone])).values())
         
-        console.log('ClubSearch: Loaded entities', {
-          clubs: clubsData.length,
-          zones: uniqueZonesData.length,
-          districts: districtsData.length,
-          kinCanada: kinCanadaData ? 1 : 0
-        })
-        
+        // Combine entities - put districts first to ensure they appear in results
         const allEntities: SearchableEntity[] = [
+          ...districtsData.map(district => ({ ...district, entityType: 'district' as const })),
           ...clubsData.map(club => ({ ...club, entityType: 'club' as const })),
           ...uniqueZonesData.map(zone => ({ ...zone, entityType: 'zone' as const })),
-          ...districtsData.map(district => ({ ...district, entityType: 'district' as const })),
           ...(kinCanadaData ? [{
             ...kinCanadaData,
             entityType: 'kin_canada' as const,
@@ -66,8 +60,6 @@ export default function ClubSearch({ value, onChange, placeholder = "Search for 
             displayName: kinCanadaData.name
           }] : [])
         ] as SearchableEntity[]
-        
-        console.log('ClubSearch: Total entities', allEntities.length, 'Districts:', allEntities.filter(e => e.entityType === 'district').length)
 
 
         setEntities(allEntities)
@@ -94,9 +86,7 @@ export default function ClubSearch({ value, onChange, placeholder = "Search for 
         return entity.displayName.toLowerCase().includes(searchLower) || 
                entity.name.toLowerCase().includes(searchLower)
       } else if (entity.entityType === 'district') {
-        const matches = entity.name.toLowerCase().includes(searchLower)
-        console.log('District filter check:', entity.name, 'search:', searchLower, 'matches:', matches)
-        return matches
+        return entity.name.toLowerCase().includes(searchLower)
       } else if (entity.entityType === 'kin_canada') {
         return entity.name.toLowerCase().includes(searchLower) || 
                'kin canada'.includes(searchLower) ||
@@ -104,8 +94,6 @@ export default function ClubSearch({ value, onChange, placeholder = "Search for 
       }
       return false
     }).slice(0, 10) // Limit to 10 results for performance
-    
-    console.log('ClubSearch: Filtered entities', filtered.length, 'Districts:', filtered.filter(e => e.entityType === 'district').length)
 
     setFilteredEntities(filtered)
     setSelectedIndex(-1)

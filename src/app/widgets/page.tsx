@@ -65,7 +65,7 @@ export default function WidgetsPage() {
             entities.push({
               type: 'zone',
               id: zone.id,
-              name: zone.name
+              name: zone.district?.name ? `${zone.name} • ${zone.district.name}` : zone.name
             })
           })
           
@@ -107,7 +107,7 @@ export default function WidgetsPage() {
               entities.push({
                 type: 'zone',
                 id: zone.id,
-                name: zone.name
+                name: zone.district?.name ? `${zone.name} • ${zone.district.name}` : zone.name
               })
             }
           }
