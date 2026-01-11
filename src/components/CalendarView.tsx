@@ -348,7 +348,7 @@ export default function CalendarView({
       <div
         className={`px-1.5 py-0.5 rounded-md text-[11px] font-semibold truncate shadow-sm ring-1 ring-black/10 border-l-2`}
         style={{ backgroundColor: bgHex, color: textHex, borderLeftColor: borderHex }}
-        title={`${event.title} - ${event.resource.club?.name || 'Unknown Club'}`}
+        title={`${event.title} - ${event.resource.club?.name || event.resource.zone?.name || event.resource.district?.name || event.resource.kin_canada?.name || 'Unknown Entity'}`}
       >
         {event.title}
       </div>
