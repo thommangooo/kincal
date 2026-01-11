@@ -28,7 +28,11 @@ export default function EntitySelector({ userEmail, userRole, selectedEntity, on
             getDistricts(),
             getKinCanada().catch(() => null) // Gracefully handle if table doesn't exist yet
           ])
-          setAllEntities({ clubs, zones, districts, kinCanada })
+          
+          // Deduplicate zones by ID (in case database has duplicates)
+          const uniqueZones = Array.from(new Map(zones.map(zone => [zone.id, zone])).values())
+          
+          setAllEntities({ clubs, zones: uniqueZones, districts, kinCanada })
         } else {
           // Editors can only see entities they have permissions for
           const userPermissions = await getUserEntityPermissions(userEmail)

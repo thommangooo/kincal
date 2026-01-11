@@ -45,9 +45,12 @@ export default function ClubSearch({ value, onChange, placeholder = "Search for 
         ])
 
         // Combine all entities with their types
+        // Deduplicate zones by ID (in case database has duplicates)
+        const uniqueZonesData = Array.from(new Map(zonesData.map(zone => [zone.id, zone])).values())
+        
         const allEntities: SearchableEntity[] = [
           ...clubsData.map(club => ({ ...club, entityType: 'club' as const })),
-          ...zonesData.map(zone => ({ ...zone, entityType: 'zone' as const })),
+          ...uniqueZonesData.map(zone => ({ ...zone, entityType: 'zone' as const })),
           ...districtsData.map(district => ({ ...district, entityType: 'district' as const })),
           ...(kinCanadaData ? [{
             ...kinCanadaData,
@@ -264,6 +267,16 @@ export default function ClubSearch({ value, onChange, placeholder = "Search for 
                   {entity.entityType === 'club' && entity.zone && (
                     <div className="text-sm !text-gray-500">
                       {entity.zone.name} • {entity.zone.district?.name}
+                    </div>
+                  )}
+                  {entity.entityType === 'district' && (entity as District).province && (
+                    <div className="text-sm !text-gray-500">
+                      {(entity as District).province}
+                    </div>
+                  )}
+                  {entity.entityType === 'zone' && (entity as Zone & { district?: { name?: string } }).district?.name && (
+                    <div className="text-sm !text-gray-500">
+                      {(entity as Zone & { district?: { name?: string } }).district?.name}
                     </div>
                   )}
                   {entity.entityType === 'kin_canada' && (
