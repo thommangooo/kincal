@@ -216,7 +216,7 @@ export default function EntitySelector({ userEmail, userRole, selectedEntity, on
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center space-x-2">
-                        <h3 className="font-medium text-gray-900">{zone.name}</h3>
+                        <h3 className="font-medium text-gray-900">{zone.name} {zone.district?.name ? `• ${zone.district.name}` : ''}</h3>
                         <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
                           zone
                         </span>
