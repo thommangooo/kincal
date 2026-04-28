@@ -20,21 +20,23 @@ export default function SignInForm() {
     setMessage('')
     
     try {
-      // First, check if the email is in the approved users list
-      const { data: approvedUser, error: checkError } = await supabase
-        .from('approved_users')
-        .select('email, name, role')
-        .eq('email', email.toLowerCase())
-        .single()
+      const normalizedEmail = email.toLowerCase().trim()
 
-      if (checkError || !approvedUser) {
+      // Check whitelist via RPC to avoid exposing approved_users to anonymous reads.
+      const { data: isApproved, error: checkError } = await supabase
+        .rpc('is_email_approved', { email_input: normalizedEmail })
+
+      if (checkError || !isApproved) {
+        if (checkError) {
+          console.error('Approval check RPC failed:', checkError)
+        }
         setMessage('This email address is not authorized to access the system. Please contact an administrator.')
         setLoading(false)
         return
       }
 
       // If approved, send the magic link
-      await signIn(email)
+      await signIn(normalizedEmail)
       setEmailSent(true)
       setMessage('')
     } catch (error) {
